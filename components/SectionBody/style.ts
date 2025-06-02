@@ -6,7 +6,7 @@ const style = (theme: Theme) =>
   createStyles({
     root: {
       display: "block",
-      fontSize: theme.spacing( 8/ FONT_BASE),
+      fontSize: theme.spacing( 12/ FONT_BASE),
       "@media print": {
         fontSize: theme.toPt({ all: 1 }, FONT_BASE_PDF),
       },

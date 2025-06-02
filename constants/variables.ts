@@ -11,7 +11,7 @@ export const PROFILE = {
   title:
     "Senior Software Enginner - React | Python | Node.js | Flutter",
   description:
-    `I am a senior software engineer with over ${yearsOfExperience()} of experience and ${yearsOfExperience(new Date(2012,2,1),CAREER_START_DATE)} of freelancing experience. My technical work spans front-end architecture, hybrid mobile application development, and backend services. I also actively manage the front-end team's software development process. In the past, I have worked on web applications and data processing pipelines. I am keen to explore interesting roles in broad areas of web and backend development.`,
+    `With ${yearsOfExperience()} of industry experience and ${yearsOfExperience(new Date(2012,2,1),CAREER_START_DATE)} of freelancing expertise, I bring a strong technical background in frontend development, hybrid mobile applications, and backend services. Beyond coding, I excel in leading and managing development teams throughout the software lifecycle, ensuring high-quality delivery and innovation. My experience includes developing mobile applications and data analysis dashboards, where I also secured multiple patents for my contributions. Passionate about cutting-edge technologies and scalable solutions, I am eager to explore diverse opportunities in application development—from architecture design to hands-on development.`,
   favicon: {
     url: `${GRAVATAR}?s=500`,
   },

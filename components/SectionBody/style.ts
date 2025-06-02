@@ -6,11 +6,11 @@ const style = (theme: Theme) =>
   createStyles({
     root: {
       display: "block",
-      fontSize: theme.spacing( 10/ FONT_BASE),
+      fontSize: theme.spacing( 8/ FONT_BASE),
       "@media print": {
         fontSize: theme.toPt({ all: 1 }, FONT_BASE_PDF),
       },
-      padding: theme.spacing(1),
+      padding: theme.spacing(0.5),
       textAlign: "justify",
       "&:after, &:before": {
         content: ".",

@@ -21,7 +21,6 @@ const style = (theme: Theme) =>
       pageBreakAfter: "auto",
       pageBreakInside: "avoid",
       marginBottom: theme.spacing(1),
-      paddingBottom: theme.spacing(1),
       "& small": {
         margin: theme.spacing(1, 0),
       },

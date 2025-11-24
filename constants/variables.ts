@@ -2,7 +2,7 @@ import { toIn, toPt } from "../utils/style";
 import yearsOfExperience from "./date";
 export const CAREER_START_DATE = new Date(2016, 6, 1);
 export const LINKEDIN_URL = "https://www.linkedin.com/in/sangatdvikram/"
-export const URL = "https://sangatdvikram.github.io/"
+export const URL = "https://vikram-resume.vercel.app/"
 export const GITHUB_URL = "https://github.com/sangatDvikram"
 export const GRAVATAR =
   "https://www.gravatar.com/avatar/7384e1fc27b2c82cc01ab728f681f326";

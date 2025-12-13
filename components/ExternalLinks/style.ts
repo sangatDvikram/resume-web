@@ -1,5 +1,6 @@
 import { createStyles } from "@mui/styles";
 import { Theme } from "@mui/material";
+import { FONT_BASE, FONT_BASE_PDF } from "../../utils/style";
 
 const style = (theme: Theme) =>
   createStyles({
@@ -11,7 +12,10 @@ const style = (theme: Theme) =>
       verticalAlign: "middle",
       "& *": {
         float: "left",
-        fontSize: theme.toPt(18 / 8),
+        fontSize: theme.spacing( 18 / FONT_BASE),
+        "@media print": {
+          fontSize: theme.toPt({ all: 2 }, FONT_BASE_PDF),
+        },
         marginRight: theme.spacing(1),
       },
       [theme.breakpoints.down("sm")]: {
@@ -22,7 +26,10 @@ const style = (theme: Theme) =>
         right: 0,
         "& *": {
           float: "none",
-          fontSize: theme.toPt(18 / 8),
+          fontSize: theme.spacing( 18 / FONT_BASE),
+          "@media print": {
+            fontSize: theme.toPt({ all: 2 }, FONT_BASE_PDF),
+          },
           marginRight: theme.spacing(1),
         },
       },

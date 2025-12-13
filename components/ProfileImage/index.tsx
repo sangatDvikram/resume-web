@@ -4,7 +4,8 @@ import { get } from "lodash-es";
 import style from "./style";
 import { GlobalContext } from "../../constants/context";
 import { withStyleComponent } from "../../utils/style";
-import { GRAVATAR, KEYMAPPING } from "../../constants/variables";
+import { KEYMAPPING } from "../../constants/variables";
+import { gravatar } from "../../utils/gravatar";
 
 interface Props extends WithStyles<typeof style>, Record<string, any> {}
 const ProfileImage: React.FC<Props> = ({ classes }) => {
@@ -12,7 +13,7 @@ const ProfileImage: React.FC<Props> = ({ classes }) => {
   const name = get(global, KEYMAPPING.name, "") || "";
   return (
     <div className={classes.img}>
-      <img src={GRAVATAR} alt={name} width={200} />
+      <img src={gravatar(200)} alt={name} width={200} />
     </div>
   );
 };

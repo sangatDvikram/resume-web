@@ -1,12 +1,16 @@
 import { createStyles } from "@mui/styles";
 import { Theme } from "@mui/material";
+import { FONT_BASE, FONT_BASE_PDF } from "../../utils/style";
 
 const style = (theme: Theme) =>
   createStyles({
     root: {
       display: "block",
-      fontSize: theme.toPt(10 / 8),
-      padding: theme.toPt(1),
+      fontSize: theme.spacing( 12/ FONT_BASE),
+      "@media print": {
+        fontSize: theme.toPt({ all: 1 }, FONT_BASE_PDF),
+      },
+      padding: theme.spacing(0.5),
       textAlign: "justify",
       "&:after, &:before": {
         content: ".",

@@ -1,5 +1,6 @@
 import { createStyles } from "@mui/styles";
 import { Theme } from "@mui/material";
+import { FONT_BASE_PDF } from "../../utils/style";
 
 const style = (theme: Theme) =>
   createStyles({
@@ -10,11 +11,17 @@ const style = (theme: Theme) =>
       },
     },
     title: {
-      fontSize: theme.toPt(2.5),
+      fontSize: theme.spacing( 2.5),
+        "@media print": {
+          fontSize: theme.toPt({ all: 1.25 }, FONT_BASE_PDF),
+        },
       position: "relative",
       textAlign: "center",
       [theme.breakpoints.down("sm")]: {
-        fontSize: theme.toPt(3),
+        fontSize: theme.spacing(3),
+        "@media print": {
+          fontSize: theme.toPt({ all: 1.5 }, FONT_BASE_PDF),
+        },
         textAlign: "left",
       },
     },

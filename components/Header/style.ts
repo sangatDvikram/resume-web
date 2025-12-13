@@ -7,8 +7,8 @@ const style = (theme: Theme) =>
       display: "flex",
       position: "relative",
       minWidth: "100%",
-      paddingBottom: theme.toPt(1),
-      marginBottom: theme.toPt(1),
+      paddingBottom: theme.spacing(1),
+      marginBottom: theme.spacing(1),
       borderBottom: "2px solid black",
       [theme.breakpoints.down("sm")]: {
         flexDirection: "row-reverse",

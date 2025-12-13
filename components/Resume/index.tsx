@@ -13,6 +13,7 @@ import Achivement from "../Achivement";
 import Education from "../Education";
 import Page from "../Page";
 import { GlobalContext } from "../../constants/context";
+import { Grid } from "@mui/material";
 
 interface Props extends WithStyles<typeof style>, Record<string, any> {}
 const Container: React.FC<Props> = ({ classes }) => {
@@ -22,13 +23,19 @@ const Container: React.FC<Props> = ({ classes }) => {
       <Page>
         <Header global={global} />
         <Overview />
-        <Patents />
-        <Skills />
-        <Experience />
-        <Projects />
-        <Certification />
-        <Achivement />
-        <Education />
+        <Grid container spacing={2}>
+          <Grid item xs={8}>
+            <Patents />
+            <Experience />
+          </Grid>
+          <Grid item xs={4}>
+            <Skills />
+            <Certification />
+            <Achivement />
+            <Education />
+            <Projects />
+          </Grid>
+        </Grid>
       </Page>
     </div>
   );

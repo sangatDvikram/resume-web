@@ -1,3 +1,4 @@
+import { gravatar } from "../utils/gravatar";
 import yearsOfExperience from "./date";
 import { PROFILE } from "./variables";
 
@@ -5,13 +6,13 @@ export const Resume = {
   name: "Vikram Sangat",
   position: "Senior Software Enginner - React | Flutter | Python | Node.js",
   description: `
-  I am a senior software engineer with over ${yearsOfExperience()} years of experience. My technical work spans front-end architecture, hybrid mobile application development, and backend services. I also actively manage the front-end team's software development process. In the past, I have worked on web applications and data processing pipelines. I am keen to explore interesting roles in broad areas of web and backend development.`,
+  I am a senior software engineer with over ${yearsOfExperience()} years of experience. My technical work spans front-end, hybrid mobile application and backend services development. I also actively manage and lead development teams throught the development lifecycle. In the past, I have worked on mobile applications and data analysis dashboard create, During with I have also secured couple of patents. I am keen to explore interesting roles in broad areas of application development.`,
   profile: PROFILE,
   address: "Bangalore, India",
-  gravatar: "https://www.gravatar.com/avatar/7384e1fc27b2c82cc01ab728f681f326",
+  gravatar: gravatar(200),
   github: "https://github.com/sangatDVikram",
   email: "v.sangat98@gmail.com",
-  linkedIn: "https://www.linkedin.com/in/vikram-sangat-4414854a/",
+  linkedIn: "https://www.linkedin.com/in/sangatdvikram/",
   mobile: "+91-9503415652",
   languages: ["Python", "Javascript", "HTML", "CSS", "Dart", "PHP", "C#"],
   frameworks: [
@@ -71,7 +72,7 @@ export const Resume = {
   ],
   experience: [
     {
-      title: "Senior Software engineer",
+      title: "Senior Software Engineer - Frontend",
       company: "Tekion",
       isCurrent: true,
       duration: [new Date(2022, 11, 12), new Date(2022, 10, 24)],
@@ -79,28 +80,28 @@ export const Resume = {
       techStack: ["React", "Redux", "Thunk", "Webpack 5"],
       description: "",
       tasks: [
-        "Leading team of frontend engineers.",
-        "Managing DRP Onboaring modules development lifecycle.",
-        "Worked on creating application using monorepo pattern.",
-        "Worked on creating onboaring and preonboarding application flow for dealers and oem",
+        "Leading a team of frontend engineers, driving development and optimization of scalable applications.",
+        "Managing the DRP Onboarding modules throughout the development lifecycle, ensuring seamless integration and efficiency.",
+        "Architected a monorepo-based application, enhancing code reusability, maintainability, and developer productivity.",
+        "Designed and implemented onboarding and pre-onboarding workflows for dealers and OEMs, streamlining user experience and operational efficiency.",
       ],
     },
     {
-      title: "Senior UI engineer",
+      title: "Senior Software Engineer - UI",
       company: "Visa",
       duration: [new Date(2021, 11, 13), new Date(2022, 10, 24)],
       area: "Bangalore, India",
       techStack: ["React", "Redux", "Single-SPA", "RxJs", "Material-UI"],
       description: "",
       tasks: [
-        "Worked on Merchant onboarding application and lead UI development team.",
-        "Worked on implementing micro frontends within react application and used manifest to configure the same.",
-        "Worked on creating common UI components and integration with rapid seller onboaring platform.",
-        "Worked on Thirdparty api like ThreatMatrix, Giact and Experian which are related to user varification, Also integrated the same with UI",
+        "Led the UI development team for the Merchant Onboarding application, ensuring seamless user experiences and efficient workflows.",
+        "Implemented micro frontends within a React application, utilizing manifests for dynamic configuration and modular architecture.",
+        "Developed common UI components and integrated them into the Rapid Seller Onboarding Platform, accelerating development and standardization.",
+        "Integrated third-party APIs like ThreatMatrix, Giact, and Experian for user verification, ensuring security and compliance within the onboarding flow.",
       ],
     },
     {
-      title: "Web full stack developer",
+      title: "Web Full Stack Developer",
       company: "DMart Labs (Avenue Supermarkets Ltd)",
       duration: [new Date(2019, 9, 1), new Date(2021, 10, 25)],
       area: "Bangalore, India",
@@ -115,15 +116,15 @@ export const Resume = {
       ],
       description: "",
       tasks: [
-        "Managed frontend team and all inhouse application development",
-        "Implemented micro frontend with Single SPA architecture and react child application",
-        "Created application development SDK and Component libraries to reduce application development time by 50%",
-        "Created framework library which provides common API for network calls, notifications and other useful features to all child applications for micro-frontend",
-        "Created a Hybrid mobile application using Flutter and React",
+        "Led the frontend team, overseeing development and optimization of in-house applications.",
+        "Architected a micro frontend system using Single SPA, seamlessly integrating React-based child applications.",
+        "Designed and implemented an Application Development SDK and Component Libraries, cutting development time by 50%.",
+        "Developed a framework library providing a unified API for network calls, notifications, and essential micro-frontend features.",
+        "Built a hybrid mobile application leveraging Flutter and React, enhancing cross-platform compatibility and user experience.",
       ],
     },
     {
-      title: "Software Engineer",
+      title: "Software Engineer - Frontend",
       company: "Innoplexus Consulting Services Pvt Ltd",
       duration: [new Date(2017, 10, 1), new Date(2019, 9, 1)],
       area: "Pune, India",
@@ -138,12 +139,10 @@ export const Resume = {
         "Python",
       ],
       tasks: [
-        "Lead team of 2 - 3 developers to create client-facing dashboards using React and D3",
-        "Created API services from scratch using Express, Django, Elasticsearch and MongoDB",
-        "Created query builder SDK for DaaS platform using Typescript",
-        "Created Dashboards and Analytical application for Patents analysis",
-        "Created data processing pipelines for calculating  Simple and Extended patent family calculations and other parents related statistic with MongoDB and Pandas",
-        "Assisted team with setting up backend structure using Django and Express",
+        "Led a team of 2–3 developers to design and develop client-facing data analytics dashboards, utilizing React and D3.js for interactive visualizations.",
+        "Developed API services from scratch using Express, Django, Elasticsearch, and MongoDB, ensuring seamless backend functionality.",
+        "Designed and built dashboards for patent analysis, enhancing data accessibility and strategic decision-making.",
+        "Developed data processing pipelines to calculate Simple and Extended Patent Family statistics, leveraging MongoDB and Pandas for large-scale data handling.",
       ],
     },
     {
@@ -162,9 +161,9 @@ export const Resume = {
       description:
         "Platform focused towards documentation in the infrastructure industry. Aimed to reduce monitoring overhead by providing geotagged insights from given data",
       tasks: [
-        "Created Django application which helps in representing collection of coordinated on map using leaflet",
-        "Worked on location clustering algorithm to cluster user images",
-        "Created Android application which supports capturing geotagged images with use of hardware sensors for directions and Geo-location",
+        "Developed a Django-based application that visualizes and represents coordinate collections on a map using Leaflet.js.",
+        "Implemented a location clustering algorithm to efficiently group user images based on geographic proximity.",
+        "Built an Android application enabling users to capture geotagged images, leveraging hardware sensors for direction and geo-location accuracy.",
       ],
     },
     {
@@ -185,9 +184,9 @@ export const Resume = {
       description:
         "Platform for automatically extracting and keywords from news and building news topical timelines to help keep track of interests of readers",
       tasks: [
-        "Integrated NLP data processing libraries like Stanford NER, NLTK and polyglot with Django",
-        "Created crawlers for curating data from various websites using RSS feeds and Crawling",
-        "Created a website using Django templates and CSS frameworks like Semantic UI",
+        "Integrated Natural Language Processing (NLP) libraries such as Stanford NER, NLTK, and Polyglot within a Django-based application to enhance data processing capabilities.",
+        "Developed web crawlers for automated data curation, leveraging RSS feeds and crawling techniques to gather and structure information efficiently.",
+        "Designed and built a responsive website using Django templates and modern CSS frameworks like Semantic UI, ensuring an intuitive user experience.",
       ],
     },
   ],

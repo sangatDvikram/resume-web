@@ -5,9 +5,6 @@ import { get } from "lodash-es";
 import style from "./style";
 import { withStyleComponent } from "../../utils/style";
 import {
-  LINKEDIN_URL,
-  URL,
-  GITHUB_URL,
   KEYMAPPING,
 } from "../../constants/variables";
 import Link from "../Link";

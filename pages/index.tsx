@@ -1,55 +1,24 @@
-import { get } from "lodash-es";
 import type { NextPage } from "next";
-import Head from "next/head";
-import App from "../app";
-import { GRAVATAR, KEYMAPPING, URL } from "../constants/variables";
-import { fetchAPILocal } from "../lib/api";
-import { GlobalContext } from "../constants/context";
+import dynamic from "next/dynamic";
+import MetaTags from "../components/MetaTags";
+import { Provider } from "react-redux";
+import store from "../redux/store";
 
+const DynamicHomePage = dynamic(() => import("../components/Homepage"), {
+  ssr: false,
+});
 type Props = Record<string, any>;
-const Home: NextPage<Props> = ({ global = {}, ...others }) => {
-  const profile = get(global, "profile.profile_image", {});
-  const title = get(global, KEYMAPPING.title, "") || "";
-  const name = get(global, KEYMAPPING.name, "") || "";
-  const description = get(global, KEYMAPPING.description, "") || "";
-  const profileImage = GRAVATAR;
-  const finalTittle = `${name} - ${title}`;
+const Home: NextPage<Props> = ({ global = {} }) => {
   return (
     <div>
-      <Head>
-        <link rel="manifest" href="/manifest.json" />
-        <title>{finalTittle}</title>
-        <meta name="title" content={finalTittle} />
-        <meta name="description" content={description} />
-
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={URL} />
-        <meta property="og:title" content={finalTittle} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={profileImage} />
-
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={URL} />
-        <meta property="twitter:title" content={finalTittle} />
-        <meta property="twitter:description" content={description} />
-        <meta property="twitter:image" content={profileImage} />
-      </Head>
-
       <main>
-        <GlobalContext.Provider value={global}>
-          <App />
-        </GlobalContext.Provider>
+        <Provider store={store}>
+          <MetaTags />
+          <DynamicHomePage />
+        </Provider>
       </main>
     </div>
   );
 };
 
 export default Home;
-export async function getStaticProps() {
-  const global = await fetchAPILocal();
-  return {
-    props: {
-      global:JSON.parse(global) ,
-    }, // will be passed to the page component as props
-  };
-}

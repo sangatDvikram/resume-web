@@ -1,10 +1,14 @@
 import { createStyles } from "@mui/styles";
 import { Theme } from "@mui/material";
+import { FONT_BASE, FONT_BASE_PDF } from "../../utils/style";
 
 const style = (theme: Theme) =>
   createStyles({
     sectionRoot: {
-      fontSize: theme.toPt(14 / 8),
+      fontSize: theme.spacing( 14/FONT_BASE),
+      "@media print": {
+        fontSize: theme.toPt({ all: 1 }, FONT_BASE_PDF),
+      },
       fontWeight: 700,
       position: "relative",
       display: "inline-block",

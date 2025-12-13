@@ -1,5 +1,6 @@
 import { createStyles } from "@mui/styles";
 import { Theme } from "@mui/material";
+import { FONT_BASE, FONT_BASE_PDF } from "../../utils/style";
 
 const style = (theme: Theme) =>
   createStyles({
@@ -11,28 +12,40 @@ const style = (theme: Theme) =>
       },
       "& li": {
         margin: 0,
-        pagaBreakInside: "avoid",
+        pageBreakInside: "avoid",
       },
     },
     details: {
       position: "relative",
       pageBreakBefore: "auto",
       pageBreakAfter: "auto",
+      pageBreakInside: "avoid",
       marginBottom: theme.spacing(1),
-      paddingBottom: theme.spacing(1),
       "& small": {
         margin: theme.spacing(1, 0),
       },
     },
     title: {
-      fontSize: theme.toPt(14 / 8),
+      fontSize: theme.spacing( 14 / FONT_BASE),
       fontWeight: 700,
+      [theme.breakpoints.down("sm")]: {
+        fontSize: theme.spacing( 14 / FONT_BASE),
+      },
+      "@media print": {
+        fontSize: theme.toPt({ all: 1 }, FONT_BASE_PDF),
+      },
     },
     time: {
-      fontSize: theme.toPt(10 / 8),
+      fontSize: theme.spacing( 10 / FONT_BASE),
+      "@media print": {
+        fontSize: theme.toPt({ all: 1 }, FONT_BASE_PDF),
+      },
     },
     company: {
-      fontSize: theme.toPt(10 / 8),
+      fontSize: theme.spacing( 10 / FONT_BASE),
+      "@media print": {
+        fontSize: theme.toPt({ all: 1 }, FONT_BASE_PDF),
+      },
     },
     duration: {
       position: "absolute",
@@ -46,7 +59,10 @@ const style = (theme: Theme) =>
       },
     },
     area: {
-      fontSize: theme.toPt(10 / 8),
+      fontSize:theme.spacing( 10 / FONT_BASE),
+      "@media print": {
+        fontSize: theme.toPt({ all: 1 }, FONT_BASE_PDF),
+      },
       fontWeight: 700,
     },
     lastDetail: {

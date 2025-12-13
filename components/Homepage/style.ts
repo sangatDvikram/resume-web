@@ -6,23 +6,18 @@ import {
   PAGE_FONT_SIZE,
   PAGE_WIDTH,
 } from "../../constants/variables";
-import { FONT_BASE_PDF } from "../../utils/style";
+import { BLACK_BACKGROUND } from "../../constants/colors";
 
 const style = (theme: Theme) =>
   createStyles({
     "@global": {
       body: {
-        fontSize: theme.spacing(1),
-        "@media print": {
-          width: PAGE_WIDTH,
-          display: "block",
-          fontSize: theme.toPt({all:1}, FONT_BASE_PDF),
-          minHeight: PAGE_HEIGHT,
-          margin: 0,
-        },
+        fontSize: PAGE_FONT_SIZE,
       },
     },
-    root: {},
+    root: {
+     
+    },
   });
 
 export default style;

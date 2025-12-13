@@ -12,12 +12,9 @@ const style = (theme: Theme) =>
       },
     },
     section: {
-      width: "25%",
       display: "inline-block",
       paddingRight: theme.spacing(1),
-      [theme.breakpoints.down("sm")]: {
-        width: "50%",
-      },
+      marginBottom: theme.spacing(1),
       "& ul": {
         margin: 0,
         listStylePosition: "inside",

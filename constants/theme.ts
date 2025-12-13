@@ -4,11 +4,11 @@ import { ToPT, toIn, toPt } from "../utils/style";
 
 declare module "@mui/material" {
   interface Theme {
-    toPt: ToPT;
+    toPt: typeof toPt;
     toIn: ToPT;
   }
   interface ThemeOptions {
-    toPt: ToPT;
+    toPt: typeof toPt;
     toIn: ToPT;
   }
 }

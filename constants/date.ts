@@ -1,14 +1,24 @@
-import {
-  differenceInYears,
-  format,
-  isValid,
-  lastDayOfMonth,
-  intervalToDuration,
-} from "date-fns";
+import { format, isValid, lastDayOfMonth, intervalToDuration } from "date-fns";
+import { formatNumberSuffix } from "../utils/general";
 const CAREER_START_DATE = new Date(2016, 6, 1);
-const yearsOfExperience = () => {
-  const difference = differenceInYears(new Date(), CAREER_START_DATE);
-  return difference;
+
+const yearsOfExperience = (
+  startDate = new Date(),
+  endDate = CAREER_START_DATE
+) => {
+  const difference = intervalToDuration({
+    start: startDate,
+    end: endDate,
+  });
+
+  const months = `${difference.months} ${formatNumberSuffix(
+    difference.months as number,
+    "month"
+  )}`;
+  return `${difference.years} ${formatNumberSuffix(
+    difference.years as number,
+    "year"
+  )} ${(difference.months as number) > 0 ? months : ""} `;
 };
 export const calculateDuration = (data: any) => {
   const { duration, isCurrent = false } = data;

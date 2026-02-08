@@ -4,47 +4,47 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
+    --background: 220 45% 8%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 8%;
+    --card: 220 45% 10%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 8%;
+    --popover: 220 45% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 174 72% 56%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 180 65% 55%;
+    --primary-foreground: 220 45% 8%;
 
-    --secondary: 222 30% 14%;
+    --secondary: 220 35% 15%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 222 30% 18%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 220 35% 20%;
+    --muted-foreground: 210 20% 60%;
 
-    --accent: 174 72% 56%;
-    --accent-foreground: 222 47% 6%;
+    --accent: 200 80% 50%;
+    --accent-foreground: 220 45% 8%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 222 30% 18%;
-    --input: 222 30% 18%;
-    --ring: 174 72% 56%;
+    --border: 220 35% 18%;
+    --input: 220 35% 18%;
+    --ring: 180 65% 55%;
 
     --radius: 0.75rem;
 
-    /* Custom colors */
-    --glow: 174 72% 56%;
-    --glow-muted: 174 50% 40%;
-    --surface: 222 40% 10%;
-    --surface-elevated: 222 35% 12%;
+    /* Custom colors - Teal to Blue gradient inspired */
+    --glow: 180 65% 55%;
+    --glow-muted: 195 60% 45%;
+    --surface: 220 40% 12%;
+    --surface-elevated: 220 38% 14%;
     
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(174 72% 56%) 0%, hsl(190 80% 50%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(222 40% 10%) 0%, hsl(222 47% 8%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(222 47% 8%) 0%, hsl(222 47% 6%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(174 72% 56% / 0.15) 0%, transparent 70%);
+    /* Gradients matching the icon */
+    --gradient-primary: linear-gradient(135deg, hsl(180 70% 50%) 0%, hsl(220 75% 45%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(220 40% 12%) 0%, hsl(220 45% 10%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(220 45% 10%) 0%, hsl(220 45% 8%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(180 65% 55% / 0.15) 0%, transparent 70%);
   }
 
   .dark {

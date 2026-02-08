@@ -3,8 +3,8 @@ import { formatNumberSuffix } from "../utils/general";
 const CAREER_START_DATE = new Date(2016, 6, 1);
 
 const yearsOfExperience = (
-  startDate = new Date(),
-  endDate = CAREER_START_DATE
+  startDate = CAREER_START_DATE,
+  endDate = new Date()
 ) => {
   const difference = intervalToDuration({
     start: startDate,

@@ -2,10 +2,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+const AVATAR_URL = "https://www.gravatar.com/avatar/7384e1fc27b2c82cc01ab728f681f326?s=400";
 
 const navItems = [
   { href: "#overview", label: "About" },
   { href: "#patents", label: "Patents" },
+  { href: "#hobbies", label: "Hobbies" },
   { href: "#experience", label: "Experience" },
   { href: "#skills", label: "Skills" },
   { href: "#education", label: "Education" },
@@ -36,8 +40,14 @@ const Navigation = () => {
       >
         <nav className="section-container py-4">
           <div className="flex items-center justify-between">
-            <a href="#" className="text-xl font-bold">
-              V<span className="text-primary">.</span>S
+            <a href="#" className="flex items-center gap-3">
+              <Avatar className="w-9 h-9 border-2 border-primary/30">
+                <AvatarImage src={AVATAR_URL} alt="Vikram Sangat" />
+                <AvatarFallback>VS</AvatarFallback>
+              </Avatar>
+              <span className="text-xl font-bold">
+                V<span className="text-primary">.</span>S
+              </span>
             </a>
 
             {/* Desktop nav */}

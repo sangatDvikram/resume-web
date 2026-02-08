@@ -3,6 +3,8 @@ import { Mail, Phone, MapPin, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, } from "react-router";
 
+const AVATAR_URL = "https://www.gravatar.com/avatar/7384e1fc27b2c82cc01ab728f681f326?s=400";
+
 const Hero = () => {
   const history = useNavigate();
   const downloadResume = () => {
@@ -10,6 +12,13 @@ const Hero = () => {
   }
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Background image with overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
+        style={{ backgroundImage: `url(${AVATAR_URL})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+      
       {/* Background glow effect */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(174_72%_56%_/_0.08)_0%,transparent_50%)]" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />

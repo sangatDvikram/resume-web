@@ -12,7 +12,7 @@ const style = (theme: Theme) =>
   createStyles({
     "@global": {
       body: {
-        fontSize: theme.spacing(1),
+        fontSize: "14px",
         "@media print": {
           width: PAGE_WIDTH,
           display: "block",

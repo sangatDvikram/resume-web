@@ -14,15 +14,15 @@ const Resume: React.FC = () => {
     <>
     <SEO title={`${RESUME.name} | Resume`} />
     <main
-      className="bg-resume text-resume-fg min-h-screen p-8 print:p-4"
+      className="bg-resume text-resume-fg min-h-screen p-8 print:p-4 print:text-[12pt]"
       itemScope
       itemType="https://schema.org/Person"
     >
       {/* Header */}
       <header className="text-center mb-8 border-b border-resume-border pb-6">
-        <h1 className="text-3xl font-bold mb-2" itemProp="name">{RESUME.name}</h1>
-        <p className="text-lg text-resume-muted mb-4" itemProp="jobTitle">{RESUME.position}</p>
-        <div className="flex flex-wrap justify-center gap-4 text-sm text-resume-muted">
+        <h1 className="text-3xl font-bold mb-2 print:text-[12pt]" itemProp="name">{RESUME.name}</h1>
+        <p className="text-lg text-resume-muted mb-4 print:text-[10pt]" itemProp="jobTitle">{RESUME.position}</p>
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-resume-muted print:text-[9pt]">
           <span>
             <span aria-hidden="true">📧 </span>
             <a
@@ -69,24 +69,24 @@ const Resume: React.FC = () => {
       </header>
       {/* Overview */}
       <section className="mb-8">
-        <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4">Overview</h2>
-        <p className="text-sm text-resume-body leading-relaxed" itemProp="description">{RESUME.description}</p>
+        <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4 print:text-[11pt]">Overview</h2>
+        <p className="text-sm text-resume-body leading-relaxed print:text-[9pt]" itemProp="description">{RESUME.description}</p>
       </section>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column */}
-        <div className="space-y-8">
+      <div className="flex flex-col gap-8 md:flex-row print:flex-row">
+        {/* Left Column — 60 % */}
+        <div className="w-full md:w-[60%] print:w-[60%] space-y-8">
 
           {/* Patents */}
           <section>
-            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4">Patents</h2>
+            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4 print:text-[11pt]">Patents</h2>
             {RESUME.patents.map((patent, index) => (
               <div key={index} className="mb-2">
-                <p className="font-semibold text-sm">{patent.title}</p>
+                <p className="text-sm print:text-[9pt]">{patent.title}</p>
                 <a
                   href={patent.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-link hover:text-link-hover hover:underline transition-colors"
+                  className="text-xs text-link hover:text-link-hover hover:underline transition-colors print:text-[8pt]"
                 >
                   {patent.link} ↗
                 </a>
@@ -95,24 +95,24 @@ const Resume: React.FC = () => {
           </section>
           {/* Experience */}
           <section>
-            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4">Experience</h2>
+            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4 print:text-[11pt]">Experience</h2>
             {RESUME.experience.map((exp, index) => (
               <div key={index} className="mb-4">
-                <h3 className="font-semibold">{exp.title}</h3>
-                <p className="text-sm text-resume-muted"><strong>{exp.company}</strong> • {exp.area} • {calculateDuration({ duration: exp.duration, isCurrent: exp.isCurrent })}</p>
-                <ul className="list-disc list-inside text-sm text-resume-body mt-2">
+                <h3 className="font-semibold print:text-[10pt]">{exp.title}</h3>
+                <p className="text-sm text-resume-muted print:text-[9pt]"><strong>{exp.company}</strong> • {exp.area} • {calculateDuration({ duration: exp.duration, isCurrent: exp.isCurrent })}</p>
+                <ul className="list-disc list-inside text-sm text-resume-body mt-2 print:text-[9pt]">
                   {exp.tasks.map((task, i) => (
                     <li key={i}>{task}</li>
                   ))}
                 </ul>
                 {exp.techStack && exp.techStack.length > 0 && (
                   <div className="mt-3">
-                    <span className="text-xs font-semibold text-resume-fg">Technologies: </span>
+                    <span className="text-xs font-semibold text-resume-fg print:text-[8pt]">Technologies: </span>
                     <span className="inline-flex flex-wrap gap-1.5 mt-1">
                       {exp.techStack.map((tech, i) => (
                         <span
                           key={i}
-                          className="text-xs text-resume-muted bg-resume-border/20 border border-resume-border/50 rounded px-1.5 py-0.5"
+                          className="text-xs text-resume-muted bg-resume-border/20 border border-resume-border/50 rounded px-1.5 py-0.5 print:text-[8pt]"
                         >
                           {tech}
                         </span>
@@ -125,89 +125,89 @@ const Resume: React.FC = () => {
           </section>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-4">
+        {/* Right Column — 40 % */}
+        <div className="w-full md:w-[40%] print:w-[40%] space-y-4">
           {/* Skills */}
           <section>
-            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4">Skills</h2>
+            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4 print:text-[11pt]">Skills</h2>
             <div className="space-y-2">
               <div>
-                <h3 className="font-semibold text-sm">Languages</h3>
-                <p className="text-sm text-resume-body">{RESUME.languages.join(", ")}</p>
+                <h3 className="font-semibold text-sm print:text-[10pt]">Languages</h3>
+                <p className="text-sm text-resume-body print:text-[9pt]">{RESUME.languages.join(", ")}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-sm">Frameworks</h3>
-                <p className="text-sm text-resume-body">{RESUME.frameworks.join(", ")}</p>
+                <h3 className="font-semibold text-sm print:text-[10pt]">Frameworks</h3>
+                <p className="text-sm text-resume-body print:text-[9pt]">{RESUME.frameworks.join(", ")}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-sm">Databases</h3>
-                <p className="text-sm text-resume-body">{RESUME.databases.join(", ")}</p>
+                <h3 className="font-semibold text-sm print:text-[10pt]">Databases</h3>
+                <p className="text-sm text-resume-body print:text-[9pt]">{RESUME.databases.join(", ")}</p>
               </div>
             </div>
           </section>
 
           {/* Education */}
           <section>
-            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4">Education</h2>
+            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4 print:text-[11pt]">Education</h2>
             {RESUME.education.map((edu, index) => (
               <div key={index} className="mb-3">
-                <h3 className="font-semibold text-sm">{edu.degree}</h3>
-                <p className="text-sm text-resume-muted">{edu.university}</p>
-                <p className="text-xs text-resume-subtle">{edu.duration}</p>
+                <h3 className="font-semibold text-sm print:text-[10pt]">{edu.degree}</h3>
+                <p className="text-sm text-resume-muted print:text-[9pt]">{edu.university}</p>
+                <p className="text-xs text-resume-subtle print:text-[8pt]">{edu.duration}</p>
               </div>
             ))}
           </section>
 
           {/* Certifications */}
           <section>
-            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4">Certifications</h2>
+            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4 print:text-[11pt]">Certifications</h2>
             {RESUME.certifications.map((cert, index) => (
               <div key={index} className="mb-2">
-                <p className="font-semibold text-sm">{cert.title}</p>
-                <p className="text-xs text-resume-muted">{cert.issuer}</p>
+                <p className="font-semibold text-sm print:text-[9pt]">{cert.title}</p>
+                <p className="text-xs text-resume-muted print:text-[8pt]">{cert.issuer}</p>
               </div>
             ))}
           </section>
 
           {/* Awards */}
           <section>
-            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4">Awards</h2>
+            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4 print:text-[11pt]">Awards</h2>
             {RESUME.awards.map((award, index) => (
               <div key={index} className="mb-2">
-                <p className="font-semibold text-sm">{award.title}</p>
-                <p className="text-xs text-resume-muted">{award.issuer}</p>
+                <p className="font-semibold text-sm print:text-[9pt]">{award.title}</p>
+                <p className="text-xs text-resume-muted print:text-[8pt]">{award.issuer}</p>
               </div>
             ))}
           </section>
 
           {/* Projects */}
           <section>
-            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4">Projects</h2>
+            <h2 className="text-xl font-bold border-b border-resume-border pb-2 mb-4 print:text-[11pt]">Projects</h2>
             {RESUME.projects.map((project, index) => (
               <div key={index} className="mb-4">
-                <p className="font-semibold text-sm">{project.title}</p>
-                <p className="text-xs text-resume-muted">{project.company}</p>
+                <p className="font-semibold text-sm print:text-[9pt]">{project.title}</p>
+                <p className="text-xs text-resume-muted print:text-[8pt]">{project.company}</p>
                 <a
                   href={project.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-link hover:text-link-hover hover:underline transition-colors"
+                  className="text-xs text-link hover:text-link-hover hover:underline transition-colors print:text-[8pt]"
                 >
                   {project.link} ↗
                 </a>
-                <ul className="list-disc list-inside text-sm text-resume-body mt-2">
+                <ul className="list-disc list-inside text-sm text-resume-body mt-2 print:text-[9pt]">
                   {project.tasks.map((task, i) => (
                     <li key={i}>{task}</li>
                   ))}
                 </ul>
                 {project.techStack && project.techStack.length > 0 && (
                   <div className="mt-3">
-                    <span className="text-xs font-semibold text-resume-fg">Technologies: </span>
+                    <span className="text-xs font-semibold text-resume-fg print:text-[8pt]">Technologies: </span>
                     <span className="inline-flex flex-wrap gap-1.5 mt-1">
                       {project.techStack.map((tech, i) => (
                         <span
                           key={i}
-                          className="text-xs text-resume-muted bg-resume-border/20 border border-resume-border/50 rounded px-1.5 py-0.5"
+                          className="text-xs text-resume-muted bg-resume-border/20 border border-resume-border/50 rounded px-1.5 py-0.5 print:text-[8pt]"
                         >
                           {tech}
                         </span>

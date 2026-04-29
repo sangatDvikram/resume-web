@@ -71,8 +71,8 @@ export const GRAVATAR = "https://www.gravatar.com/avatar/7384e1fc27b2c82cc01ab72
 export const PATENT_ONE = "https://patents.google.com/patent/GB2572361A";
 export const PATENT_TWO = "https://patents.google.com/patent/USD870129S1";
 export const A3ACP = "https://github.com/sangatDvikram/a3-acp";
-export const TRANSWISE = "https://github.com/Vikram-Sangat/transwise-client-app";
-export const A3Udater = "https://github.com/Vikram-Sangat/A3-Client-Updater";
+export const TRANSWISE = "https://github.com/sangatDvikram/transwise-client-app";
+export const A3Udater = "https://github.com/sangatDvikram/A3-Client-Updater";
 export const BLOCKCHAIN = "https://www.credential.net/56729257-fa68-446f-a156-11b6de00f5e4#gs.9q3r7k";
 
 /**

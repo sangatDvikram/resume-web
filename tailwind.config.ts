@@ -59,6 +59,19 @@ export default {
           DEFAULT: "hsl(var(--surface))",
           elevated: "hsl(var(--surface-elevated))",
         },
+        // Accent teal — section radial-gradient glows
+        "teal-glow": "hsl(var(--teal-glow))",
+        // Status indicator — "Available for opportunities" hero badge
+        "status-available": "hsl(var(--status-available))",
+        // Resume (printable page) — always light palette
+        resume: {
+          DEFAULT: "hsl(var(--resume-bg))",
+          fg:      "hsl(var(--resume-fg))",
+          body:    "hsl(var(--resume-body))",
+          muted:   "hsl(var(--resume-muted))",
+          subtle:  "hsl(var(--resume-subtle))",
+          border:  "hsl(var(--resume-border))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

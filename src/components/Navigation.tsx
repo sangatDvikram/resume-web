@@ -1,8 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const AVATAR_URL = "https://www.gravatar.com/avatar/7384e1fc27b2c82cc01ab728f681f326?s=400";
 
@@ -30,21 +26,28 @@ const Navigation = () => {
 
   return (
     <>
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-slide-down ${
           isScrolled ? "glass shadow-lg" : ""
         }`}
       >
         <nav className="section-container py-4">
           <div className="flex items-center justify-between">
             <a href="#" className="flex items-center gap-3">
-              <Avatar className="w-9 h-9 border-2 border-primary/30">
-                <AvatarImage src={AVATAR_URL} alt="Vikram Sangat" />
-                <AvatarFallback>VS</AvatarFallback>
-              </Avatar>
+              {/* Avatar */}
+              <figure
+                className="w-9 h-9 rounded-full border-2 border-primary/30 overflow-hidden"
+                aria-label="Vikram Sangat"
+              >
+                <img
+                  src={AVATAR_URL}
+                  alt="Vikram Sangat"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </figure>
               <span className="text-xl font-bold">
                 V<span className="text-primary">.</span>S
               </span>
@@ -65,45 +68,40 @@ const Navigation = () => {
             </div>
 
             {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
+            <button
+              className="md:hidden p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
+              {isMobileMenuOpen ? (
+                <span className="text-xl">✕</span>
+              ) : (
+                <span className="text-xl">☰</span>
+              )}
+            </button>
           </div>
         </nav>
-      </motion.header>
+      </header>
 
       {/* Mobile menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 pt-20 bg-background/95 backdrop-blur-lg md:hidden"
-          >
-            <nav className="section-container py-8">
-              <div className="flex flex-col gap-4">
-                {navItems.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-lg text-muted-foreground hover:text-foreground transition-colors py-2 border-b border-border/30"
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </div>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-40 pt-20 bg-background/95 backdrop-blur-lg md:hidden animate-fade-in">
+          <nav className="section-container py-8">
+            <div className="flex flex-col gap-4">
+              {navItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-lg text-muted-foreground hover:text-foreground transition-colors py-2 border-b border-border/30"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </nav>
+        </div>
+      )}
     </>
   );
 };

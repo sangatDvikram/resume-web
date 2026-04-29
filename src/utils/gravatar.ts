@@ -1,3 +1,3 @@
-import { GRAVATAR } from "../constants/variables";
+import { GRAVATAR } from "../constants";
 
-export const gravatar = (size = 200): string => `${GRAVATAR}?s=${size}` 
+export const gravatar = (size = 200): string => `${GRAVATAR}?s=${size}`;

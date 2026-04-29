@@ -39,12 +39,42 @@
     --glow-muted: 195 60% 45%;
     --surface: 220 40% 12%;
     --surface-elevated: 220 38% 14%;
-    
+
     /* Gradients matching the icon */
     --gradient-primary: linear-gradient(135deg, hsl(180 70% 50%) 0%, hsl(220 75% 45%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(220 40% 12%) 0%, hsl(220 45% 10%) 100%);
     --gradient-hero: linear-gradient(180deg, hsl(220 45% 10%) 0%, hsl(220 45% 8%) 100%);
     --gradient-glow: radial-gradient(ellipse at center, hsl(180 65% 55% / 0.15) 0%, transparent 70%);
+
+    /* ── Accent teal ──────────────────────────────────────────────────────────
+       Shared HSL channel values for the teal radial glow used as a decorative
+       background in Hero, Hobbies, Skills, FreelanceProjects, and Patents.
+       Usage:  hsl(var(--teal-glow) / <alpha>)
+    ────────────────────────────────────────────────────────────────────────── */
+    --teal-glow: 174 72% 56%;
+
+    /* ── Status indicator ─────────────────────────────────────────────────────
+       "Available for opportunities" dot in the Hero section (≈ emerald-400).
+    ────────────────────────────────────────────────────────────────────────── */
+    --status-available: 158 64% 51%;
+
+    /* ── Resume (print) palette ───────────────────────────────────────────────
+       The /resume route renders a white, print-ready page.  These tokens keep
+       all colour decisions in one place and are independent of the dark-mode
+       theme applied to the rest of the site.
+         --resume-bg      white  (#ffffff)
+         --resume-fg      black  (#000000)
+         --resume-body    ≈ gray-700  (#374151)  – body text, task lists
+         --resume-muted   ≈ gray-600  (#4b5563)  – secondary labels, company names
+         --resume-subtle  ≈ gray-500  (#6b7280)  – tertiary info, dates, patent links
+         --resume-border  ≈ gray-300  (#d1d5db)  – section divider lines
+    ────────────────────────────────────────────────────────────────────────── */
+    --resume-bg:     0 0% 100%;
+    --resume-fg:     0 0% 0%;
+    --resume-body:   218 11% 25%;
+    --resume-muted:  217 10% 35%;
+    --resume-subtle: 220  9% 46%;
+    --resume-border: 212 13% 82%;
   }
 
   .dark {

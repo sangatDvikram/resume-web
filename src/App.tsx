@@ -1,37 +1,33 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Resume from "./components/Resume";
-import theme from "./constants/theme";
-import { ThemeProvider } from "@mui/styles";
 import { GlobalContext } from "./constants/context";
-import { RESUME } from "./constants/resume";
+import { RESUME } from "./constants";
 
-const queryClient = new QueryClient();
+// Route-level code splitting: each page loads its own JS chunk on first visit.
+const Index    = lazy(() => import("./pages/Index"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Resume   = lazy(() => import("./components/Resume"));
+
+/** Full-page spinner shown while the active route chunk is downloading. */
+const PageLoader = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+  </div>
+);
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ThemeProvider theme={theme}>
-          <GlobalContext.Provider value={RESUME}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/resume" element={<Resume />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          </GlobalContext.Provider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <BrowserRouter>
+    <GlobalContext.Provider value={RESUME}>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/"       element={<Index />} />
+          <Route path="/resume" element={<Resume />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*"       element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </GlobalContext.Provider>
+  </BrowserRouter>
 );
 
 export default App;

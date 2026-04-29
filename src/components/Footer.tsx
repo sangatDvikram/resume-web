@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Github, Linkedin, Heart } from "lucide-react";
-
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
@@ -20,18 +17,18 @@ const Footer = () => {
               href="mailto:v.sangat98@gmail.com"
               className="flex items-center gap-2 hover:text-primary transition-colors"
             >
-              <Mail className="w-4 h-4" />
+              <span>✉️</span>
               <span>v.sangat98@gmail.com</span>
             </a>
             <a
               href="tel:+919503415652"
               className="flex items-center gap-2 hover:text-primary transition-colors"
             >
-              <Phone className="w-4 h-4" />
+              <span>📞</span>
               <span>+91 9503415652</span>
             </a>
             <span className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
+              <span>📍</span>
               <span>Bangalore, India</span>
             </span>
           </div>

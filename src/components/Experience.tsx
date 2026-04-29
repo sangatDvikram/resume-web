@@ -1,8 +1,3 @@
-import { motion } from "framer-motion";
-import { useInView } from "framer-motion";
-import { useRef } from "react";
-import { Building2, Calendar } from "lucide-react";
-
 const experiences = [
   {
     title: "Senior Software Engineer - Frontend",
@@ -83,33 +78,22 @@ const experiences = [
 ];
 
 const Experience = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
-
   return (
-    <section id="experience" className="py-24 relative" ref={ref}>
+    <section id="experience" className="py-24 relative">
       <div className="section-container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-sm font-mono text-primary mb-4 tracking-wider uppercase">Career</h2>
           <h3 className="text-3xl sm:text-4xl font-bold">Experience</h3>
-        </motion.div>
+        </div>
 
         <div className="relative max-w-4xl mx-auto">
           {/* Timeline line */}
           <div className="absolute left-0 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-primary/20 to-transparent transform md:-translate-x-1/2" />
 
           {experiences.map((exp, index) => (
-            <motion.div
+            <div
               key={`${exp.company}-${exp.period}`}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`relative mb-12 md:mb-16 pl-8 md:pl-0 ${
+              className={`relative mb-12 md:mb-16 pl-8 md:pl-0 animate-fade-in ${
                 index % 2 === 0 ? "md:pr-[calc(50%+2rem)]" : "md:pl-[calc(50%+2rem)]"
               }`}
             >
@@ -121,12 +105,12 @@ const Experience = () => {
                   <div>
                     <h4 className="text-lg font-semibold text-foreground">{exp.title}</h4>
                     <div className="flex items-center gap-2 text-primary mt-1">
-                      <Building2 className="w-4 h-4" />
+                      <span>🏢</span>
                       <span className="font-medium">{exp.company}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
+                    <span>📅</span>
                     <span>{exp.period}</span>
                   </div>
                 </div>
@@ -148,7 +132,7 @@ const Experience = () => {
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

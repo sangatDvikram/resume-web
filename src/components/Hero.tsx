@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
-
-const AVATAR_URL = "https://www.gravatar.com/avatar/7384e1fc27b2c82cc01ab728f681f326?s=400";
+import { gravatar } from "@/constants";
 
 const Hero = () => {
   const history = useNavigate();
@@ -13,7 +12,7 @@ const Hero = () => {
       {/* Background image with overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
-        style={{ backgroundImage: `url(${AVATAR_URL})` }}
+        style={{ backgroundImage: `url(${gravatar(400)})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
 

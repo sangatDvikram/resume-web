@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { GlobalContext } from "./constants/context";
 import { RESUME } from "./constants";
 
@@ -16,18 +17,20 @@ const PageLoader = () => (
 );
 
 const App = () => (
-  <BrowserRouter>
-    <GlobalContext.Provider value={RESUME}>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/"       element={<Index />} />
-          <Route path="/resume" element={<Resume />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*"       element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </GlobalContext.Provider>
-  </BrowserRouter>
+  <HelmetProvider>
+    <BrowserRouter>
+      <GlobalContext.Provider value={RESUME}>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/"       element={<Index />} />
+            <Route path="/resume" element={<Resume />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*"       element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </GlobalContext.Provider>
+    </BrowserRouter>
+  </HelmetProvider>
 );
 
 export default App;

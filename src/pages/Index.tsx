@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import SEO from "@/components/SEO";
 
 // Section-level code splitting: every section loads its own chunk so the
 // browser can fetch, parse, and paint each independently as the user scrolls.
@@ -36,6 +37,8 @@ const SectionLoader = () => (
 
 const Index = () => (
   <main className="min-h-screen bg-background">
+    {/* Inject page title + social meta tags — no visual output, no CLS risk */}
+    <SEO />
     {/* Navigation renders above the fold — use a height-matched blank so the
         page does not shift when the fixed header appears. */}
     <Suspense fallback={<NavSkeleton />}>

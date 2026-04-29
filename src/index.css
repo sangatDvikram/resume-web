@@ -68,6 +68,8 @@
          --resume-muted   ≈ gray-600  (#4b5563)  – secondary labels, company names
          --resume-subtle  ≈ gray-500  (#6b7280)  – tertiary info, dates, patent links
          --resume-border  ≈ gray-300  (#d1d5db)  – section divider lines
+         --link           ≈ blue-500  (#3b82f6)  – anchor resting colour
+         --link-hover     ≈ blue-600  (#2563eb)  – anchor hover colour
     ────────────────────────────────────────────────────────────────────────── */
     --resume-bg:     0 0% 100%;
     --resume-fg:     0 0% 0%;
@@ -75,6 +77,8 @@
     --resume-muted:  217 10% 35%;
     --resume-subtle: 220  9% 46%;
     --resume-border: 212 13% 82%;
+    --link:          221 83% 53%;
+    --link-hover:    221 83% 43%;
   }
 
   .dark {

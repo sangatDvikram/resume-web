@@ -72,6 +72,9 @@ export default {
           subtle:  "hsl(var(--resume-subtle))",
           border:  "hsl(var(--resume-border))",
         },
+        // Anchor link colours — shared across resume anchors
+        "link":       "hsl(var(--link))",
+        "link-hover": "hsl(var(--link-hover))",
       },
       borderRadius: {
         lg: "var(--radius)",

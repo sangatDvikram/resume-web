@@ -2,35 +2,15 @@ import skillsLanguagesImg from "@/assets/skills-languages.jpg";
 import skillsFrameworksImg from "@/assets/skills-frameworks.jpg";
 import skillsDatabasesImg from "@/assets/skills-databases.jpg";
 import skillsToolsImg from "@/assets/skills-tools.jpg";
-
-const skillCategories = [
-  {
-    title: "Languages",
-    icon: "💻",
-    image: skillsLanguagesImg,
-    skills: ["Python", "Javascript", "HTML", "CSS", "Dart", "PHP", "C#"],
-  },
-  {
-    title: "Frameworks",
-    icon: "📦",
-    image: skillsFrameworksImg,
-    skills: ["D3.js", "Django", "Express", "Flutter", "Node.js", "NextJS", "React", "Redux", "RxJs", "Typescript"],
-  },
-  {
-    title: "Databases",
-    icon: "🗄️",
-    image: skillsDatabasesImg,
-    skills: ["Elasticsearch", "MongoDB", "PostgreSQL", "MySQL"],
-  },
-  {
-    title: "Tools",
-    icon: "🔧",
-    image: skillsToolsImg,
-    skills: ["Visual Studio Code", "Android Studio", "Postman", "git"],
-  },
-];
+import { RESUME } from "@/constants";
 
 const Skills = () => {
+  const skillCategories = [
+    { title: "Languages", icon: "💻", image: skillsLanguagesImg, skills: RESUME.languages },
+    { title: "Frameworks", icon: "📦", image: skillsFrameworksImg, skills: RESUME.frameworks },
+    { title: "Databases", icon: "🗄️", image: skillsDatabasesImg, skills: RESUME.databases },
+    { title: "Tools", icon: "🔧", image: skillsToolsImg, skills: RESUME.tools },
+  ];
   return (
     <section id="skills" className="py-24 relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,hsl(var(--teal-glow)_/_0.05)_0%,transparent_50%)]" />

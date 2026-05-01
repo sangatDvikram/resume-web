@@ -1,97 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { RESUME } from "@/constants";
 
-// Photography images
-const photos = [
-  {
-    id: 1,
-    src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop",
-    title: "Mountain Sunrise",
-    location: "Himalayas, India",
-  },
-  {
-    id: 2,
-    src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=600&fit=crop",
-    title: "Forest Path",
-    location: "Western Ghats",
-  },
-  {
-    id: 3,
-    src: "https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=800&h=600&fit=crop",
-    title: "Serene Lake",
-    location: "Kashmir",
-  },
-  {
-    id: 4,
-    src: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&h=600&fit=crop",
-    title: "Golden Fields",
-    location: "Punjab",
-  },
-  {
-    id: 5,
-    src: "https://images.unsplash.com/photo-1585929511893-ea79c683cfd2?w=800&h=600&fit=crop",
-    title: "City Lights",
-    location: "Bangalore",
-  },
-  {
-    id: 6,
-    src: "https://images.unsplash.com/photo-1503803548695-c2a7b4a5b875?d?w=800&h=600&fit=crop",
-    title: "Coastal Sunset",
-    location: "Goa",
-  },
-];
-
-// Music preferences
-const musicGenres = [
-  { name: "Rock", icon: "🎸", description: "Classic and alternative rock" },
-  { name: "Electronic", icon: "🎧", description: "EDM and ambient sounds" },
-  { name: "Jazz", icon: "🎷", description: "Smooth jazz and fusion" },
-  { name: "Classical", icon: "🎻", description: "Orchestral and piano" },
-  { name: "Indie", icon: "🎤", description: "Independent artists" },
-  { name: "World", icon: "🌍", description: "Global and cultural music" },
-];
-
-const favoriteArtists = [
-  "Pink Floyd", "Radiohead", "Hans Zimmer", "Daft Punk", "A.R. Rahman", "Coldplay"
-];
-
-// Reading preferences
-const bookCategories = [
-  { name: "Technology", icon: "💻", count: 25 },
-  { name: "Science Fiction", icon: "🚀", count: 40 },
-  { name: "Philosophy", icon: "🧠", count: 15 },
-  { name: "Biography", icon: "📖", count: 20 },
-  { name: "Self-Help", icon: "🌱", count: 12 },
-  { name: "History", icon: "🏛️", count: 18 },
-];
-
-const favoriteBooks = [
-  { title: "Clean Code", author: "Robert C. Martin" },
-  { title: "Sapiens", author: "Yuval Noah Harari" },
-  { title: "The Pragmatic Programmer", author: "David Thomas" },
-  { title: "1984", author: "George Orwell" },
-  { title: "Atomic Habits", author: "James Clear" },
-  { title: "The Alchemist", author: "Paulo Coelho" },
-];
-
-// Anime preferences
-const animeGenres = [
-  { name: "Shonen", icon: "⚔️", description: "Action-packed adventures" },
-  { name: "Seinen", icon: "🎭", description: "Mature themes and stories" },
-  { name: "Sci-Fi", icon: "🤖", description: "Futuristic worlds" },
-  { name: "Thriller", icon: "🔍", description: "Suspense and mystery" },
-  { name: "Fantasy", icon: "🐉", description: "Magical realms" },
-  { name: "Slice of Life", icon: "🌸", description: "Everyday moments" },
-];
-
-const favoriteAnime = [
-  { title: "One Piece", rating: "10/10" },
-  { title: "Attack on Titan", rating: "10/10" },
-  { title: "Death Note", rating: "10/10" },
-  { title: "Naruto", rating: "9.5/10" },
-  { title: "Fullmetal Alchemist: Brotherhood", rating: "10/10" },
-  { title: "Code Geass", rating: "9/10" },
-  { title: "One Punch Man", rating: "9/10" },
-];
+const { photos, musicGenres, favoriteArtists, bookCategories, favoriteBooks, animeGenres, favoriteAnime, tabs } = RESUME.hobbies;
 
 const Hobbies = () => {
   const [activeTab, setActiveTab] = useState("photography");
@@ -118,12 +28,7 @@ const Hobbies = () => {
     }
   }, [selectedImage]);
 
-  const tabs = [
-    { id: "photography", label: "Photography", icon: "📷" },
-    { id: "music", label: "Music", icon: "🎵" },
-    { id: "reading", label: "Reading", icon: "📚" },
-    { id: "anime", label: "Anime", icon: "📺" },
-  ];
+
 
   return (
     <section id="hobbies" className="py-24 relative overflow-hidden">
@@ -312,7 +217,7 @@ const Hobbies = () => {
               onClick={handlePrevImage}
               className="absolute left-4 z-10 p-3 rounded-full bg-background/50 backdrop-blur-sm hover:bg-primary/20 transition-colors"
             >
-              <span className="text-xl">←</span>
+              <span className="text-xl text-white">←</span>
             </button>
 
             <div className="w-full h-full p-8 flex flex-col items-center justify-center">
@@ -322,7 +227,7 @@ const Hobbies = () => {
                 className="max-w-full max-h-[70vh] object-contain rounded-lg"
               />
               <div className="mt-4 text-center">
-                <h4 className="text-xl font-semibold">{photos[selectedImage].title}</h4>
+                <h4 className="text-xl font-semibold text-white">{photos[selectedImage].title}</h4>
                 <p className="text-muted-foreground">{photos[selectedImage].location}</p>
               </div>
             </div>
@@ -331,14 +236,14 @@ const Hobbies = () => {
               onClick={handleNextImage}
               className="absolute right-4 z-10 p-3 rounded-full bg-background/50 backdrop-blur-sm hover:bg-primary/20 transition-colors"
             >
-              <span className="text-xl">→</span>
+              <span className="text-xl text-white">→</span>
             </button>
 
             <button
               onClick={() => setSelectedImage(null)}
               className="absolute top-4 right-4 z-10 p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-primary/20 transition-colors"
             >
-              <span className="text-xl">✕</span>
+              <span className="text-xl text-white">✕</span>
             </button>
 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">

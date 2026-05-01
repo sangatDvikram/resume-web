@@ -1,20 +1,23 @@
 import { useNavigate } from "react-router";
-import { gravatar } from "@/constants";
+import { gravatar, RESUME, yearsOfExperience, CAREER_START_DATE } from "@/constants";
 
 const Hero = () => {
-  const history = useNavigate();
-  const downloadResume = () => {
-    history('/resume');
-  };
+  const navigate = useNavigate();
+
+  const nameParts = RESUME.name.split(" ");
+  const firstName = nameParts.slice(0, -1).join(" ");
+  const lastName = nameParts[nameParts.length - 1];
+  const heroTitle = RESUME.position.split(" - ")[0];
+  const industryYears = yearsOfExperience().trim().split(" ")[0];
+  const freelanceYears = yearsOfExperience(new Date(2012, 2, 1), CAREER_START_DATE).trim().split(" ")[0];
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background image with overlay */}
+      {/* Background image */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
         style={{ backgroundImage: `url(${gravatar(400)})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
 
       {/* Background glow effect */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--teal-glow)_/_0.08)_0%,transparent_50%)]" />
@@ -31,54 +34,54 @@ const Hero = () => {
 
           {/* Name */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-4 tracking-tight">
-            Vikram <span className="text-gradient">Sangat</span>
+            {firstName} <span className="text-gradient">{lastName}</span>
           </h1>
 
           {/* Title */}
           <p className="text-xl sm:text-2xl text-muted-foreground mb-6 font-light">
-            Senior Software Engineer
+            {heroTitle}
           </p>
 
           {/* Experience badges */}
           <div className="flex flex-wrap justify-center gap-3 mb-10">
             <span className="px-4 py-2 rounded-lg bg-secondary/50 border border-border/50 text-sm font-mono">
-              9+ Years Industry
+              {industryYears}+ Years Industry
             </span>
             <span className="px-4 py-2 rounded-lg bg-secondary/50 border border-border/50 text-sm font-mono">
-              4+ Years Freelancing
+              {freelanceYears}+ Years Freelancing
             </span>
             <span className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 text-sm font-mono text-primary">
-              2 Patents
+              {RESUME.patents.length} Patents
             </span>
           </div>
 
           {/* Contact info */}
           <div className="flex flex-wrap justify-center gap-6 mb-10 text-muted-foreground">
-            <a href="mailto:v.sangat98@gmail.com" className="flex items-center gap-2 hover:text-primary transition-colors">
+            <a href={`mailto:${RESUME.email}`} className="flex items-center gap-2  transition-colors">
               <span className="text-lg">✉️</span>
-              <span className="text-sm">v.sangat98@gmail.com</span>
+              <span className="text-sm">{RESUME.email}</span>
             </a>
-            <a href="tel:+919503415652" className="flex items-center gap-2 hover:text-primary transition-colors">
+            <a href={`tel:${RESUME.mobile}`} className="flex items-center gap-2  transition-colors">
               <span className="text-lg">📞</span>
-              <span className="text-sm">+91 9503415652</span>
+              <span className="text-sm">{RESUME.mobile}</span>
             </a>
             <span className="flex items-center gap-2">
               <span className="text-lg">📍</span>
-              <span className="text-sm">Bangalore, India</span>
+              <span className="text-sm">{RESUME.address}</span>
             </span>
           </div>
 
           {/* CTA buttons */}
           <div className="flex flex-wrap justify-center gap-4">
             <button
-              onClick={downloadResume}
-              className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors glow"
+              onClick={() => navigate("/resume")}
+              className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               <span>📄</span>
               Download Resume
             </button>
             <button
-              onClick={() => window.location.href = 'mailto:v.sangat98@gmail.com'}
+              onClick={() => window.location.href = `mailto:${RESUME.email}`}
               className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               <span>✉️</span>

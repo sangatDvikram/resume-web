@@ -1,16 +1,7 @@
 import { useState, useEffect } from "react";
+import { RESUME } from "@/constants";
 
-const AVATAR_URL = "https://www.gravatar.com/avatar/7384e1fc27b2c82cc01ab728f681f326?s=400";
-
-const navItems = [
-  { href: "#overview", label: "About" },
-  { href: "#patents", label: "Patents" },
-  { href: "#hobbies", label: "Hobbies" },
-  { href: "#experience", label: "Experience" },
-  { href: "#skills", label: "Skills" },
-  { href: "#education", label: "Education" },
-  { href: "#freelance", label: "Projects" },
-];
+const { avatar, navItems, name } = RESUME;
 
 const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -37,11 +28,11 @@ const Navigation = () => {
               {/* Avatar */}
               <figure
                 className="w-9 h-9 rounded-full border-2 border-primary/30 overflow-hidden"
-                aria-label="Vikram Sangat"
+                aria-label={name}
               >
                 <img
-                  src={AVATAR_URL}
-                  alt="Vikram Sangat"
+                  src={avatar}
+                  alt={name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';

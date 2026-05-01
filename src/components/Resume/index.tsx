@@ -29,7 +29,7 @@ const Resume: React.FC = () => {
                 onClick={downloadLatexResume}
                 title="Download LaTeX source (.tex)"
                 aria-label="Download resume as LaTeX source file"
-                className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded border border-resume-border text-resume-muted hover:text-resume-fg hover:border-resume-fg transition-colors"
+                className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 <span aria-hidden="true">⬇</span> Download .tex
               </button>

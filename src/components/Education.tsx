@@ -1,34 +1,4 @@
-const education = [
-  {
-    degree: "Bachelor of Engineering, Computer Science",
-    institution: "Jhulelal Institute Of Technology, Nagpur",
-    period: "2008 - 2012",
-  },
-  {
-    degree: "Master of Technology, CS and IT",
-    institution: "Vishwakarma Institute of Technology, Pune",
-    period: "2013 - 2015",
-    note: "Completed coursework",
-  },
-];
-
-const certifications = [
-  {
-    title: "Certified Blockchain Developer",
-    issuer: "Blockchain Council",
-  },
-];
-
-const achievements = [
-  {
-    title: "Jedi Knight for versatile performance",
-    issuer: "Innoplexus Consulting Services Pvt Ltd",
-  },
-  {
-    title: "Mentored in PyCamp 2K17",
-    issuer: "PyCamp 2K17 - Nagpur",
-  },
-];
+import { RESUME } from "@/constants";
 
 const Education = () => {
   return (
@@ -45,14 +15,11 @@ const Education = () => {
             </div>
 
             <div className="space-y-6">
-              {education.map((edu, index) => (
+              {RESUME.education.map((edu, index) => (
                 <div key={index} className="border-l-2 border-primary/30 pl-4">
                   <h4 className="font-medium text-foreground">{edu.degree}</h4>
-                  <p className="text-sm text-muted-foreground mt-1">{edu.institution}</p>
-                  <p className="text-xs text-primary font-mono mt-1">{edu.period}</p>
-                  {edu.note && (
-                    <p className="text-xs text-muted-foreground/70 mt-1 italic">({edu.note})</p>
-                  )}
+                  <p className="text-sm text-muted-foreground mt-1">{edu.university}</p>
+                  <p className="text-xs text-primary font-mono mt-1">{edu.duration}</p>
                 </div>
               ))}
             </div>
@@ -68,11 +35,18 @@ const Education = () => {
             </div>
 
             <div className="space-y-4">
-              {certifications.map((cert, index) => (
+              {RESUME.certifications.map((cert, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <span className="text-primary flex-shrink-0">✓</span>
                   <div>
-                    <h4 className="font-medium text-foreground">{cert.title}</h4>
+                    <a
+                      href={cert.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      {cert.title}
+                    </a>
                     <p className="text-sm text-muted-foreground">{cert.issuer}</p>
                   </div>
                 </div>
@@ -90,12 +64,12 @@ const Education = () => {
             </div>
 
             <div className="space-y-4">
-              {achievements.map((achievement, index) => (
+              {RESUME.awards.map((award, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium text-foreground">{achievement.title}</h4>
-                    <p className="text-sm text-muted-foreground">{achievement.issuer}</p>
+                    <h4 className="font-medium text-foreground">{award.title}</h4>
+                    <p className="text-sm text-muted-foreground">{award.issuer}</p>
                   </div>
                 </div>
               ))}

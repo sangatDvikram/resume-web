@@ -1,13 +1,4 @@
-const patents = [
-  {
-    title: "System and method for determining allocation of sales force",
-    description: "Innovative approach to optimizing sales force distribution and resource allocation",
-  },
-  {
-    title: "Display screen with transitional graphical user interface",
-    description: "Novel UI/UX design patterns for smooth transitional interfaces",
-  },
-];
+import { RESUME } from "@/constants";
 
 const Patents = () => {
   return (
@@ -21,7 +12,7 @@ const Patents = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {patents.map((patent) => (
+          {RESUME.patents.map((patent) => (
             <div
               key={patent.title}
               className="glass glass-hover rounded-xl p-6 group animate-fade-in"
@@ -34,7 +25,14 @@ const Patents = () => {
                   <h4 className="font-semibold mb-2 group-hover:text-primary transition-colors">
                     {patent.title}
                   </h4>
-                  <p className="text-sm text-muted-foreground">{patent.description}</p>
+                  <a
+                    href={patent.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-link hover:text-link-hover underline-offset-2 hover:underline font-mono transition-colors"
+                  >
+                    {patent.link} ↗
+                  </a>
                 </div>
               </div>
             </div>

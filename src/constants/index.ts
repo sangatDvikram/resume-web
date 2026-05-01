@@ -86,7 +86,7 @@ export const gravatar = (size = 200): string => `${GRAVATAR}?s=${size}`;
 
 export const PROFILE = {
   name: "Vikram Dilip Sangat",
-  title: "Senior Software Enginner - React | Python | Node.js | Flutter",
+  title: "Senior Software Engineer - React | Python | Node.js | Flutter",
   description: `With ${yearsOfExperience()} of industry experience and ${yearsOfExperience(new Date(2012, 2, 1), CAREER_START_DATE)} of freelancing expertise, I bring a strong technical background in frontend development, hybrid mobile applications, and backend services. Beyond coding, I excel in leading and managing development teams throughout the software lifecycle, ensuring high-quality delivery and innovation. My experience includes developing mobile applications and data analysis dashboards, where I also secured multiple patents for my contributions. Passionate about cutting-edge technologies and scalable solutions, I am eager to explore diverse opportunities in application development—from architecture design to hands-on development.`,
   favicon: {
     url: `${GRAVATAR}?s=500`,
@@ -132,7 +132,7 @@ export enum KEYMAPPING {
 
 export const RESUME = {
   name: "Vikram Sangat",
-  position: "Senior Software Enginner -  React | Javascript | Node.js | Python | Flutter",
+  position: "Senior Software Engineer - React | JavaScript | Node.js | Python | Flutter",
   description: `
   With ${yearsOfExperience()} of industry experience and ${yearsOfExperience(new Date(2012, 2, 1), CAREER_START_DATE)} of freelancing expertise, I bring a strong technical background in frontend development, hybrid mobile applications, and backend services. Beyond coding, I excel in leading and managing development teams throughout the software lifecycle, ensuring high-quality delivery and innovation. My experience includes developing mobile applications and data analysis dashboards, where I also secured multiple patents for my contributions. Passionate about cutting-edge technologies and scalable solutions, I am eager to explore diverse opportunities in application development—from architecture design to hands-on development.`,
   profile: PROFILE,
@@ -142,10 +142,10 @@ export const RESUME = {
   email: "v.sangat98@gmail.com",
   linkedIn: LINKEDIN_URL,
   mobile: "+91-9503415652",
-  languages: ["Python", "Javascript", "HTML", "CSS", "Dart", "PHP", "C#"],
+  languages: ["Python", "JavaScript", "HTML", "CSS", "Dart", "PHP", "C#"],
   frameworks: [
     "D3.js", "Django", "Express", "Flutter", "Node.js",
-    "NextJS", "React", "Redux", "RxJs", "Typescript",
+    "Next.js", "React", "Redux", "RxJS", "TypeScript",
   ],
   databases: ["Elasticsearch", "MongoDB", "PostgreSQL", "MySQL"],
   tools: ["Visual Studio Code", "Android Studio", "Postman", "git"],
@@ -211,7 +211,7 @@ export const RESUME = {
       company: "Visa",
       duration: [new Date(2021, 11, 13), new Date(2022, 10, 24)] as [Date, Date],
       area: "Bangalore, India",
-      techStack: ["React", "Redux", "Single-SPA", "RxJs", "Material-UI"],
+      techStack: ["React", "Redux", "Single-SPA", "RxJS", "Material-UI"],
       description: "",
       tasks: [
         "Led the UI development team for the Merchant Onboarding application, ensuring seamless user experiences and efficient workflows.",
@@ -225,7 +225,7 @@ export const RESUME = {
       company: "DMart Labs (Avenue Supermarkets Ltd)",
       duration: [new Date(2019, 9, 1), new Date(2021, 10, 25)] as [Date, Date],
       area: "Bangalore, India",
-      techStack: ["React", "Redux", "Node.js", "Single-SPA", "RxJs", "Flutter", "Material-UI"],
+      techStack: ["React", "Redux", "Node.js", "Single-SPA", "RxJS", "Flutter", "Material-UI"],
       description: "",
       tasks: [
         "Led the frontend team, overseeing development and optimization of in-house applications.",
@@ -250,11 +250,11 @@ export const RESUME = {
       ],
     },
     {
-      title: "CoFounder",
+      title: "Co-Founder",
       company: "Pole8",
       duration: [new Date(2017, 5, 1), new Date(2017, 10, 1)] as [Date, Date],
       area: "Nagpur, India",
-      techStack: ["Semantic UI", "Django", "PostgresSQL", "Leaflet", "JQuery", "Python"],
+      techStack: ["Semantic UI", "Django", "PostgreSQL", "Leaflet", "jQuery", "Python"],
       description: "Platform focused towards documentation in the infrastructure industry. Aimed to reduce monitoring overhead by providing geotagged insights from given data",
       tasks: [
         "Developed a Django-based application that visualizes and represents coordinate collections on a map using Leaflet.js.",
@@ -263,12 +263,12 @@ export const RESUME = {
       ],
     },
     {
-      title: "CoFounder",
+      title: "Co-Founder",
       company: "Vritt",
-      techStack: ["Semantic UI", "Django", "PostgresSQL", "Stanford-NER", "NLTK", "Polyglot", "JQuery", "Python"],
+      techStack: ["Semantic UI", "Django", "PostgreSQL", "Stanford-NER", "NLTK", "Polyglot", "jQuery", "Python"],
       duration: [new Date(2016, 5, 1), new Date(2017, 5, 1)] as [Date, Date],
       area: "Nagpur, India",
-      description: "Platform for automatically extracting and keywords from news and building news topical timelines to help keep track of interests of readers",
+      description: "Platform for automatically extracting keywords from news and building news topical timelines to help keep track of interests of readers",
       tasks: [
         "Integrated Natural Language Processing (NLP) libraries such as Stanford NER, NLTK, and Polyglot within a Django-based application to enhance data processing capabilities.",
         "Developed web crawlers for automated data curation, leveraging RSS feeds and crawling techniques to gather and structure information efficiently.",
@@ -281,20 +281,20 @@ export const RESUME = {
       title: "A3 Ultimate Account Control Panel",
       company: "A3 Ultimate Games",
       link: A3ACP,
-      techStack: ["Bootstrap", "MySql", "PHP", "MSSQL", "CodeIgniter"],
+      techStack: ["Bootstrap", "MySQL", "PHP", "MSSQL", "CodeIgniter"],
       tasks: [
         "Created platform to manage in-game purchases and account management via web application",
-        "Integrated Paypal and PayU Money payment's services for in-game items purchase",
-        "Created blogging system form players to share their experience with others players",
+        "Integrated PayPal and PayU Money payment services for in-game items purchase",
+        "Created blogging system for players to share their experience with other players",
       ],
     },
     {
-      title: "A3 Ultimate game client updater",
+      title: "A3 Ultimate Game Client Updater",
       company: "A3 Ultimate Games",
       link: A3Udater,
       techStack: ["C#", "MD5"],
       tasks: [
-        "Created client updated application for generating on the fly updates and new features to players.",
+        "Created client updater application for generating on the fly updates and new features to players.",
         "Integrated MD5 Checksum generation and validation for updating new patch files.",
       ],
     },
@@ -302,10 +302,10 @@ export const RESUME = {
       title: "Transwise",
       company: "Tiru Ghisewad - Transwise",
       link: TRANSWISE,
-      techStack: ["Bootstrap", "MySql", "PHP", "CodeIgniter"],
+      techStack: ["Bootstrap", "MySQL", "PHP", "CodeIgniter"],
       tasks: [
-        "Transwise is a platform for book rental cars as well as rent drivers.",
-        "Integrated receipts tax calculations ,scheduling emails on each trip complete and printing.",
+        "Transwise is a platform to book rental cars as well as hire drivers.",
+        "Integrated receipt tax calculations, scheduling emails on each trip completion and printing.",
       ],
     },
   ],

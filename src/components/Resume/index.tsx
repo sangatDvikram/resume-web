@@ -23,16 +23,18 @@ const Resume: React.FC = () => {
         <header className="text-center mb-8 border-b border-resume-border pb-6">
           <h1 className="text-3xl font-bold mb-2 print:text-[12pt]" itemProp="name">{RESUME.name}</h1>
           <p className="text-lg text-resume-muted mb-4 print:text-[10pt]" itemProp="jobTitle">{RESUME.position}</p>
-          <div className="hidden md:flex justify-center mb-4 print:hidden">
-            <button
-              onClick={downloadLatexResume}
-              title="Download LaTeX source (.tex)"
-              aria-label="Download resume as LaTeX source file"
-              className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded border border-resume-border text-resume-muted hover:text-resume-fg hover:border-resume-fg transition-colors"
-            >
-              <span aria-hidden="true">⬇</span> Download .tex
-            </button>
-          </div>
+          {import.meta.env.DEV && (
+            <div className="hidden md:flex justify-center mb-4 print:hidden">
+              <button
+                onClick={downloadLatexResume}
+                title="Download LaTeX source (.tex)"
+                aria-label="Download resume as LaTeX source file"
+                className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded border border-resume-border text-resume-muted hover:text-resume-fg hover:border-resume-fg transition-colors"
+              >
+                <span aria-hidden="true">⬇</span> Download .tex
+              </button>
+            </div>
+          )}
           <div className="flex flex-wrap justify-center gap-4 text-sm text-resume-muted print:text-[9pt]">
             <span>
               <span aria-hidden="true">📧 </span>

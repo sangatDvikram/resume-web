@@ -39,6 +39,38 @@ export const yearsOfExperience = (
   )} ${(difference.months as number) > 0 ? months : ""} `;
 };
 
+/**
+ * React.ReactNode variant of yearsOfExperience.
+ * Wraps the numeric year and month values in a bold, primary-coloured <strong>
+ * so they stand out visually when rendered inside JSX.
+ *
+ * Usage:
+ *   <p>With {yearsOfExperienceNode()} of industry experience…</p>
+ */
+export const yearsOfExperienceNode = (
+  startDate = CAREER_START_DATE,
+  endDate   = new Date()
+): React.ReactNode => {
+  const difference = intervalToDuration({ start: startDate, end: endDate });
+  const years  = difference.years  as number;
+  const months = difference.months as number;
+
+  return (
+    <>
+      <strong className="font-bold text-primary">{years}</strong>
+      {' '}{formatNumberSuffix(years, 'year')}
+      {months > 0 && (
+        <>
+          {' '}
+          <strong className="font-bold text-primary">{months}</strong>
+          {' '}{formatNumberSuffix(months, 'month')}
+        </>
+      )}
+      {' '}
+    </>
+  );
+};
+
 export const calculateDuration = (data: { duration: [Date, Date]; isCurrent?: boolean }): string => {
   const { duration, isCurrent = false } = data;
   const lastDay = lastDayOfMonth(duration[1]);

@@ -2,7 +2,7 @@ import { RESUME } from "@/constants";
 
 const FreelanceProjects = () => {
   return (
-    <section id="freelance" className="py-24 relative">
+    <section id="freelance" className="py-8 relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--teal-glow)_/_0.04)_0%,transparent_50%)]" />
 
       <div className="section-container relative">

@@ -2,7 +2,7 @@ import { RESUME, calculateDuration } from "@/constants";
 
 const Experience = () => {
   return (
-    <section id="experience" className="py-24 relative">
+    <section id="experience" className="py-8 relative">
       <div className="section-container">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-sm font-mono text-primary mb-4 tracking-wider uppercase">Career</h2>

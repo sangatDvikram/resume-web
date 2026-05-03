@@ -26,9 +26,9 @@ const NavSkeleton = () => <div className="h-16 w-full" aria-hidden />;
 /** Full-viewport placeholder for the hero section. */
 const HeroSkeleton = () => <div className="min-h-screen w-full" aria-hidden />;
 
-/** Generic below-the-fold section spinner: py-24 matches every section's padding. */
+/** Generic below-the-fold section spinner: py-8 matches every section's padding. */
 const SectionLoader = () => (
-  <div className="py-24 flex items-center justify-center" aria-label="Loading section">
+  <div className="py-8 flex items-center justify-center" aria-label="Loading section">
     <div className="w-7 h-7 rounded-full border-2 border-primary border-t-transparent animate-spin" />
   </div>
 );
@@ -36,7 +36,7 @@ const SectionLoader = () => (
 // ---------------------------------------------------------------------------
 
 const Index = () => (
-  <main className="min-h-screen bg-background">
+  <main className="min-h-screen bg-background text-foreground">
     {/* Inject page title + social meta tags — no visual output, no CLS risk */}
     <SEO />
     {/* Navigation renders above the fold — use a height-matched blank so the

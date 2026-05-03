@@ -29,15 +29,15 @@ const Resume: React.FC = () => {
                 onClick={downloadLatexResume}
                 title="Download LaTeX source (.tex)"
                 aria-label="Download resume as LaTeX source file"
-                className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded border border-input bg-backgroundhover:bg-primary/90 transition-colors"
               >
-                <span aria-hidden="true">⬇</span> Download .tex
+                <span className="material-icons text-sm" aria-hidden="true">download</span> Download .tex
               </button>
             </div>
           )}
           <div className="flex flex-wrap justify-center gap-4 text-sm text-resume-muted print:text-[9pt]">
             <span>
-              <span aria-hidden="true">📧 </span>
+              <span className="material-icons text-sm align-middle" aria-hidden="true">email</span>{' '}
               <a
                 href={`mailto:${RESUME.email}`}
                 itemProp="email"
@@ -47,15 +47,15 @@ const Resume: React.FC = () => {
               </a>
             </span>
             <span>
-              <span aria-hidden="true">📱 </span>
+              <span className="material-icons text-sm align-middle" aria-hidden="true">smartphone</span>{' '}
               <a href={`tel:${RESUME.mobile}`} itemProp="telephone" className="text-link hover:text-link-hover hover:underline transition-colors">{RESUME.mobile}</a>
             </span>
             <span>
-              <span aria-hidden="true">📍 </span>
+              <span className="material-icons text-sm align-middle" aria-hidden="true">location_on</span>{' '}
               <span itemProp="address">{RESUME.address}</span>
             </span>
             <span>
-              <span aria-hidden="true">🔗 </span>
+              <span className="material-icons text-sm align-middle" aria-hidden="true">link</span>{' '}
               <a
                 href={RESUME.linkedIn}
                 target="_blank"
@@ -67,7 +67,7 @@ const Resume: React.FC = () => {
               </a>
             </span>
             <span>
-              <span aria-hidden="true">🐙 </span>
+              <span className="material-icons text-sm align-middle" aria-hidden="true">code</span>{' '}
               <a
                 href={RESUME.github}
                 target="_blank"
@@ -136,7 +136,7 @@ const Resume: React.FC = () => {
                     rel="noopener noreferrer"
                     className="text-xs text-link hover:text-link-hover hover:underline transition-colors print:text-[8pt]"
                   >
-                    {patent.link} ↗
+                    {patent.link} <span className="material-icons text-xs align-middle" aria-hidden="true">open_in_new</span>
                   </a>
                 </div>
               ))}
@@ -207,7 +207,7 @@ const Resume: React.FC = () => {
                     rel="noopener noreferrer"
                     className="text-xs text-link hover:text-link-hover hover:underline transition-colors print:text-[8pt]"
                   >
-                    {project.link} ↗
+                    {project.link} <span className="material-icons text-xs align-middle" aria-hidden="true">open_in_new</span>
                   </a>
                   <ul className="list-disc list-inside text-sm text-resume-body mt-2 print:text-[9pt]">
                     {project.tasks.map((task, i) => (

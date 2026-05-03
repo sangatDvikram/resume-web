@@ -2,7 +2,7 @@ import { RESUME } from "@/constants";
 
 const Overview = () => {
   return (
-    <section id="overview" className="py-24 relative">
+    <section id="overview" className="py-8 relative">
       <div className="section-container">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-sm font-mono text-primary mb-4 tracking-wider uppercase">About Me</h2>

@@ -31,7 +31,7 @@ const Hobbies = () => {
 
 
   return (
-    <section id="hobbies" className="py-24 relative overflow-hidden">
+    <section id="hobbies" className="py-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--teal-glow)_/_0.05)_0%,transparent_60%)]" />
 
       <div className="section-container relative">
@@ -217,7 +217,7 @@ const Hobbies = () => {
               onClick={handlePrevImage}
               className="absolute left-4 z-10 p-3 rounded-full bg-background/50 backdrop-blur-sm hover:bg-primary/20 transition-colors"
             >
-              <span className="text-xl text-white">←</span>
+              <span className="text-xl text-foreground">←</span>
             </button>
 
             <div className="w-full h-full p-8 flex flex-col items-center justify-center">
@@ -227,7 +227,7 @@ const Hobbies = () => {
                 className="max-w-full max-h-[70vh] object-contain rounded-lg"
               />
               <div className="mt-4 text-center">
-                <h4 className="text-xl font-semibold text-white">{photos[selectedImage].title}</h4>
+                <h4 className="text-xl font-semibold text-foreground">{photos[selectedImage].title}</h4>
                 <p className="text-muted-foreground">{photos[selectedImage].location}</p>
               </div>
             </div>
@@ -236,14 +236,14 @@ const Hobbies = () => {
               onClick={handleNextImage}
               className="absolute right-4 z-10 p-3 rounded-full bg-background/50 backdrop-blur-sm hover:bg-primary/20 transition-colors"
             >
-              <span className="text-xl text-white">→</span>
+              <span className="text-xl text-foreground">→</span>
             </button>
 
             <button
               onClick={() => setSelectedImage(null)}
               className="absolute top-4 right-4 z-10 p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-primary/20 transition-colors"
             >
-              <span className="text-xl text-white">✕</span>
+              <span className="text-xl text-foreground">✕</span>
             </button>
 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">

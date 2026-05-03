@@ -1,26 +1,28 @@
+@import 'material-icons/iconfont/material-icons.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 220 45% 8%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    
+    --card: 220 20% 97%;
+    --card-foreground: 220 45% 10%;
 
-    --card: 220 45% 10%;
-    --card-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 45% 10%;
 
-    --popover: 220 45% 10%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 180 65% 55%;
+    --primary: 220 75% 45%;
     --primary-foreground: 220 45% 8%;
 
-    --secondary: 220 35% 15%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 20% 93%;
+    --secondary-foreground: 220 35% 15%;
 
-    --muted: 220 35% 20%;
-    --muted-foreground: 210 20% 60%;
+    --muted: 220 15% 95%;
+    --muted-foreground: 215 25% 40%;
 
     --accent: 200 80% 50%;
     --accent-foreground: 220 45% 8%;
@@ -28,8 +30,8 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 35% 18%;
-    --input: 220 35% 18%;
+    --border: 220 15% 85%;
+    --input: 220 15% 85%;
     --ring: 180 65% 55%;
 
     --radius: 0.75rem;
@@ -37,13 +39,13 @@
     /* Custom colors - Teal to Blue gradient inspired */
     --glow: 180 65% 55%;
     --glow-muted: 195 60% 45%;
-    --surface: 220 40% 12%;
-    --surface-elevated: 220 38% 14%;
+    --surface: 220 20% 96%;
+    --surface-elevated: 0 0% 100%;
 
     /* Gradients matching the icon */
     --gradient-primary: linear-gradient(135deg, hsl(180 70% 50%) 0%, hsl(220 75% 45%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(220 40% 12%) 0%, hsl(220 45% 10%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(220 45% 10%) 0%, hsl(220 45% 8%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(220 20% 97%) 0%, hsl(220 20% 95%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(220 15% 97%) 0%, hsl(220 15% 95%) 100%);
     --gradient-glow: radial-gradient(ellipse at center, hsl(180 65% 55% / 0.15) 0%, transparent 70%);
 
     /* ── Accent teal ──────────────────────────────────────────────────────────
@@ -82,8 +84,29 @@
   }
 
   .dark {
-    --background: 222 47% 6%;
+    --background: 0 0% 0%;
     --foreground: 210 40% 98%;
+
+    --card: 220 45% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 45% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --secondary: 220 35% 15%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 220 35% 20%;
+    --muted-foreground: 210 20% 60%;
+
+    --border: 220 35% 18%;
+    --input: 220 35% 18%;
+
+    --surface: 220 40% 12%;
+    --surface-elevated: 220 38% 14%;
+
+    --gradient-card: linear-gradient(145deg, hsl(220 40% 12%) 0%, hsl(220 45% 10%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(220 45% 10%) 0%, hsl(220 45% 8%) 100%);
   }
 }
 
@@ -98,7 +121,11 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Lato', system-ui, sans-serif;
+  }
+
+  a {
+    color: hsl(var(--link));
   }
 
   ::selection {
@@ -108,7 +135,7 @@
 
 @layer components {
   .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Roboto', monospace;
   }
 
   .glass {

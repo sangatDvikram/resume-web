@@ -2,7 +2,7 @@ import { RESUME } from "@/constants";
 
 const Patents = () => {
   return (
-    <section id="patents" className="py-24 relative">
+    <section id="patents" className="py-8 relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--teal-glow)_/_0.03)_0%,transparent_50%)]" />
 
       <div className="section-container relative">

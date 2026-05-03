@@ -12,7 +12,7 @@ const Skills = () => {
     { title: "Tools", icon: "🔧", image: skillsToolsImg, skills: RESUME.tools },
   ];
   return (
-    <section id="skills" className="py-24 relative">
+    <section id="skills" className="py-8 relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,hsl(var(--teal-glow)_/_0.05)_0%,transparent_50%)]" />
 
       <div className="section-container relative">

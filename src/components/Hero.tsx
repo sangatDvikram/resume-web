@@ -38,19 +38,19 @@ const Hero = () => {
           </h1>
 
           {/* Title */}
-          <p className="text-xl sm:text-2xl text-muted-foreground mb-6 font-light">
+          <p className="text-xl sm:text-2xl text-muted-foreground mb-6 font-bold">
             {heroTitle}
           </p>
 
           {/* Experience badges */}
           <div className="flex flex-wrap justify-center gap-3 mb-10">
-            <span className="px-4 py-2 rounded-lg bg-secondary/50 border border-border/50 text-sm font-mono">
+            <span className="px-4 py-2 rounded-lg bg-secondary/50 border border-border/50 text-sm font-mono font-bold">
               {industryYears}+ Years Industry
             </span>
-            <span className="px-4 py-2 rounded-lg bg-secondary/50 border border-border/50 text-sm font-mono">
+            <span className="px-4 py-2 rounded-lg bg-secondary/50 border border-border/50 text-sm font-mono font-bold">
               {freelanceYears}+ Years Freelancing
             </span>
-            <span className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 text-sm font-mono text-primary">
+            <span className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 text-sm font-mono text-primary font-bold">
               {RESUME.patents.length} Patents
             </span>
           </div>
@@ -58,15 +58,15 @@ const Hero = () => {
           {/* Contact info */}
           <div className="flex flex-wrap justify-center gap-6 mb-10 text-muted-foreground">
             <a href={`mailto:${RESUME.email}`} className="flex items-center gap-2  transition-colors">
-              <span className="text-lg">✉️</span>
+              <span className="material-icons text-lg">email</span>
               <span className="text-sm">{RESUME.email}</span>
             </a>
             <a href={`tel:${RESUME.mobile}`} className="flex items-center gap-2  transition-colors">
-              <span className="text-lg">📞</span>
+              <span className="material-icons text-lg">phone</span>
               <span className="text-sm">{RESUME.mobile}</span>
             </a>
             <span className="flex items-center gap-2">
-              <span className="text-lg">📍</span>
+              <span className="material-icons text-lg">location_on</span>
               <span className="text-sm">{RESUME.address}</span>
             </span>
           </div>
@@ -77,14 +77,14 @@ const Hero = () => {
               onClick={() => navigate("/resume")}
               className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
             >
-              <span>📄</span>
+              <span className="material-icons text-base">description</span>
               Download Resume
             </button>
             <button
               onClick={() => window.location.href = `mailto:${RESUME.email}`}
               className="inline-flex items-center justify-center gap-2 h-11 px-8 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
             >
-              <span>✉️</span>
+              <span className="material-icons text-base">email</span>
               Get in Touch
             </button>
           </div>

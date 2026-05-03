@@ -2,7 +2,7 @@ import { RESUME } from "@/constants";
 
 const Education = () => {
   return (
-    <section id="education" className="py-24 relative">
+    <section id="education" className="py-8 relative">
       <div className="section-container">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Education */}

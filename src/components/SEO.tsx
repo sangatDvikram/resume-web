@@ -1,14 +1,19 @@
 import { Helmet } from "react-helmet-async";
-import { RESUME, URL as SITE_URL, gravatar } from "@/constants";
+import { RESUME, URL as SITE_URL, gravatar, yearsOfExperience, CAREER_START_DATE } from "@/constants";
 
 // ---------------------------------------------------------------------------
 // Derived defaults — computed once at module load so renders are allocation-free.
-// RESUME.description and RESUME.position may carry leading/trailing whitespace
-// from the template-literal definitions in constants/index.ts, so we trim them.
+// yearsOfExperience() is called directly (same mechanism as yearsOfExperienceNode)
+// so the plain-text meta description is always driven by the same utility.
+// Meta tags only accept strings, so the node variant is not used here.
 // ---------------------------------------------------------------------------
-const DEFAULT_TITLE       = `${RESUME.name} | ${RESUME.position.trim()}`;
-const DEFAULT_DESCRIPTION = RESUME.description.trim();
-const OG_IMAGE            = gravatar(500);   // 500 px square for social previews
+const DEFAULT_TITLE = `${RESUME.name} | ${RESUME.position.trim()}`;
+
+const _industryExp   = yearsOfExperience().trim();
+const _freelanceExp  = yearsOfExperience(new Date(2012, 2, 1), CAREER_START_DATE).trim();
+const DEFAULT_DESCRIPTION = `With ${_industryExp} of industry experience and ${_freelanceExp} of freelancing expertise, I bring a strong technical background in frontend development, hybrid mobile applications, and backend services. I specialize in architecting scalable React-based micro-frontend systems, engineering robust backend APIs with Node.js, Python, and Django, and leading cross-functional teams across the full software development lifecycle — from system design and data pipeline development to pixel-perfect UI delivery. A holder of two patents, I have a proven track record of translating complex technical challenges into high-quality, production-grade solutions across fintech, retail, life sciences, and gaming domains.`;
+
+const OG_IMAGE = gravatar(500);   // 500 px square for social previews
 
 interface SEOProps {
   /** Override the page <title> and og:title / twitter:title.

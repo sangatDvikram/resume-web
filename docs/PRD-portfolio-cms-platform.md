@@ -201,7 +201,7 @@ portfolio-cms/
                                ▼
                      ┌──────────────────┐
                      │   PostgreSQL      │
-                     │ (Supabase / RDS)  │
+                     │     (Neon)        │
                      └──────────────────┘
                                │
                      ┌──────────────────┐
@@ -1190,8 +1190,8 @@ The Swagger UI is served at `/v1/docs` in **development and staging** only. In p
 | Environment | Frontend (Next.js)     | API (NestJS)           | Database                      |
 |-------------|------------------------|------------------------|-------------------------------|
 | Development | `localhost:3000` (dev) | `localhost:3001` (dev) | Local PostgreSQL via Docker   |
-| Staging     | Vercel Preview         | Railway (staging svc)  | Supabase (staging project)    |
-| Production  | Vercel Production      | Railway (prod svc)     | Supabase (production project) |
+| Staging     | Vercel Preview         | Railway (staging svc)  | Neon (staging branch)         |
+| Production  | Vercel Production      | Railway (prod svc)     | Neon (production branch)      |
 
 ### 11.2 Environment Variables
 
@@ -1206,7 +1206,12 @@ JWT_PUBLIC_KEY=<RS256-public-key-PEM>
 **NestJS (`apps/api/.env`):**
 
 ```
-DATABASE_URL=postgresql://user:pass@host:5432/portfolio
+# Neon — pooled endpoint for runtime queries (PgBouncer in transaction mode)
+DATABASE_URL=postgresql://user:pass@ep-xyz-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require
+
+# Neon — direct (unpooled) endpoint for TypeORM migration CLI only
+DATABASE_URL_UNPOOLED=postgresql://user:pass@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require
+
 JWT_PRIVATE_KEY=<RS256-private-key-PEM>
 JWT_PUBLIC_KEY=<RS256-public-key-PEM>
 NEXT_REVALIDATE_URL=https://portfolio.vercel.app/api/revalidate
@@ -1215,6 +1220,11 @@ CLOUDINARY_CLOUD_NAME=<your-cloud-name>
 CLOUDINARY_API_KEY=<your-api-key>
 CLOUDINARY_API_SECRET=<your-api-secret>
 ```
+
+> **Neon connection notes:**
+> - `DATABASE_URL` points to the **pooler endpoint** (`-pooler` in the hostname). Use this in `TypeOrmModule.forRootAsync()` for all runtime queries. Neon's PgBouncer runs in **transaction mode**, so TypeORM's `extra.max` should be set to `10` or fewer connections and named/prepared statements must be disabled (`extra: { max: 10, ssl: { rejectUnauthorized: false } }`).
+> - `DATABASE_URL_UNPOOLED` points to the **direct connection**. Use this only in the migration CLI (`data-source.ts`) because PgBouncer transaction mode is incompatible with migration DDL statements that span multiple transactions.
+> - Both variables are **automatically injected** by the Vercel Marketplace Neon integration into all Vercel environments (Preview + Production). For local development, copy them from the Neon Console → Connect dialog.
 
 ### 11.3 CI/CD Pipeline
 
@@ -1240,7 +1250,7 @@ All schema changes are managed via **TypeORM Migrations**:
 
 1. Developer runs `typeorm migration:generate -d src/database/data-source.ts src/migrations/<MigrationName>` locally to auto-generate a migration from entity diff.
 2. Generated migration file is committed to `apps/api/src/migrations/`.
-3. CI/CD pipeline runs `typeorm migration:run -d src/database/data-source.ts` against the target environment before the API service is redeployed.
+3. CI/CD pipeline runs `typeorm migration:run -d src/database/data-source.ts` against the target environment before the API service is redeployed. The migration CLI MUST use `DATABASE_URL_UNPOOLED` (direct connection), not the pooler endpoint, as DDL statements are incompatible with PgBouncer transaction mode.
 4. Migrations are **never run manually** against production — only via the CI/CD pipeline.
 5. `synchronize: false` is enforced in all non-development environments to prevent TypeORM from silently auto-altering the production schema.
 

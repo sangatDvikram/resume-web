@@ -1,4 +1,4 @@
-# Logs
+# ─── Logs ────────────────────────────────────────────────────────────────────
 logs
 *.log
 npm-debug.log*
@@ -7,12 +7,40 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# ─── Dependencies ─────────────────────────────────────────────────────────────
 node_modules
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ─── Build outputs ────────────────────────────────────────────────────────────
 dist
 dist-ssr
-*.local
+apps/web/.next
+apps/web/out
+apps/api/dist
+packages/*/dist
 
-# Editor directories and files
+# ─── Environment files (NEVER commit real secrets) ────────────────────────────
+.env
+.env.local
+.env.*.local
+# Do commit .env.example files (they contain only placeholders)
+!.env.example
+
+# ─── Next.js ──────────────────────────────────────────────────────────────────
+apps/web/.next/
+apps/web/out/
+
+# ─── TypeScript ───────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── Coverage ─────────────────────────────────────────────────────────────────
+coverage
+apps/api/coverage
+
+# ─── Editor directories and files ─────────────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,3 +50,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini

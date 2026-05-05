@@ -129,6 +129,7 @@ export class AdminJsModule {
                   companyName: 'Portfolio CMS',
                   logo: false,
                   withMadeWithLove: false,
+                  favicon: '/apple-icon-57x57.png',
                 },
                 resources: [
                   // ── Auth ─────────────────────────────────────────────────

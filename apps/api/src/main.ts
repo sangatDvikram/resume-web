@@ -1,4 +1,6 @@
+import path from 'path';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
@@ -44,7 +46,10 @@ async function bootstrap() {
     router.stack.splice(insertAt, 0, ...admin, ...jsonParser, ...urlencodedParser);
   };
 
-  const app = await NestFactory.create(AppModule.withAdmin(adminModule));
+  const app = await NestFactory.create<NestExpressApplication>(AppModule.withAdmin(adminModule));
+
+  // ── Static assets (favicon, etc.) ────────────────────────────────────────
+  app.useStaticAssets(path.join(process.cwd(), 'public'));
 
   // ── CORS ──────────────────────────────────────────────────────────────────
   app.enableCors({
@@ -93,6 +98,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('v1/docs', app, document, {
     swaggerOptions: { persistAuthorization: true },
+    customfavIcon: '/apple-icon-57x57.png',
   });
 
   // ── Cookie parser (required for session cookies) ──────────────────────────

@@ -50,7 +50,8 @@ apps/api/coverage
 *.njsproj
 *.sln
 *.sw?
-
+*.pem
 # ─── OS ───────────────────────────────────────────────────────────────────────
 Thumbs.db
 Desktop.ini
+package-lock.json

@@ -69,6 +69,7 @@ yarn workspace api test:cov      # Coverage report
 yarn workspace api migration:generate -- src/migrations/MigrationName
 yarn workspace api migration:run
 yarn workspace api migration:revert
+yarn workspace api create-admin    # interactive prompt — creates the first admin user
 ```
 
 ---
@@ -85,6 +86,7 @@ yarn workspace api migration:revert
 | `DATABASE_URL` | ✅ | Neon **pooler** connection string (runtime) |
 | `DATABASE_URL_UNPOOLED` | ✅ | Neon **direct** connection string (migrations only) |
 | `DB_POOL_MAX` | | Max PgBouncer pool size (default `10`) |
+| `DB_SSL` | | `true` enables SSL for the DB connection. Always on in production; set to `true` locally only when using a cloud DB (e.g. Neon). Leave unset for local Docker Postgres. |
 | `DB_SYNC` | | `true` enables TypeORM auto-sync in dev only |
 | `JWT_PRIVATE_KEY` | ✅ | RS256 private key (PEM) |
 | `JWT_PUBLIC_KEY` | ✅ | RS256 public key (PEM) |

@@ -22,8 +22,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Disallow admin panel from public crawlers
-        disallow: "/v1/",
+        // Disallow admin panel and API prefix from public crawlers
+        disallow: ["/admin", "/v1/"],
       },
     ],
     sitemap: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://portfolio.example.com"}/sitemap.xml`,

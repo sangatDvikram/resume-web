@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -54,6 +55,9 @@ async function bootstrap() {
   SwaggerModule.setup('v1/docs', app, document, {
     swaggerOptions: { persistAuthorization: true },
   });
+
+  // ── Cookie parser (required for session cookies) ──────────────────────────
+  app.use(cookieParser());
 
   // ── Start ─────────────────────────────────────────────────────────────────
   const port = process.env.PORT ?? 3001;

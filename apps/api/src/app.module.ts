@@ -55,8 +55,16 @@ import { NoIndexMiddleware } from './common/middleware/no-index.middleware';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => [
         {
+          // Default throttler — applied to general routes
+          name: 'default',
           ttl: Number(config.get('THROTTLE_TTL') ?? 60) * 1000,
           limit: Number(config.get('THROTTLE_LIMIT') ?? 20),
+        },
+        {
+          // Login-specific throttler — 10 requests per 15 minutes per IP
+          name: 'login',
+          ttl: 15 * 60 * 1000,
+          limit: 10,
         },
       ],
       inject: [ConfigService],

@@ -27,6 +27,12 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Build shared packages
+        run: |
+          yarn workspace @portfolio-cms/types build
+          yarn workspace @portfolio-cms/utils build
+          yarn workspace @portfolio-cms/oat-ui build
+
       - name: Lint — API
         working-directory: apps/api
         run: yarn lint
@@ -59,12 +65,21 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Build shared packages
+        run: |
+          yarn workspace @portfolio-cms/types build
+          yarn workspace @portfolio-cms/utils build
+          yarn workspace @portfolio-cms/oat-ui build
+
       - name: Run tests
         working-directory: apps/api
         run: yarn test --passWithNoTests --ci
         env:
           NODE_ENV: test
           DATABASE_URL: 'postgresql://test:test@localhost:5432/test'
+          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+          JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
+          SESSION_SECRET: 'ci-test-session-secret'
 
   # ─── Build check — Next.js ───────────────────────────────────────────────
   build-web:
@@ -82,13 +97,18 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Build shared packages
+        run: |
+          yarn workspace @portfolio-cms/types build
+          yarn workspace @portfolio-cms/utils build
+          yarn workspace @portfolio-cms/oat-ui build
+
       - name: Build
         working-directory: apps/web
         run: yarn build
         env:
           NEXT_PUBLIC_API_URL: 'https://api.portfolio.example.com'
           REVALIDATE_SECRET: 'ci-placeholder-secret'
-          JWT_PUBLIC_KEY: 'ci-placeholder-key'
 
   # ─── Build check — NestJS ────────────────────────────────────────────────
   build-api:
@@ -105,6 +125,12 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Build shared packages
+        run: |
+          yarn workspace @portfolio-cms/types build
+          yarn workspace @portfolio-cms/utils build
+          yarn workspace @portfolio-cms/oat-ui build
 
       - name: Build
         working-directory: apps/api

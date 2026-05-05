@@ -47,6 +47,11 @@ export class AdminJsModule {
             return {
               adminJsOptions: {
                 rootPath: '/admin',
+                branding: {
+                  companyName: 'Portfolio CMS',
+                  logo: false,
+                  withMadeWithLove: false,
+                },
                 resources: [
                   {
                     resource: AdminUser,

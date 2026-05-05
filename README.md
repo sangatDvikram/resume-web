@@ -137,6 +137,11 @@ Admin panel: `http://localhost:3001/admin` (AdminJS — requires admin account)
 | `/v1/auth/login` | `POST` | Public | Login — returns RS256 JWT access token |
 | `/v1/auth/me` | `GET` | 🔒 JWT | Returns the authenticated admin user |
 | `/v1/resume` | `GET` | Public | Full resume payload (profile, skills, experience, etc.) |
+| `/v1/blog` | `GET` | Public | List all published blog posts (summary) |
+| `/v1/blog/:slug` | `GET` | Public | Single blog post with rendered HTML content |
+| `/v1/blog` | `POST` | 🔒 JWT | Create a blog post (slug + HTML auto-generated) |
+| `/v1/blog/:id` | `PATCH` | 🔒 JWT | Update a blog post (re-renders Markdown on save) |
+| `/v1/blog/:id` | `DELETE` | 🔒 JWT | Delete a blog post |
 
 ### Database entities
 
@@ -158,6 +163,32 @@ All entities use `uuid` primary keys and extend TypeORM's `BaseEntity` (Active R
 | `ProjectVideo` | `project_video` | video URL, provider, sort order |
 | `Album` | `album` | title, slug, description, cover photo |
 | `Photo` | `photo` | title, slug, image URL, album (M2O) |
+
+---
+
+## Blog Engine
+
+Blog posts are written in Markdown and stored in the database. On every create/update the API renders the Markdown to sanitized HTML and caches the result in the `htmlContent` column — the web frontend renders it directly without any client-side Markdown processing.
+
+### Markdown pipeline (`apps/api/src/common/markdown.util.ts`)
+
+The NestJS API is compiled as **CommonJS** but the Markdown ecosystem (`unified`, `remark-*`, `rehype-*`) ships as **ESM-only**. The pipeline uses a dynamic import shim to bridge this gap at runtime:
+
+```ts
+// ESM-only packages loaded via dynamic import to bypass TS CJS transform
+const { unified } = await (new Function('m', 'return import(m)'))('unified');
+```
+
+Supported transformations: GFM tables · strikethrough · task lists · fenced code blocks · autolinks · HTML sanitization.
+
+### Slug & reading time
+
+- **Slug**: auto-generated from the title using `generateSlug(title)` — e.g. `my-first-post-V1StGXR8`. Never regenerated after creation.
+- **Reading time**: computed as `⌈wordCount / 200⌉` minutes and stored on the entity.
+
+### ISR revalidation
+
+Every mutation (create / update / delete via API or AdminJS) fires a `POST /api/revalidate` request to the Next.js web app, purging the `blog` cache tag. Published posts go live at `/blog/[slug]` within 60 seconds — no redeployment required.
 
 ---
 
@@ -235,7 +266,14 @@ resume-web/
 │   │       ├── admin/              # AdminJS panel (admin.module.ts)
 │   │       ├── admin-user/         # AdminUser entity, service, module
 │   │       ├── auth/               # JWT RS256 auth (login, guards, strategies)
+│   │       ├── blog/               # Blog feature module
+│   │       │   ├── blog.controller.ts  # Public + JWT-protected endpoints
+│   │       │   ├── blog.service.ts     # CRUD, slug gen, tag upsert, ISR trigger
+│   │       │   ├── blog.module.ts
+│   │       │   └── dto/
+│   │       │       └── blog-post.dto.ts
 │   │       ├── common/
+│   │       │   ├── markdown.util.ts# Markdown→HTML (unified/remark/rehype via dynamic ESM import)
 │   │       │   ├── middleware/     # no-index.middleware.ts
 │   │       │   ├── slug.util.ts    # slugify() + generateSlug() — uses nanoid
 │   │       │   ├── sqids.service.ts# encode/decode UUIDs ↔ short public IDs
@@ -265,9 +303,13 @@ resume-web/
 │   └── web/                        # Next.js 16 frontend
 │       ├── public/                 # Icons, manifests, profile photo
 │       └── src/app/
+│           ├── blog/
+│           │   ├── page.tsx        # /blog — ISR listing with post cards and tag chips
+│           │   └── [slug]/
+│           │       └── page.tsx    # /blog/[slug] — SSG detail page, OG meta, prose HTML
 │           ├── layout.tsx          # Root layout — fonts, ThemeProvider, SEO metadata
 │           ├── page.tsx            # Portfolio landing page
-│           ├── globals.css         # Tailwind v4 @theme + design tokens
+│           ├── globals.css         # Tailwind v4 @theme + design tokens + @tailwindcss/typography
 │           ├── manifest.ts         # Web app manifest (Next.js App Router)
 │           └── robots.ts           # robots.txt (Next.js App Router)
 ├── packages/
@@ -299,8 +341,8 @@ See [`docs/EPICS-AND-STORIES.md`](docs/EPICS-AND-STORIES.md) for the full implem
 | EPIC 1 — Foundation & Infrastructure | ✅ Complete |
 | EPIC 2 — Authentication & Authorization | ✅ Complete (JWT RS256, guards, AdminJS) |
 | EPIC 3 — Admin CMS (AdminJS) | ✅ Complete (all entities registered, BaseEntity pattern) |
-| EPIC 4 — Dynamic Resume System | 🔄 In progress |
-| EPIC 5 — Blog Engine | 🔜 Planned |
+| EPIC 4 — Dynamic Resume System | ✅ Complete (REST API, Server Components, ISR, AdminJS resources) |
+| EPIC 5 — Blog Engine | ✅ Complete (NestJS CRUD, Markdown pipeline, Next.js 16 pages, ISR, AdminJS resources) |
 | EPIC 6 — Projects Showcase | 🔜 Planned |
 | EPIC 7 — Photography Gallery | 🔜 Planned |
 | EPIC 8 — Media & Cloudinary Pipeline | 🔜 Planned |

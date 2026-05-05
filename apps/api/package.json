@@ -58,10 +58,16 @@
     "passport-local": "^1.0.0",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.1.13",
+    "rehype-sanitize": "^6.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
     "rxjs": "^7.8.1",
     "sqids": "^0.3.0",
     "typeorm": "^0.3.28",
-    "typeorm-extension": "^3.9.0"
+    "typeorm-extension": "^3.9.0",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

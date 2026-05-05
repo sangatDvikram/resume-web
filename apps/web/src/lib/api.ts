@@ -87,6 +87,32 @@ export interface ResumeResponseDto {
   patents: PatentDto[];
 }
 
+// ─── Blog types ───────────────────────────────────────────────────────────────
+
+export interface TagDto {
+  id: string;
+  name: string;
+}
+
+export interface BlogPostSummaryDto {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  coverImageUrl: string | null;
+  readingTime: number | null;
+  published: boolean;
+  publishedAt: string | null;
+  tags: TagDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BlogPostDetailDto extends BlogPostSummaryDto {
+  htmlContent: string;
+  rawMarkdown: string;
+}
+
 // ─── Client ───────────────────────────────────────────────────────────────────
 
 /** Base URL for server-side fetches — prefers internal network URL over public. */
@@ -114,4 +140,36 @@ export async function getResume(): Promise<ResumeResponseDto> {
   }
 
   return res.json() as Promise<ResumeResponseDto>;
+}
+
+/**
+ * Fetch all published blog posts (summary only — no htmlContent).
+ * Tagged with "blog" so `revalidateTag('blog')` can purge it on-demand.
+ */
+export async function getBlogPosts(): Promise<BlogPostSummaryDto[]> {
+  const res = await fetch(`${getApiBase()}/v1/blog`, {
+    next: { tags: ['blog'], revalidate: 3600 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch blog posts: ${res.status} ${res.statusText}`);
+  }
+
+  return res.json() as Promise<BlogPostSummaryDto[]>;
+}
+
+/**
+ * Fetch a single published blog post by slug (includes htmlContent).
+ * Tagged with "blog" and "blog-<slug>" for granular revalidation.
+ */
+export async function getBlogPost(slug: string): Promise<BlogPostDetailDto> {
+  const res = await fetch(`${getApiBase()}/v1/blog/${encodeURIComponent(slug)}`, {
+    next: { tags: ['blog', `blog-${slug}`], revalidate: 3600 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch blog post "${slug}": ${res.status} ${res.statusText}`);
+  }
+
+  return res.json() as Promise<BlogPostDetailDto>;
 }

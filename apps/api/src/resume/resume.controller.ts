@@ -18,7 +18,7 @@ import { CreateExperienceDto, UpdateExperienceDto } from './dto/experience.dto';
 import { CreateEducationDto, UpdateEducationDto }   from './dto/education.dto';
 import { CreateSkillDto, UpdateSkillDto }           from './dto/skill.dto';
 
-@Controller('v1/resume')
+@Controller('resume')
 export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
 

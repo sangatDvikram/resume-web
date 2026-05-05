@@ -70,34 +70,39 @@ export class AdminJsModule {
               entity.useDataSource(dataSource);
             }
 
-            // ── ISR helper — fired after any resume resource mutation ──────
-            const revalidateResume = async (): Promise<void> => {
+            /** Shared after-hook factory: revalidates given tags and passes through. */
+            const makeAfterHook = (tags: string[]) => async (response: any) => {
               const revalidateUrl = config.get<string>('NEXT_REVALIDATE_URL');
               const secret = config.get<string>('REVALIDATE_SECRET');
-              if (!revalidateUrl || !secret) return;
+              if (!revalidateUrl || !secret) return response;
               try {
                 await fetch(revalidateUrl, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ tags: ['resume'], secret }),
+                  body: JSON.stringify({ tags, secret }),
                   signal: AbortSignal.timeout(5_000),
                 });
               } catch (e) {
                 console.error('AdminJS ISR revalidation failed', e);
               }
-            };
-
-            /** Shared after-hook: revalidates and passes through the response. */
-            const afterResume = async (response: any) => {
-              void revalidateResume();
               return response;
             };
+
+            const afterResume = makeAfterHook(['resume']);
+            const afterBlog   = makeAfterHook(['blog']);
 
             /** Resume mutation hooks — applied to edit, new, delete */
             const resumeActions = {
               edit:   { after: afterResume },
               new:    { after: afterResume },
               delete: { after: afterResume },
+            };
+
+            /** Blog mutation hooks */
+            const blogActions = {
+              edit:   { after: afterBlog },
+              new:    { after: afterBlog },
+              delete: { after: afterBlog },
             };
 
             return {
@@ -180,8 +185,25 @@ export class AdminJsModule {
                     },
                   },
                   // ── Blog ─────────────────────────────────────────────────
-                  { resource: Tag },
-                  { resource: BlogPost },
+                  {
+                    resource: Tag,
+                    options: {
+                      actions: blogActions,
+                      listProperties: ['name'],
+                      editProperties: ['name'],
+                    },
+                  },
+                  {
+                    resource: BlogPost,
+                    options: {
+                      actions: blogActions,
+                      listProperties: ['title', 'slug', 'published', 'publishedAt', 'readingTime'],
+                      editProperties: [
+                        'title', 'excerpt', 'coverImageUrl',
+                        'rawMarkdown', 'published', 'publishedAt',
+                      ],
+                    },
+                  },
                   // ── Projects ─────────────────────────────────────────────
                   { resource: Project },
                   { resource: ProjectMedia },

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Lato, Roboto } from "next/font/google";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "@teispace/next-themes";
 import "./globals.css";
 
 const lato = Lato({

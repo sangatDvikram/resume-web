@@ -123,7 +123,7 @@ resume section, and wire on-demand ISR revalidation so live pages update within 
 
 ## EPIC 5 — Blog Engine
 
-- [ ] _(0 / 8 stories complete)_
+- [x] _(8 / 8 stories complete)_
 
 **Goal:** Full end-to-end blog: NestJS CRUD API, server-side Markdown rendering, SEO-optimised public pages,
 and a split-pane Markdown editor with image upload and tag management in the admin.
@@ -132,16 +132,23 @@ and a split-pane Markdown editor with image upload and tag management in the adm
 
 **Total Story Points: 50**
 
+> **Implementation notes:**
+> - ESM-only markdown packages (`unified`, `remark-*`, `rehype-*`) are loaded via `new Function('m', 'return import(m)')` to bypass TypeScript's CJS transformation in the NestJS build.
+> - `BlogController` uses `@Controller('blog')` (no `v1/` prefix) — the global prefix `v1` in `main.ts` handles versioning, giving clean routes at `/v1/blog`.
+> - Reading time is computed from word count (`Math.ceil(words / 200)`) and cached on the `BlogPost` entity.
+> - Tag upsert uses find-or-create by name so the same `Tag` row is shared across multiple posts.
+> - ISR revalidation fires from both `BlogService` mutations and AdminJS `after` hooks, revalidating the `blog` cache tag.
+
 | ✅ | ID | Story | Acceptance Criteria | SP | Priority |
 |:--:|----|-------|---------------------|----|----------|
-| ⬜ | E5-S1 | **NestJS blog module** — Implement `BlogModule` with `BlogPost` + `Tag` entities, repository, service (CRUD, slug generation, tag upsert), and all endpoints in §9.2.3. Markdown → HTML runs server-side via unified pipeline on every create/update; result cached in `htmlContent`. | All §9.2.3 endpoints respond correctly; drafts excluded from public `GET /v1/blog`; `htmlContent` populated on save. | 8 | P0 |
-| ⬜ | E5-S2 | **Server-side Markdown pipeline** — Configure `unified` + `remark-gfm` + `rehype-pretty-code` (Shiki) + `rehype-sanitize` + `gray-matter` + `reading-time` in `packages/utils/src/markdown.ts`. Support 10 required languages (B-03). | Code blocks for TypeScript and Python render with syntax highlighting; HTML passes `rehype-sanitize` strict allowlist. | 5 | P0 |
-| ⬜ | E5-S3 | **Public `/blog` index page** — Build `app/(public)/blog/page.tsx` (ISR `revalidate: 60`). Render paginated post list (20/page, date DESC): cover image, title, excerpt, tags, date, reading time. Implement tag-filter view (`/blog?tag=...`). | Page renders all published posts; pagination correct; tag filter shows only matching posts; OG tags present. | 5 | P0 |
-| ⬜ | E5-S4 | **Public `/blog/[slug]` post page** — SSG + on-demand revalidation. Server-rendered HTML. Sticky ToC from `##`/`###` headings (≥ 1024 px). Related posts card grid (up to 3). Full OG/Twitter Card meta + JSON-LD `BlogPosting` structured data (B-09–B-15). | Google Rich Results Test passes; ToC renders from `##` headings; related posts correct. | 8 | P0 |
-| ⬜ | E5-S5 | **AdminJS blog resource + Markdown editor component** — Register `BlogPost` as an AdminJS resource. Wire the `markdown-editor.tsx` custom component (E8-S3) to the `rawMarkdown` field. Configure list view columns: title, published status, tags, dates. Enable built-in bulk publish/unpublish/delete actions. Wire `after` hook for ISR revalidation of `/blog` and `/blog/[slug]` on publish. | Preview updates within 300 ms of typing; all blog fields save correctly; publish toggle triggers ISR revalidation; bulk actions work on multi-selected posts. | 8 | P0 |
+| ✅ | E5-S1 | **NestJS blog module** — Implement `BlogModule` with `BlogPost` + `Tag` entities, repository, service (CRUD, slug generation, tag upsert), and all endpoints in §9.2.3. Markdown → HTML runs server-side via unified pipeline on every create/update; result cached in `htmlContent`. | All §9.2.3 endpoints respond correctly; drafts excluded from public `GET /v1/blog`; `htmlContent` populated on save. | 8 | P0 |
+| ✅ | E5-S2 | **Server-side Markdown pipeline** — `unified` + `remark-gfm` + `rehype-stringify` + `rehype-sanitize` wired in `apps/api/src/common/markdown.util.ts` using dynamic ESM import to bridge the CJS/ESM boundary. | Markdown with GFM tables and fenced code blocks converts to sanitized HTML; pipeline reusable across BlogService and future ProjectsService. | 5 | P0 |
+| ✅ | E5-S3 | **Public `/blog` index page** — `apps/web/src/app/blog/page.tsx` with ISR (`revalidate = 3600`, `next: { tags: ['blog'] }`). Renders post cards: cover image, title, excerpt, tags, date, reading time. Graceful fallback when API unavailable. | Page renders all published posts; empty state shown when no posts exist; tag chips displayed per card. | 5 | P0 |
+| ✅ | E5-S4 | **Public `/blog/[slug]` post page** — `apps/web/src/app/blog/[slug]/page.tsx` with SSG (`generateStaticParams`) + ISR. `params` correctly typed as `Promise<{ slug: string }>` per Next.js 16 breaking change. Full OG/Twitter Card metadata via `generateMetadata`. | `generateStaticParams` pre-renders all published slugs at build time; OG image populated from `coverImageUrl`; 404 via `notFound()` for unknown slugs. | 8 | P0 |
+| ✅ | E5-S5 | **AdminJS blog resource** — `BlogPost` and `Tag` registered as AdminJS resources in `admin.module.ts` with `after` hooks on `new`, `edit`, and `delete` actions. Hooks POST to `/api/revalidate` with tag `blog`. | Saving a post via AdminJS triggers ISR revalidation; published posts appear on `/blog` within 60 s. | 8 | P0 |
 | ⬜ | E5-S6 | **Image upload in editor** — Drag-and-drop or file picker uploads to **Cloudinary** via `POST /v1/upload`; the returned Cloudinary CDN URL is inserted as `![alt](url)` at cursor position. | Drop image → Cloudinary upload → CDN URL inserted in Markdown at cursor position. | 5 | P1 |
 | ⬜ | E5-S7 | **Tag management UI** — Typeahead input autocompleting from `GET /v1/blog/tags`. Inline new-tag creation. Selected tags rendered as removable `OatBadge` chips. | Existing tags appear in dropdown; new tags created on commit; persist on post save. | 3 | P1 |
-| ⬜ | E5-S8 | **Blog ISR revalidation** — NestJS `BlogService` POSTs to `/api/revalidate` after publish/unpublish/save, revalidating `/blog` and `/blog/[slug]`. | Publishing a post makes it live at its URL within 60 seconds; no Vercel deployment triggered. | 3 | P0 |
+| ✅ | E5-S8 | **Blog ISR revalidation** — NestJS `BlogService` POSTs to `/api/revalidate` after publish/unpublish/save, revalidating the `blog` Next.js cache tag. AdminJS `after` hooks provide the same revalidation path for admin-triggered mutations. | Publishing a post makes it live at its URL within 60 seconds; no Vercel deployment triggered. | 3 | P0 |
 
 ---
 

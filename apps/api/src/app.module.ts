@@ -12,6 +12,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminUserModule } from './admin-user/admin-user.module';
 import { AuthModule } from './auth/auth.module';
+import { ResumeModule } from './resume/resume.module';
 import { NoIndexMiddleware } from './common/middleware/no-index.middleware';
 
 @Module({
@@ -73,6 +74,7 @@ import { NoIndexMiddleware } from './common/middleware/no-index.middleware';
     // ── Feature modules ────────────────────────────────────────────────────
     AdminUserModule,
     AuthModule,
+    ResumeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

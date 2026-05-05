@@ -5,6 +5,22 @@ import { DataSource } from 'typeorm';
 import { AdminUserModule } from '../admin-user/admin-user.module';
 import { AdminUserService } from '../admin-user/admin-user.service';
 import { AdminUser } from '../admin-user/admin-user.entity';
+import {
+  ResumeProfile,
+  Skill,
+  ExperienceEntry,
+  EducationEntry,
+  Patent,
+  Certification,
+  Award,
+  Tag,
+  BlogPost,
+  Project,
+  ProjectMedia,
+  ProjectVideo,
+  Album,
+  Photo,
+} from '../entities';
 
 /**
  * AdminJS v7 and its adapters are ESM-only; NestJS compiles to CommonJS.
@@ -42,7 +58,47 @@ export class AdminJsModule {
             // to be explicitly registered on the entity class. NestJS's Data
             // Mapper integration never calls useDataSource(), so we do it here
             // before AdminJS builds its resource list in onModuleInit.
-            AdminUser.useDataSource(dataSource);
+            const entities = [
+              AdminUser,
+              ResumeProfile, Skill, ExperienceEntry, EducationEntry,
+              Patent, Certification, Award,
+              Tag, BlogPost,
+              Project, ProjectMedia, ProjectVideo,
+              Album, Photo,
+            ];
+            for (const entity of entities) {
+              entity.useDataSource(dataSource);
+            }
+
+            // ── ISR helper — fired after any resume resource mutation ──────
+            const revalidateResume = async (): Promise<void> => {
+              const revalidateUrl = config.get<string>('NEXT_REVALIDATE_URL');
+              const secret = config.get<string>('REVALIDATE_SECRET');
+              if (!revalidateUrl || !secret) return;
+              try {
+                await fetch(revalidateUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ tags: ['resume'], secret }),
+                  signal: AbortSignal.timeout(5_000),
+                });
+              } catch (e) {
+                console.error('AdminJS ISR revalidation failed', e);
+              }
+            };
+
+            /** Shared after-hook: revalidates and passes through the response. */
+            const afterResume = async (response: any) => {
+              void revalidateResume();
+              return response;
+            };
+
+            /** Resume mutation hooks — applied to edit, new, delete */
+            const resumeActions = {
+              edit:   { after: afterResume },
+              new:    { after: afterResume },
+              delete: { after: afterResume },
+            };
 
             return {
               adminJsOptions: {
@@ -53,14 +109,86 @@ export class AdminJsModule {
                   withMadeWithLove: false,
                 },
                 resources: [
+                  // ── Auth ─────────────────────────────────────────────────
                   {
                     resource: AdminUser,
                     options: {
-                      properties: {
-                        passwordHash: { isVisible: false },
-                      },
+                      properties: { passwordHash: { isVisible: false } },
                     },
                   },
+                  // ── Resume ───────────────────────────────────────────────
+                  {
+                    resource: ResumeProfile,
+                    options: {
+                      actions: resumeActions,
+                      editProperties: [
+                        'name', 'position', 'description', 'email', 'phone',
+                        'location', 'linkedInUrl', 'githubUrl', 'websiteUrl',
+                        'avatarUrl', 'careerStartDate', 'freelanceStartDate',
+                      ],
+                    },
+                  },
+                  {
+                    resource: Skill,
+                    options: {
+                      actions: resumeActions,
+                      listProperties: ['name', 'category'],
+                      editProperties: ['name', 'category'],
+                    },
+                  },
+                  {
+                    resource: ExperienceEntry,
+                    options: {
+                      actions: resumeActions,
+                      listProperties: ['title', 'company', 'location', 'isCurrent', 'sortOrder'],
+                      editProperties: [
+                        'title', 'company', 'location', 'startDate', 'endDate',
+                        'isCurrent', 'tasks', 'sortOrder',
+                      ],
+                    },
+                  },
+                  {
+                    resource: EducationEntry,
+                    options: {
+                      actions: resumeActions,
+                      listProperties: ['degree', 'university', 'duration', 'sortOrder'],
+                      editProperties: ['degree', 'university', 'duration', 'sortOrder'],
+                    },
+                  },
+                  {
+                    resource: Patent,
+                    options: {
+                      actions: resumeActions,
+                      listProperties: ['link', 'title', 'sortOrder'],
+                      editProperties: ['link', 'url', 'title', 'sortOrder'],
+                    },
+                  },
+                  {
+                    resource: Certification,
+                    options: {
+                      actions: resumeActions,
+                      listProperties: ['title', 'issuer', 'sortOrder'],
+                      editProperties: ['title', 'issuer', 'link', 'sortOrder'],
+                    },
+                  },
+                  {
+                    resource: Award,
+                    options: {
+                      actions: resumeActions,
+                      listProperties: ['title', 'issuer', 'sortOrder'],
+                      editProperties: ['title', 'issuer', 'sortOrder'],
+                    },
+                  },
+                  // ── Blog ─────────────────────────────────────────────────
+                  { resource: Tag },
+                  { resource: BlogPost },
+                  // ── Projects ─────────────────────────────────────────────
+                  { resource: Project },
+                  { resource: ProjectMedia },
+                  { resource: ProjectVideo },
+                  // ── Gallery ──────────────────────────────────────────────
+                  { resource: Album },
+                  { resource: Photo },
                 ],
               },
               auth: {

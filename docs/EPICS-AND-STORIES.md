@@ -79,7 +79,7 @@ rate limiting, and AdminJS session-based protection for all `/admin/**` routes.
 
 ## EPIC 3 — Data Migration: `constants/index.tsx` → PostgreSQL
 
-- [ ] _(0 / 5 stories complete)_
+- [x] _(5 / 5 stories complete)_
 
 **Goal:** Define all TypeORM entity classes, generate the initial DB migration, run an idempotent seed
 that imports every value from `src/constants/index.tsx`, validate parity, and move shared utilities to
@@ -91,17 +91,17 @@ that imports every value from `src/constants/index.tsx`, validate parity, and mo
 
 | ✅ | ID | Story | Acceptance Criteria | SP | Priority |
 |:--:|----|-------|---------------------|----|----------|
-| ⬜ | E3-S1 | **Define all TypeORM entity classes** — Implement all 15 entities in `apps/api/src/entities/`: `AdminUser`, `ResumeProfile`, `Skill`, `ExperienceEntry`, `EducationEntry`, `Patent`, `Certification`, `Award`, `Tag`, `BlogPost`, `Project`, `ProjectMedia`, `ProjectVideo`, `Album`, `Photo`. Include `@Index` decorators per §9.3. | All entities importable; `typeorm migration:generate` produces a non-empty diff with all 15 tables. | 5 | P0 |
-| ⬜ | E3-S2 | **Generate and apply initial TypeORM migration** — Run `typeorm migration:generate` from entity diff, review the generated SQL, commit to `apps/api/src/migrations/`, and apply via `typeorm migration:run`. | `psql` confirms all 15 tables + join tables exist; migration file committed to Git. | 2 | P0 |
-| ⬜ | E3-S3 | **Write idempotent seed script** — Using `typeorm-extension`, create `apps/api/src/seeds/seed.ts` that reads every exported value from `src/constants/index.tsx` and upserts rows via TypeORM repositories: `ResumeProfile`, all `Skill` categories, `ExperienceEntry` + `ExperienceSkill`, `EducationEntry`, `Patent`, `Certification`, `Award`, `Project`, and `Photo` (into default "General" album). Seed uploads the 6 existing Unsplash photo URLs to Cloudinary via the SDK and stores the returned `publicId`, `url`, `lqipUrl`, `width`, and `height` fields in the `Photo` entity. | Running `yarn seed` twice produces identical DB state. All 6 experience entries, 4 skill categories, 3 projects, 6 photos present in Cloudinary and DB. | 8 | P0 |
-| ⬜ | E3-S4 | **Side-by-side validation** — Render static React app and new Next.js API-driven resume page in parallel. Compare all fields. Log and resolve mismatches. | Written checklist confirms 100% field parity. No Lighthouse regression on LCP, CLS, or SEO scores. | 3 | P0 |
-| ⬜ | E3-S5 | **Extract shared utilities to `packages/utils`** — Move `calculateDuration`, `yearsOfExperience`, `formatNumberSuffix`, and `generateLatexResume` into `packages/utils/src/date.ts` and `packages/utils/src/latex.ts`. Update all import sites. | All moved functions pass existing unit tests; no broken imports across monorepo. | 3 | P1 |
+| ✅ | E3-S1 | **Define all TypeORM entity classes** — Implement all 15 entities in `apps/api/src/entities/`: `AdminUser`, `ResumeProfile`, `Skill`, `ExperienceEntry`, `EducationEntry`, `Patent`, `Certification`, `Award`, `Tag`, `BlogPost`, `Project`, `ProjectMedia`, `ProjectVideo`, `Album`, `Photo`. Include `@Index` decorators per §9.3. | All entities importable; `typeorm migration:generate` produces a non-empty diff with all 15 tables. | 5 | P0 |
+| ✅ | E3-S2 | **Generate and apply initial TypeORM migration** — Run `typeorm migration:generate` from entity diff, review the generated SQL, commit to `apps/api/src/migrations/`, and apply via `typeorm migration:run`. | `psql` confirms all 15 tables + join tables exist; migration file committed to Git. | 2 | P0 |
+| ✅ | E3-S3 | **Write idempotent seed script** — Using `typeorm-extension`, create `apps/api/src/seeds/seed.ts` that reads every exported value from `src/constants/index.tsx` and upserts rows via TypeORM repositories: `ResumeProfile`, all `Skill` categories, `ExperienceEntry` + `ExperienceSkill`, `EducationEntry`, `Patent`, `Certification`, `Award`, `Project`, and `Photo` (into default "General" album). Seed uploads the 6 existing Unsplash photo URLs to Cloudinary via the SDK and stores the returned `publicId`, `url`, `lqipUrl`, `width`, and `height` fields in the `Photo` entity. | Running `yarn seed` twice produces identical DB state. All 6 experience entries, 4 skill categories, 3 projects, 6 photos present in Cloudinary and DB. | 8 | P0 |
+| ✅ | E3-S4 | **Side-by-side validation** — Render static React app and new Next.js API-driven resume page in parallel. Compare all fields. Log and resolve mismatches. | Written checklist confirms 100% field parity. No Lighthouse regression on LCP, CLS, or SEO scores. | 3 | P0 |
+| ✅ | E3-S5 | **Extract shared utilities to `packages/utils`** — Move `calculateDuration`, `yearsOfExperience`, `formatNumberSuffix`, and `generateLatexResume` into `packages/utils/src/date.ts` and `packages/utils/src/latex.ts`. Update all import sites. | All moved functions pass existing unit tests; no broken imports across monorepo. | 3 | P1 |
 
 ---
 
 ## EPIC 4 — Dynamic Resume System
 
-- [ ] _(0 / 6 stories complete)_
+- [x] _(6 / 6 stories complete)_
 
 **Goal:** Replace all static constant imports with a live NestJS REST API. Build admin CRUD forms for every
 resume section, and wire on-demand ISR revalidation so live pages update within 60 seconds of any admin save.
@@ -112,12 +112,12 @@ resume section, and wire on-demand ISR revalidation so live pages update within 
 
 | ✅ | ID | Story | Acceptance Criteria | SP | Priority |
 |:--:|----|-------|---------------------|----|----------|
-| ⬜ | E4-S1 | **NestJS resume module** — Implement `ResumeModule` with service + repository methods for `ResumeProfile`, `ExperienceEntry`, `EducationEntry`, `Skill`, `Patent`, `Certification`, `Award`. Service computes `yearsOfExperienceString` from `careerStartDate`. | Unit tests cover service methods; `GET /v1/resume` returns full `ResumeDTO` with all sub-collections. | 8 | P0 |
-| ⬜ | E4-S2 | **Resume REST endpoints** — Wire all endpoints in §9.2.2: `GET /v1/resume` (public), `PATCH /v1/resume/profile` (auth), full CRUD for experience / education / skills with `class-validator` DTOs. Apply `JwtAuthGuard` to all mutation routes. | All endpoints return correct status codes; invalid payloads return 422 RFC 7807 bodies; unauthenticated mutations return 401. | 5 | P0 |
-| ⬜ | E4-S3 | **Migrate Next.js pages to Server Components** — Replace all `RESUME.*`/`PROFILE.*` imports across `app/(public)/page.tsx` and `app/(public)/resume/page.tsx` with server-side fetches to `GET /v1/resume`. Keep static file as read-only fallback. | Pages render identical content to pre-migration static version; Lighthouse scores unchanged. | 5 | P0 |
-| ⬜ | E4-S4 | **AdminJS resume resource configuration** — Configure `ResumeProfile`, `ExperienceEntry`, `EducationEntry`, `Certification`, `Award`, and `Patent` AdminJS resources with appropriate `editProperties` (profile: character-count hint via custom component; experience: `isCurrent` checkbox, tech-stack multi-select, bullet tasks). Wire `after` hook for ISR revalidation of `/` and `/resume` on save. | Admin can create, edit, delete, and reorder all resume sections via AdminJS; changes persist and appear in `GET /v1/resume` immediately; ISR revalidation fires within 5 s. | 5 | P0 |
-| ⬜ | E4-S5 | **On-demand ISR revalidation for resume** — Implement `/api/revalidate` route handler in Next.js. NestJS resume service POSTs to it after every mutation, revalidating `/` and `/resume`. | Editing an experience entry causes `/resume` to reflect the change within 60 seconds; no new Vercel deployment. | 3 | P0 |
-| ⬜ | E4-S6 | **Remove static constants (Phase 3)** — Delete `src/constants/index.tsx`. Remove all remaining imports of `RESUME`, `PROFILE`, `CAREER_START_DATE`, `LINKEDIN_URL`, `gravatar()`. Update `generateLatex.ts` to fetch from API snapshot. | `grep -r "constants/index"` returns no matches; `yarn build` succeeds; all pages render correctly. | 5 | P1 |
+| ✅ | E4-S1 | **NestJS resume module** — Implement `ResumeModule` with service + repository methods for `ResumeProfile`, `ExperienceEntry`, `EducationEntry`, `Skill`, `Patent`, `Certification`, `Award`. Service computes `yearsOfExperienceString` from `careerStartDate`. | Unit tests cover service methods; `GET /v1/resume` returns full `ResumeDTO` with all sub-collections. | 8 | P0 |
+| ✅ | E4-S2 | **Resume REST endpoints** — Wire all endpoints in §9.2.2: `GET /v1/resume` (public), `PATCH /v1/resume/profile` (auth), full CRUD for experience / education / skills with `class-validator` DTOs. Apply `JwtAuthGuard` to all mutation routes. | All endpoints return correct status codes; invalid payloads return 422 RFC 7807 bodies; unauthenticated mutations return 401. | 5 | P0 |
+| ✅ | E4-S3 | **Migrate Next.js pages to Server Components** — Replace all `RESUME.*`/`PROFILE.*` imports across `app/(public)/page.tsx` and `app/(public)/resume/page.tsx` with server-side fetches to `GET /v1/resume`. Keep static file as read-only fallback. | Pages render identical content to pre-migration static version; Lighthouse scores unchanged. | 5 | P0 |
+| ✅ | E4-S4 | **AdminJS resume resource configuration** — Configure `ResumeProfile`, `ExperienceEntry`, `EducationEntry`, `Certification`, `Award`, and `Patent` AdminJS resources with appropriate `editProperties` (profile: character-count hint via custom component; experience: `isCurrent` checkbox, tech-stack multi-select, bullet tasks). Wire `after` hook for ISR revalidation of `/` and `/resume` on save. | Admin can create, edit, delete, and reorder all resume sections via AdminJS; changes persist and appear in `GET /v1/resume` immediately; ISR revalidation fires within 5 s. | 5 | P0 |
+| ✅ | E4-S5 | **On-demand ISR revalidation for resume** — Implement `/api/revalidate` route handler in Next.js. NestJS resume service POSTs to it after every mutation, revalidating `/` and `/resume`. | Editing an experience entry causes `/resume` to reflect the change within 60 seconds; no new Vercel deployment. | 3 | P0 |
+| ✅ | E4-S6 | **Remove static constants (Phase 3)** — Delete `src/constants/index.tsx`. Remove all remaining imports of `RESUME`, `PROFILE`, `CAREER_START_DATE`, `LINKEDIN_URL`, `gravatar()`. Update `generateLatex.ts` to fetch from API snapshot. | `grep -r "constants/index"` returns no matches; `yarn build` succeeds; all pages render correctly. | 5 | P1 |
 
 ---
 

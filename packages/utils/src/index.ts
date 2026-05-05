@@ -7,6 +7,9 @@ export {
 } from './date';
 export type { Duration } from './date';
 
+// ─── Slug helpers ─────────────────────────────────────────────────────────────
+export { slugify } from './slug';
+
 // ─── LaTeX resume generator ───────────────────────────────────────────────────
 export { generateLatexResume } from './latex';
 export type {

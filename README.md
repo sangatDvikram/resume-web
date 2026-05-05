@@ -5,7 +5,8 @@ A full-stack Portfolio & CMS platform built as a Yarn Workspaces + Lerna monorep
 | App / Package | Tech | Dev URL |
 |---|---|---|
 | `apps/web` | Next.js 16 · React 19 · Tailwind v4 | `http://localhost:3000` |
-| `apps/api` | NestJS 10 · TypeORM · Swagger | `http://localhost:3001/v1` |
+| `apps/api` | NestJS 10 · TypeORM · Swagger · AdminJS | `http://localhost:3001/v1` |
+| `packages/utils` | Shared utilities (slugify, date helpers, LaTeX) | — |
 | `packages/types` | Shared TypeScript interfaces | — |
 | `packages/eslint-config` | Shared ESLint configs | — |
 | `packages/oat-ui` | Shared component library (stub) | — |
@@ -128,12 +129,74 @@ Paste the full PEM content (including header/footer lines) into the respective e
 
 Base path: `/v1`
 Interactive docs: `http://localhost:3001/v1/docs` (Swagger / OpenAPI 3.1)
+Admin panel: `http://localhost:3001/admin` (AdminJS — requires admin account)
 
-| Endpoint | Method | Description |
+| Endpoint | Method | Auth | Description |
+|---|---|---|---|
+| `/v1/health` | `GET` | Public | Health check — returns status, version, timestamp |
+| `/v1/auth/login` | `POST` | Public | Login — returns RS256 JWT access token |
+| `/v1/auth/me` | `GET` | 🔒 JWT | Returns the authenticated admin user |
+| `/v1/resume` | `GET` | Public | Full resume payload (profile, skills, experience, etc.) |
+
+### Database entities
+
+All entities use `uuid` primary keys and extend TypeORM's `BaseEntity` (Active Record pattern).
+
+| Entity | Table | Notable fields |
 |---|---|---|
-| `/v1/health` | `GET` | Health check — returns status, version, timestamp |
+| `ResumeProfile` | `resume_profile` | headline, summary, contact info |
+| `Skill` | `skill` | name, category, proficiency level |
+| `ExperienceEntry` | `experience_entry` | company, role, start/end date, highlights |
+| `EducationEntry` | `education_entry` | institution, degree, field, dates |
+| `Patent` | `patent` | title, patent number, status |
+| `Certification` | `certification` | name, issuer, issue/expiry dates |
+| `Award` | `award` | title, issuer, year |
+| `BlogPost` | `blog_post` | title, slug, content, tags (M2M) |
+| `Tag` | `tag` | name (shared across blog posts) |
+| `Project` | `project` | title, slug, description, tags, media, videos |
+| `ProjectMedia` | `project_media` | image URL, alt, sort order |
+| `ProjectVideo` | `project_video` | video URL, provider, sort order |
+| `Album` | `album` | title, slug, description, cover photo |
+| `Photo` | `photo` | title, slug, image URL, album (M2O) |
 
-Additional endpoints will be added in subsequent EPICs (auth, resume, blog, projects, gallery, upload).
+---
+
+## Slug & Public ID generation
+
+### Slugs — `nanoid` + `slugify`
+
+Every content entity that needs a URL-friendly identifier (blog posts, projects, albums, photos) uses the `generateSlug` helper.
+
+```ts
+import { generateSlug, slugify } from 'src/common/slug.util';
+
+// Derive a collision-resistant slug from a title
+const slug = generateSlug('My First Blog Post');
+// → 'my-first-blog-post-V1StGXR8'
+
+// Or just normalise text (no random suffix)
+const plain = slugify('Ångström Units');
+// → 'angstrom-units'
+```
+
+`slugify` is also exported from `@portfolio-cms/utils` for use on the Next.js frontend.
+
+### Public IDs — `sqids`
+
+Internal UUIDs are kept as primary keys in the database. For public-facing URLs the `SqidsService` encodes a UUID into a short, opaque string and decodes it back, so internal database IDs are never exposed.
+
+```ts
+// Injected by NestJS DI (SqidsModule is global)
+constructor(private readonly sqids: SqidsService) {}
+
+const publicId = this.sqids.encode('550e8400-e29b-41d4-a716-446655440000');
+// → 'kHfge3' (example — 6 chars minimum)
+
+const uuid = this.sqids.decode('kHfge3');
+// → '550e8400-e29b-41d4-a716-446655440000'
+```
+
+`SqidsModule` is registered as `@Global()` in `AppModule`, so `SqidsService` can be constructor-injected into any feature module without additional imports.
 
 ---
 
@@ -167,31 +230,62 @@ These credentials match the defaults in `apps/api/.env.example`.
 ```
 resume-web/
 ├── apps/
-│   ├── api/                  # NestJS 10 backend
-│   │   ├── src/
-│   │   │   ├── database/     # TypeORM DataSource (Neon dual-URL)
-│   │   │   ├── app.controller.ts
-│   │   │   ├── app.service.ts
-│   │   │   └── main.ts       # CORS, global prefix (v1), Swagger, ValidationPipe
-│   │   └── test/             # e2e tests
-│   └── web/                  # Next.js 16 frontend
-│       ├── public/           # Icons, manifests, profile photo
+│   ├── api/                        # NestJS 10 backend
+│   │   └── src/
+│   │       ├── admin/              # AdminJS panel (admin.module.ts)
+│   │       ├── admin-user/         # AdminUser entity, service, module
+│   │       ├── auth/               # JWT RS256 auth (login, guards, strategies)
+│   │       ├── common/
+│   │       │   ├── middleware/     # no-index.middleware.ts
+│   │       │   ├── slug.util.ts    # slugify() + generateSlug() — uses nanoid
+│   │       │   ├── sqids.service.ts# encode/decode UUIDs ↔ short public IDs
+│   │       │   └── sqids.module.ts # @Global() NestJS module
+│   │       ├── database/           # TypeORM DataSource (Neon dual-URL)
+│   │       ├── entities/           # All TypeORM entities (extend BaseEntity)
+│   │       │   ├── resume-profile.entity.ts
+│   │       │   ├── skill.entity.ts
+│   │       │   ├── experience-entry.entity.ts
+│   │       │   ├── education-entry.entity.ts
+│   │       │   ├── patent.entity.ts
+│   │       │   ├── certification.entity.ts
+│   │       │   ├── award.entity.ts
+│   │       │   ├── blog-post.entity.ts
+│   │       │   ├── tag.entity.ts
+│   │       │   ├── project.entity.ts
+│   │       │   ├── project-media.entity.ts
+│   │       │   ├── project-video.entity.ts
+│   │       │   ├── album.entity.ts
+│   │       │   ├── photo.entity.ts
+│   │       │   └── index.ts
+│   │       ├── migrations/         # TypeORM migration files
+│   │       ├── resume/             # Resume feature module (controller, service, DTOs)
+│   │       ├── seeds/              # Idempotent seed script + seed data
+│   │       ├── app.module.ts       # Root module (registers SqidsModule globally)
+│   │       └── main.ts             # CORS, global prefix (v1), Swagger, ValidationPipe
+│   └── web/                        # Next.js 16 frontend
+│       ├── public/                 # Icons, manifests, profile photo
 │       └── src/app/
-│           ├── layout.tsx    # Root layout — fonts, ThemeProvider, SEO metadata
-│           ├── page.tsx      # Portfolio landing page
-│           ├── globals.css   # Tailwind v4 @theme + design tokens
-│           ├── manifest.ts   # Web app manifest (Next.js App Router)
-│           └── robots.ts     # robots.txt (Next.js App Router)
+│           ├── layout.tsx          # Root layout — fonts, ThemeProvider, SEO metadata
+│           ├── page.tsx            # Portfolio landing page
+│           ├── globals.css         # Tailwind v4 @theme + design tokens
+│           ├── manifest.ts         # Web app manifest (Next.js App Router)
+│           └── robots.ts           # robots.txt (Next.js App Router)
 ├── packages/
-│   ├── types/                # Shared TypeScript interfaces
-│   ├── eslint-config/        # Shared ESLint configs (base, next, nestjs)
-│   └── oat-ui/               # Shared component library (stub)
+│   ├── utils/                      # Shared utilities
+│   │   └── src/
+│   │       ├── slug.ts             # slugify() — dep-free, used by web & api
+│   │       ├── date.ts             # calculateDuration, yearsOfExperience, etc.
+│   │       ├── latex.ts            # LaTeX resume generator
+│   │       └── index.ts            # Barrel export
+│   ├── types/                      # Shared TypeScript interfaces
+│   ├── eslint-config/              # Shared ESLint configs (base, next, nestjs)
+│   └── oat-ui/                     # Shared component library (stub)
 ├── docs/
 │   ├── PRD-portfolio-cms-platform.md
 │   └── EPICS-AND-STORIES.md
 ├── docker-compose.yml
 ├── lerna.json
-└── package.json              # Workspace root
+└── package.json                    # Workspace root
 ```
 
 ---
@@ -203,9 +297,9 @@ See [`docs/EPICS-AND-STORIES.md`](docs/EPICS-AND-STORIES.md) for the full implem
 | Epic | Status |
 |---|---|
 | EPIC 1 — Foundation & Infrastructure | ✅ Complete |
-| EPIC 2 — Authentication & Authorization | 🔜 Next |
-| EPIC 3 — Admin CMS (AdminJS) | 🔜 Planned |
-| EPIC 4 — Dynamic Resume System | 🔜 Planned |
+| EPIC 2 — Authentication & Authorization | ✅ Complete (JWT RS256, guards, AdminJS) |
+| EPIC 3 — Admin CMS (AdminJS) | ✅ Complete (all entities registered, BaseEntity pattern) |
+| EPIC 4 — Dynamic Resume System | 🔄 In progress |
 | EPIC 5 — Blog Engine | 🔜 Planned |
 | EPIC 6 — Projects Showcase | 🔜 Planned |
 | EPIC 7 — Photography Gallery | 🔜 Planned |

@@ -1,3 +1,4 @@
+import path from 'path';
 import { Module, DynamicModule } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { getDataSourceToken } from '@nestjs/typeorm';
@@ -38,10 +39,25 @@ export class AdminJsModule {
     // Type assertions are used here because typeof import() requires moduleResolution
     // node16/nodenext/bundler, which is incompatible with NestJS's CommonJS output.
     const { AdminModule } = await esmImport('@adminjs/nestjs') as { AdminModule: any };
-    const { default: AdminJS } = await esmImport('adminjs') as { default: any };
+    const { default: AdminJS, ComponentLoader } = await esmImport('adminjs') as { default: any; ComponentLoader: any };
     const { Database, Resource } = await esmImport('@adminjs/typeorm') as { Database: any; Resource: any };
 
     AdminJS.registerAdapter({ Database, Resource });
+
+    // ── Custom component registration ────────────────────────────────────────
+    // ComponentLoader is created once and shared via closure into useFactory.
+    // AdminJS's internal esbuild bundler compiles these .tsx files at startup.
+    const componentLoader = new ComponentLoader();
+    const componentsDir   = path.join(__dirname, 'components');
+
+    const MarkdownEditorComp = componentLoader.add(
+      'MarkdownEditor',
+      path.join(componentsDir, 'markdown-editor'),
+    );
+    const TagPickerComp = componentLoader.add(
+      'TagPicker',
+      path.join(componentsDir, 'tag-picker'),
+    );
 
     return {
       module: AdminJsModule,
@@ -108,6 +124,7 @@ export class AdminJsModule {
             return {
               adminJsOptions: {
                 rootPath: '/admin',
+                componentLoader,
                 branding: {
                   companyName: 'Portfolio CMS',
                   logo: false,
@@ -199,9 +216,19 @@ export class AdminJsModule {
                       actions: blogActions,
                       listProperties: ['title', 'slug', 'published', 'publishedAt', 'readingTime'],
                       editProperties: [
-                        'title', 'excerpt', 'coverImageUrl',
+                        'title', 'excerpt', 'coverImageUrl', 'tags',
                         'rawMarkdown', 'published', 'publishedAt',
                       ],
+                      properties: {
+                        // ── E5-S6: Markdown editor with image upload ──────────
+                        rawMarkdown: {
+                          components: { edit: MarkdownEditorComp },
+                        },
+                        // ── E5-S7: Tag picker with typeahead & inline create ──
+                        tags: {
+                          components: { edit: TagPickerComp },
+                        },
+                      },
                     },
                   },
                   // ── Projects ─────────────────────────────────────────────

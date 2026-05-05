@@ -142,6 +142,8 @@ Admin panel: `http://localhost:3001/admin` (AdminJS — requires admin account)
 | `/v1/blog` | `POST` | 🔒 JWT | Create a blog post (slug + HTML auto-generated) |
 | `/v1/blog/:id` | `PATCH` | 🔒 JWT | Update a blog post (re-renders Markdown on save) |
 | `/v1/blog/:id` | `DELETE` | 🔒 JWT | Delete a blog post |
+| `/v1/blog/tags` | `GET` | Public | List all tags sorted alphabetically |
+| `/v1/upload` | `POST` | 🔒 Session | Upload image → Cloudinary; returns `{ url, publicId }` |
 
 ### Database entities
 

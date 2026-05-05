@@ -14,6 +14,7 @@ import { AdminUserModule } from './admin-user/admin-user.module';
 import { AuthModule } from './auth/auth.module';
 import { ResumeModule } from './resume/resume.module';
 import { BlogModule } from './blog/blog.module';
+import { UploadModule } from './upload/upload.module';
 import { NoIndexMiddleware } from './common/middleware/no-index.middleware';
 import { SqidsModule } from './common/sqids.module';
 
@@ -79,6 +80,7 @@ import { SqidsModule } from './common/sqids.module';
     AuthModule,
     ResumeModule,
     BlogModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

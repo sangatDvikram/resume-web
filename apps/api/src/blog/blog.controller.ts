@@ -32,6 +32,17 @@ export class BlogController {
   }
 
   /**
+   * GET /v1/blog/tags
+   * Returns all tags sorted alphabetically.
+   * Used by the AdminJS tag-picker component and optionally by the public frontend.
+   * Must be declared BEFORE :slug to avoid route conflict.
+   */
+  @Get('tags')
+  findAllTags() {
+    return this.blogService.findAllTags();
+  }
+
+  /**
    * GET /v1/blog/:slug
    * Returns a single published post with full htmlContent.
    */

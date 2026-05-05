@@ -123,7 +123,7 @@ resume section, and wire on-demand ISR revalidation so live pages update within 
 
 ## EPIC 5 — Blog Engine
 
-- [x] _(8 / 8 stories complete)_
+- [x] _(8 / 8 stories complete — all stories including P1 items E5-S6 & E5-S7)_
 
 **Goal:** Full end-to-end blog: NestJS CRUD API, server-side Markdown rendering, SEO-optimised public pages,
 and a split-pane Markdown editor with image upload and tag management in the admin.
@@ -139,6 +139,13 @@ and a split-pane Markdown editor with image upload and tag management in the adm
 > - Tag upsert uses find-or-create by name so the same `Tag` row is shared across multiple posts.
 > - ISR revalidation fires from both `BlogService` mutations and AdminJS `after` hooks, revalidating the `blog` cache tag.
 
+> **Additional implementation notes (S6 & S7):**
+> - `POST /v1/upload` uses `multer` memory storage + Cloudinary `upload_stream` (no temp files). Accepts images up to 10 MB. Returns `{ url, publicId }`.
+> - AdminJS `ComponentLoader` is created inside `AdminJsModule.createAsync()` (which is async and can use `esmImport`). The compiled component paths are resolved via `path.join(__dirname, 'components', …)`.
+> - `markdown-editor.tsx` renders a monospace textarea; the "📷 Insert Image" button POSTs to `/v1/upload` with `credentials: 'include'` so the AdminJS session cookie is forwarded automatically.
+> - `tag-picker.tsx` fetches available tags from `GET /v1/blog/tags` and creates new ones via AdminJS's `ApiClient.resourceAction({ resourceId: 'Tag', actionName: 'new', … })` — no extra backend endpoint needed for creation.
+> - `tags` added to `editProperties` on the BlogPost resource so the picker is shown in the edit form. `onChange(property.path, selectedIds)` feeds the id-array back to AdminJS's TypeORM adapter for M2M persistence.
+
 | ✅ | ID | Story | Acceptance Criteria | SP | Priority |
 |:--:|----|-------|---------------------|----|----------|
 | ✅ | E5-S1 | **NestJS blog module** — Implement `BlogModule` with `BlogPost` + `Tag` entities, repository, service (CRUD, slug generation, tag upsert), and all endpoints in §9.2.3. Markdown → HTML runs server-side via unified pipeline on every create/update; result cached in `htmlContent`. | All §9.2.3 endpoints respond correctly; drafts excluded from public `GET /v1/blog`; `htmlContent` populated on save. | 8 | P0 |
@@ -146,8 +153,8 @@ and a split-pane Markdown editor with image upload and tag management in the adm
 | ✅ | E5-S3 | **Public `/blog` index page** — `apps/web/src/app/blog/page.tsx` with ISR (`revalidate = 3600`, `next: { tags: ['blog'] }`). Renders post cards: cover image, title, excerpt, tags, date, reading time. Graceful fallback when API unavailable. | Page renders all published posts; empty state shown when no posts exist; tag chips displayed per card. | 5 | P0 |
 | ✅ | E5-S4 | **Public `/blog/[slug]` post page** — `apps/web/src/app/blog/[slug]/page.tsx` with SSG (`generateStaticParams`) + ISR. `params` correctly typed as `Promise<{ slug: string }>` per Next.js 16 breaking change. Full OG/Twitter Card metadata via `generateMetadata`. | `generateStaticParams` pre-renders all published slugs at build time; OG image populated from `coverImageUrl`; 404 via `notFound()` for unknown slugs. | 8 | P0 |
 | ✅ | E5-S5 | **AdminJS blog resource** — `BlogPost` and `Tag` registered as AdminJS resources in `admin.module.ts` with `after` hooks on `new`, `edit`, and `delete` actions. Hooks POST to `/api/revalidate` with tag `blog`. | Saving a post via AdminJS triggers ISR revalidation; published posts appear on `/blog` within 60 s. | 8 | P0 |
-| ⬜ | E5-S6 | **Image upload in editor** — Drag-and-drop or file picker uploads to **Cloudinary** via `POST /v1/upload`; the returned Cloudinary CDN URL is inserted as `![alt](url)` at cursor position. | Drop image → Cloudinary upload → CDN URL inserted in Markdown at cursor position. | 5 | P1 |
-| ⬜ | E5-S7 | **Tag management UI** — Typeahead input autocompleting from `GET /v1/blog/tags`. Inline new-tag creation. Selected tags rendered as removable `OatBadge` chips. | Existing tags appear in dropdown; new tags created on commit; persist on post save. | 3 | P1 |
+| ✅ | E5-S6 | **Image upload in editor** — File picker in `markdown-editor.tsx` (custom AdminJS component on `rawMarkdown`) POSTs to `POST /v1/upload`; `UploadService` streams the buffer to Cloudinary via `upload_stream`; the returned CDN URL is inserted as `![name](url)` at cursor position. | Drop image → Cloudinary upload → CDN URL inserted in Markdown at cursor position. | 5 | P1 |
+| ✅ | E5-S7 | **Tag management UI** — `tag-picker.tsx` (custom AdminJS component on `tags`) fetches `GET /v1/blog/tags` for typeahead; creates new tags via AdminJS `ApiClient`; selected tags displayed as removable chips; `onChange` emits id-array for TypeORM M2M persistence. | Existing tags appear in dropdown; new tags created on commit; persist on post save. | 3 | P1 |
 | ✅ | E5-S8 | **Blog ISR revalidation** — NestJS `BlogService` POSTs to `/api/revalidate` after publish/unpublish/save, revalidating the `blog` Next.js cache tag. AdminJS `after` hooks provide the same revalidation path for admin-triggered mutations. | Publishing a post makes it live at its URL within 60 seconds; no Vercel deployment triggered. | 3 | P0 |
 
 ---

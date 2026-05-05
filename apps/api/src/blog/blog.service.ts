@@ -80,6 +80,11 @@ export class BlogService {
 
   // ── Queries ───────────────────────────────────────────────────────────────
 
+  /** Returns all tags sorted alphabetically — used by the tag-picker UI. */
+  async findAllTags(): Promise<Tag[]> {
+    return this.tagRepo.find({ order: { name: 'ASC' } });
+  }
+
   async findAllPublished(): Promise<BlogPostSummaryDto[]> {
     const posts = await this.postRepo.find({
       where: { published: true },

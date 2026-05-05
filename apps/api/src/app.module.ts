@@ -1,4 +1,5 @@
 import {
+  DynamicModule,
   MiddlewareConsumer,
   Module,
   NestModule,
@@ -26,12 +27,11 @@ import { NoIndexMiddleware } from './common/middleware/no-index.middleware';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => {
         const isProduction = config.get('NODE_ENV') === 'production';
+        const useSSL = isProduction || config.get<string>('DB_SSL') === 'true';
         return {
           type: 'postgres' as const,
           url: config.get<string>('DATABASE_URL'),
-          ssl: isProduction
-            ? { rejectUnauthorized: true }
-            : { rejectUnauthorized: false },
+          ssl: useSSL ? { rejectUnauthorized: isProduction } : false,
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           migrations: [__dirname + '/migrations/*{.ts,.js}'],
           synchronize:
@@ -41,7 +41,7 @@ import { NoIndexMiddleware } from './common/middleware/no-index.middleware';
             : (['error', 'migration'] as const),
           extra: {
             max: parseInt(config.get<string>('DB_POOL_MAX') ?? '10', 10),
-            ssl: { rejectUnauthorized: false },
+            ...(useSSL && { ssl: { rejectUnauthorized: isProduction } }),
           },
           // autoLoadEntities picks up entities registered via forFeature()
           autoLoadEntities: true,
@@ -70,6 +70,14 @@ import { NoIndexMiddleware } from './common/middleware/no-index.middleware';
   providers: [AppService],
 })
 export class AppModule implements NestModule {
+  /** Called from main.ts so the async AdminJsModule can be awaited before bootstrap. */
+  static withAdmin(adminModule: DynamicModule): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [adminModule],
+    };
+  }
+
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(NoIndexMiddleware)

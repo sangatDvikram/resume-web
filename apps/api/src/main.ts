@@ -1,11 +1,50 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { AdminJsModule } from './admin/admin.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  const esmImport = new Function('m', 'return import(m)') as (
+    m: string,
+  ) => Promise<any>;
+
+  const adminModule = await AdminJsModule.createAsync();
+
+  // ── @adminjs/nestjs compatibility fix ─────────────────────────────────────
+  // ExpressLoader.reorderRoutes() reads `app.router`, which Express 4 defines
+  // as a non-configurable throwing getter on every app instance — it cannot be
+  // overridden with Object.defineProperty or lodash set(). Instead we patch the
+  // prototype method itself to use `app._router` (the real Express 4 router)
+  // before NestFactory.create() triggers onModuleInit and calls reorderRoutes.
+  const { ExpressLoader } = await esmImport('@adminjs/nestjs');
+  ExpressLoader.prototype.reorderRoutes = function (app: any) {
+    const router = app._router;
+    if (!app || !router || !router.stack) return;
+    let jsonParser: any[] = [];
+    let urlencodedParser: any[] = [];
+    let admin: any[] = [];
+    const jsonIdx = router.stack.findIndex((l: any) => l.name === 'jsonParser');
+    if (jsonIdx >= 0) jsonParser = router.stack.splice(jsonIdx, 1);
+    const urlIdx = router.stack.findIndex(
+      (l: any) => l.name === 'urlencodedParser',
+    );
+    if (urlIdx >= 0) urlencodedParser = router.stack.splice(urlIdx, 1);
+    const adminIdx = router.stack.findIndex((l: any) => l.name === 'admin');
+    if (adminIdx >= 0) admin = router.stack.splice(adminIdx, 1);
+    const corsIdx = router.stack.findIndex(
+      (l: any) => l.name === 'corsMiddleware',
+    );
+    const initIdx = router.stack.findIndex(
+      (l: any) => l.name === 'expressInit',
+    );
+    const insertAt = (corsIdx >= 0 ? corsIdx : initIdx) + 1;
+    router.stack.splice(insertAt, 0, ...admin, ...jsonParser, ...urlencodedParser);
+  };
+
+  const app = await NestFactory.create(AppModule.withAdmin(adminModule));
 
   // ── CORS ──────────────────────────────────────────────────────────────────
   app.enableCors({

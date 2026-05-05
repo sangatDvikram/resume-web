@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Entity,
   PrimaryGeneratedColumn,
   Column,
@@ -7,22 +8,22 @@ import {
 } from 'typeorm';
 
 @Entity('admin_users')
-export class AdminUser {
+export class AdminUser extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ unique: true, length: 255 })
-  email: string;
+  email!: string;
 
   @Column({ name: 'password_hash', length: 255 })
-  passwordHash: string;
+  passwordHash!: string;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  updatedAt!: Date;
 }

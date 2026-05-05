@@ -19,6 +19,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isMigrationCli = process.env.TYPEORM_CLI === 'true';
+const useSSL = isProduction || process.env.DB_SSL === 'true';
 
 /**
  * Connection string selection:
@@ -33,8 +34,8 @@ export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   url: connectionUrl,
 
-  // SSL required for Neon (and most cloud Postgres providers)
-  ssl: isProduction ? { rejectUnauthorized: true } : { rejectUnauthorized: false },
+  // SSL: always on in production; opt-in locally via DB_SSL=true
+  ssl: useSSL ? { rejectUnauthorized: isProduction } : false,
 
   // Entity discovery — scan all .entity.ts files under src/
   entities: [path.join(__dirname, '../**/*.entity{.ts,.js}')],
@@ -52,7 +53,7 @@ export const dataSourceOptions: DataSourceOptions = {
   extra: {
     // Neon PgBouncer transaction mode: keep pool size conservative
     max: parseInt(process.env.DB_POOL_MAX ?? '10', 10),
-    ssl: { rejectUnauthorized: false },
+    ...(useSSL && { ssl: { rejectUnauthorized: isProduction } }),
   },
 };
 

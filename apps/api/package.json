@@ -25,7 +25,8 @@
     "migration:show": "cross-env TYPEORM_CLI=true npx typeorm-ts-node-commonjs migration:show -d src/database/data-source.ts",
     "create-admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts",
     "seed": "cross-env TYPEORM_CLI=true ts-node -r tsconfig-paths/register src/seeds/seed.ts",
-    "seed:validate": "cross-env TYPEORM_CLI=true ts-node -r tsconfig-paths/register src/seeds/validate-seed.ts"
+    "seed:validate": "cross-env TYPEORM_CLI=true ts-node -r tsconfig-paths/register src/seeds/validate-seed.ts",
+    "generate:openapi": "ts-node -r tsconfig-paths/register scripts/export-openapi.ts"
   },
   "dependencies": {
     "@adminjs/express": "^6.1.1",
@@ -113,9 +114,23 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!**/node_modules/**",
+      "!**/*.module.ts",
+      "!**/main.ts",
+      "!**/*.dto.ts",
+      "!**/*.entity.ts",
+      "!**/migrations/**"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "coverageThreshold": {
+      "global": {
+        "lines": 80,
+        "functions": 80,
+        "branches": 70,
+        "statements": 80
+      }
+    }
   }
 }

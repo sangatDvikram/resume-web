@@ -58,6 +58,26 @@ export class AdminJsModule {
       'TagPicker',
       path.join(componentsDir, 'tag-picker'),
     );
+    const SkillPickerComp = componentLoader.add(
+      'SkillPicker',
+      path.join(componentsDir, 'skill-picker'),
+    );
+    const MediaUploaderComp = componentLoader.add(
+      'MediaUploader',
+      path.join(componentsDir, 'media-uploader'),
+    );
+    const VideoManagerComp = componentLoader.add(
+      'VideoManager',
+      path.join(componentsDir, 'video-manager'),
+    );
+    const PhotoUploaderComp = componentLoader.add(
+      'PhotoUploader',
+      path.join(componentsDir, 'photo-uploader'),
+    );
+    const DashboardComp = componentLoader.add(
+      'Dashboard',
+      path.join(componentsDir, 'dashboard'),
+    );
 
     return {
       module: AdminJsModule,
@@ -104,8 +124,10 @@ export class AdminJsModule {
               return response;
             };
 
-            const afterResume = makeAfterHook(['resume']);
-            const afterBlog   = makeAfterHook(['blog']);
+            const afterResume   = makeAfterHook(['resume']);
+            const afterBlog     = makeAfterHook(['blog']);
+            const afterProjects = makeAfterHook(['projects']);
+            const afterGallery  = makeAfterHook(['gallery']);
 
             /** Resume mutation hooks — applied to edit, new, delete */
             const resumeActions = {
@@ -121,10 +143,20 @@ export class AdminJsModule {
               delete: { after: afterBlog },
             };
 
+            /** Project mutation hooks */
+            const projectActions = {
+              edit:   { after: afterProjects },
+              new:    { after: afterProjects },
+              delete: { after: afterProjects },
+            };
+
             return {
               adminJsOptions: {
                 rootPath: '/admin',
                 componentLoader,
+                dashboard: {
+                  component: DashboardComp,
+                },
                 branding: {
                   companyName: 'Portfolio CMS',
                   logo: false,
@@ -233,12 +265,84 @@ export class AdminJsModule {
                     },
                   },
                   // ── Projects ─────────────────────────────────────────────
-                  { resource: Project },
-                  { resource: ProjectMedia },
-                  { resource: ProjectVideo },
+                  {
+                    resource: Project,
+                    options: {
+                      actions: projectActions,
+                      listProperties: ['title', 'slug', 'company', 'featured', 'published', 'sortOrder'],
+                      editProperties: [
+                        'title', 'company', 'role', 'startDate', 'endDate',
+                        'githubUrl', 'liveDemoUrl', 'featured', 'published', 'sortOrder',
+                        'skills', 'description',
+                      ],
+                      properties: {
+                        description: {
+                          components: { edit: MarkdownEditorComp },
+                        },
+                        skills: {
+                          components: { edit: SkillPickerComp },
+                        },
+                      },
+                    },
+                  },
+                  {
+                    resource: ProjectMedia,
+                    options: {
+                      actions: projectActions,
+                      listProperties: ['url', 'altText', 'sortOrder'],
+                      editProperties: ['url', 'altText', 'sortOrder'],
+                      properties: {
+                        url: { components: { edit: MediaUploaderComp } },
+                      },
+                    },
+                  },
+                  {
+                    resource: ProjectVideo,
+                    options: {
+                      actions: projectActions,
+                      listProperties: ['source', 'url', 'title', 'sortOrder'],
+                      editProperties: ['source', 'url', 'title', 'sortOrder'],
+                      properties: {
+                        url: { components: { edit: VideoManagerComp } },
+                      },
+                    },
+                  },
                   // ── Gallery ──────────────────────────────────────────────
-                  { resource: Album },
-                  { resource: Photo },
+                  {
+                    resource: Album,
+                    options: {
+                      actions: {
+                        edit:   { after: afterGallery },
+                        new:    { after: afterGallery },
+                        delete: { after: afterGallery },
+                      },
+                      listProperties: ['name', 'slug', 'location', 'published', 'sortOrder'],
+                      editProperties: [
+                        'name', 'description', 'location',
+                        'coverId', 'published', 'sortOrder',
+                      ],
+                    },
+                  },
+                  {
+                    resource: Photo,
+                    options: {
+                      actions: {
+                        edit:   { after: afterGallery },
+                        new:    { after: afterGallery },
+                        delete: { after: afterGallery },
+                      },
+                      listProperties: ['thumbUrl', 'title', 'location', 'published', 'sortOrder'],
+                      editProperties: [
+                        'originalUrl', 'title', 'altText', 'location',
+                        'album', 'published', 'sortOrder',
+                      ],
+                      properties: {
+                        originalUrl: {
+                          components: { edit: PhotoUploaderComp, show: PhotoUploaderComp },
+                        },
+                      },
+                    },
+                  },
                 ],
               },
               auth: {

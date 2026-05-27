@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getBlogPosts, getBlogPost } from "@/lib/api";
 import type { BlogPostDetailDto } from "@/lib/api";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 // ISR: revalidate every hour; on-demand via /api/revalidate with tag "blog"
 export const revalidate = 3600;
@@ -137,7 +138,7 @@ export default async function BlogPostPage({
                      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                      prose-code:before:content-none prose-code:after:content-none
                      prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded"
-          dangerouslySetInnerHTML={{ __html: post.htmlContent }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.htmlContent) }}
         />
       </article>
     </main>

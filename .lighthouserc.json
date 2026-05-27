@@ -1,0 +1,50 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/blog",
+        "http://localhost:3000/projects",
+        "http://localhost:3000/gallery"
+      ],
+      "startServerCommand": "yarn workspace web start",
+      "startServerReadyPattern": "Ready on",
+      "startServerReadyTimeout": 60000,
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "throttling": {
+          "rttMs": 40,
+          "throughputKbps": 10240,
+          "cpuSlowdownMultiplier": 1
+        }
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:no-pwa",
+      "assertions": {
+        "categories:performance": ["warn", { "minScore": 0.85 }],
+        "categories:accessibility": ["error", { "minScore": 0.90 }],
+        "categories:best-practices": ["warn", { "minScore": 0.90 }],
+        "categories:seo": ["warn", { "minScore": 0.85 }],
+        "first-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
+        "largest-contentful-paint": ["warn", { "maxNumericValue": 3000 }],
+        "cumulative-layout-shift": ["warn", { "maxNumericValue": 0.1 }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 300 }],
+        "interactive": ["warn", { "maxNumericValue": 4000 }],
+        "uses-text-compression": ["warn", { "minScore": 1 }],
+        "uses-optimized-images": ["warn", { "minScore": 1 }],
+        "uses-responsive-images": ["warn", { "minScore": 1 }],
+        "render-blocking-resources": ["warn", { "minScore": 1 }],
+        "color-contrast": ["error", { "minScore": 1 }],
+        "image-alt": ["error", { "minScore": 1 }],
+        "html-has-lang": ["error", { "minScore": 1 }],
+        "document-title": ["error", { "minScore": 1 }],
+        "meta-description": ["warn", { "minScore": 1 }]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

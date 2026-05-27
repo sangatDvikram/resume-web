@@ -113,6 +113,54 @@ export interface BlogPostDetailDto extends BlogPostSummaryDto {
   rawMarkdown: string;
 }
 
+// ─── Projects types ───────────────────────────────────────────────────────────
+
+export interface ProjectMediaDto {
+  id: string;
+  url: string;
+  altText: string | null;
+  sortOrder: number;
+}
+
+export interface ProjectVideoDto {
+  id: string;
+  source: 'youtube' | 'vimeo' | 'self_hosted';
+  url: string;
+  title: string | null;
+  sortOrder: number;
+}
+
+export interface SkillRefDto {
+  id: string;
+  name: string;
+  category: string;
+}
+
+export interface ProjectSummaryDto {
+  id: string;
+  slug: string;
+  title: string;
+  company: string | null;
+  role: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  githubUrl: string | null;
+  liveDemoUrl: string | null;
+  featured: boolean;
+  published: boolean;
+  sortOrder: number;
+  skills: SkillRefDto[];
+  media: ProjectMediaDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectDetailDto extends ProjectSummaryDto {
+  description: string | null;
+  htmlDescription: string | null;
+  videos: ProjectVideoDto[];
+}
+
 // ─── Client ───────────────────────────────────────────────────────────────────
 
 /** Base URL for server-side fetches — prefers internal network URL over public. */
@@ -172,4 +220,127 @@ export async function getBlogPost(slug: string): Promise<BlogPostDetailDto> {
   }
 
   return res.json() as Promise<BlogPostDetailDto>;
+}
+
+// ─── Gallery ──────────────────────────────────────────────────────────────────
+
+export interface ExifDto {
+  make?: string;
+  model?: string;
+  focalLength?: string;
+  aperture?: string;
+  iso?: string | number;
+  shutterSpeed?: string;
+}
+
+export interface PhotoDto {
+  id: string;
+  title: string | null;
+  altText: string | null;
+  location: string | null;
+  publicId: string | null;
+  originalUrl: string;
+  thumbUrl: string;
+  lqipUrl: string | null;
+  width: number | null;
+  height: number | null;
+  exif: ExifDto | null;
+  sortOrder: number;
+  published: boolean;
+  albumId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AlbumSummaryDto {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  location: string | null;
+  coverUrl: string | null;
+  lqipUrl: string | null;
+  photoCount: number;
+  published: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AlbumDetailDto extends AlbumSummaryDto {
+  photos: PhotoDto[];
+  nextCursor: string | null;
+  total: number;
+}
+
+export interface PhotoPageDto {
+  photos: PhotoDto[];
+  nextCursor: string | null;
+  total: number;
+}
+
+/** Fetch all published albums with cover image + photo count. */
+export async function getAlbums(): Promise<AlbumSummaryDto[]> {
+  const res = await fetch(`${getApiBase()}/v1/gallery/albums`, {
+    next: { tags: ['gallery'], revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch albums: ${res.status}`);
+  return res.json() as Promise<AlbumSummaryDto[]>;
+}
+
+/** Fetch a single published album by slug (includes first page of photos). */
+export async function getAlbum(slug: string, cursor?: string): Promise<AlbumDetailDto> {
+  const url = new URL(`${getApiBase()}/v1/gallery/albums/${encodeURIComponent(slug)}`);
+  if (cursor) url.searchParams.set('cursor', cursor);
+  const res = await fetch(url.toString(), {
+    next: { tags: ['gallery', `album-${slug}`], revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch album "${slug}": ${res.status}`);
+  return res.json() as Promise<AlbumDetailDto>;
+}
+
+/** Fetch a paginated photo feed (optionally filtered by albumId). */
+export async function getPhotos(albumId?: string, cursor?: string): Promise<PhotoPageDto> {
+  const url = new URL(`${getApiBase()}/v1/gallery/photos`);
+  if (albumId) url.searchParams.set('albumId', albumId);
+  if (cursor)  url.searchParams.set('cursor', cursor);
+  const res = await fetch(url.toString(), {
+    next: { tags: ['gallery'], revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch photos: ${res.status}`);
+  return res.json() as Promise<PhotoPageDto>;
+}
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
+/**
+ * Fetch all published projects (summary only — no htmlDescription / videos).
+ * Tagged with "projects" so `revalidateTag('projects')` can purge on-demand.
+ */
+export async function getProjects(): Promise<ProjectSummaryDto[]> {
+  const res = await fetch(`${getApiBase()}/v1/projects`, {
+    next: { tags: ['projects'], revalidate: 60 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch projects: ${res.status} ${res.statusText}`);
+  }
+
+  return res.json() as Promise<ProjectSummaryDto[]>;
+}
+
+/**
+ * Fetch a single published project by slug (includes description, videos).
+ * Tagged with "projects" and "project-<slug>" for granular revalidation.
+ */
+export async function getProject(slug: string): Promise<ProjectDetailDto> {
+  const res = await fetch(`${getApiBase()}/v1/projects/${encodeURIComponent(slug)}`, {
+    next: { tags: ['projects', `project-${slug}`], revalidate: 60 },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch project "${slug}": ${res.status} ${res.statusText}`);
+  }
+
+  return res.json() as Promise<ProjectDetailDto>;
 }

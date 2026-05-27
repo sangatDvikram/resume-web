@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getBlogPosts } from "@/lib/api";
 import type { BlogPostSummaryDto } from "@/lib/api";
+import { OatBadge } from "@portfolio-cms/oat-ui";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -41,12 +42,12 @@ function PostCard({ post }: { post: BlogPostSummaryDto }) {
         {post.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {post.tags.map((tag) => (
-              <span
+              <OatBadge
                 key={tag.id}
-                className="skill-chip text-xs py-0.5 px-2"
+                style={{ fontSize: "0.75rem", padding: "2px 8px" }}
               >
                 {tag.name}
-              </span>
+              </OatBadge>
             ))}
           </div>
         )}

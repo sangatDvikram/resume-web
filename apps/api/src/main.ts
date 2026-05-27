@@ -51,15 +51,36 @@ async function bootstrap() {
   // ── Static assets (favicon, etc.) ────────────────────────────────────────
   app.useStaticAssets(path.join(process.cwd(), 'public'));
 
-  // ── CORS ──────────────────────────────────────────────────────────────────
+  // ── CORS (E10-S7) ─────────────────────────────────────────────────────────
+  // Strict allowlist: only the configured frontend origin is permitted.
+  // The /\.vercel\.app$/ wildcard has been removed to prevent any Vercel
+  // preview deployment from calling the production API without explicit approval.
+  // Add additional origins via EXTRA_CORS_ORIGINS (comma-separated).
+  const allowedOrigins: (string | RegExp)[] = [
+    process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    'http://localhost:3001',
+  ];
+  const extra = process.env.EXTRA_CORS_ORIGINS;
+  if (extra) {
+    extra.split(',').map(o => o.trim()).filter(Boolean).forEach(o => allowedOrigins.push(o));
+  }
+
   app.enableCors({
-    origin: [
-      process.env.FRONTEND_URL ?? 'http://localhost:3000',
-      /\.vercel\.app$/,
-    ],
+    origin: (origin, callback) => {
+      // Allow server-to-server requests (no Origin header) and allowed origins
+      if (!origin || allowedOrigins.some(o =>
+        typeof o === 'string' ? o === origin : o.test(origin),
+      )) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin "${origin}" is not allowed`));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['X-Request-Id'],
+    maxAge: 86400, // preflight cache: 24 h
   });
 
   // ── Global prefix ─────────────────────────────────────────────────────────

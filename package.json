@@ -12,7 +12,9 @@
     "lint": "lerna run lint",
     "test": "lerna run test",
     "web": "yarn workspace web dev",
-    "api": "yarn workspace api start:dev"
+    "api": "yarn workspace api start:dev",
+    "generate:openapi": "yarn workspace api generate:openapi",
+    "generate:types": "yarn generate:openapi && openapi-typescript docs/openapi.json -o packages/types/src/api.d.ts && yarn workspace @portfolio-cms/types build"
   },
   "devDependencies": {
     "lerna": "^8.1.9",

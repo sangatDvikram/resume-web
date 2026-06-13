@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1.7
 # ──────────────────────────────────────────────────────────────────────────────
 # Portfolio CMS — apps/api (NestJS) container image
-# Used by Railway (apps/api/railway.toml) and Fly.io (fly.toml).
+# Used by Railway (railway.toml) and Fly.io (fly.toml).
 # Multi-stage build:
 #   builder  — installs full workspace + builds @portfolio-cms/types and api
-#   runtime  — minimal Node 20 Alpine image running `node dist/main.js`
+#   runtime  — minimal Node 22 Alpine image running `node dist/main.js`
 # ──────────────────────────────────────────────────────────────────────────────
 ARG NODE_VERSION=22-alpine
 
@@ -47,7 +47,8 @@ RUN yarn workspace @portfolio-cms/types build \
 FROM node:${NODE_VERSION} AS runtime
 
 # tini = clean PID 1 / signal forwarding; libc6-compat = native modules.
-RUN apk add --no-cache libc6-compat tini
+# wget (full) = used by the HEALTHCHECK instruction below.
+RUN apk add --no-cache libc6-compat tini wget
 
 WORKDIR /app
 
@@ -69,6 +70,17 @@ WORKDIR /app/apps/api
 
 EXPOSE 3001
 
-# tini handles SIGTERM cleanly so Fly machines stop/restart fast.
+# Docker-native healthcheck — used by Railway and Fly.io to determine when
+# the container is ready to receive traffic.
+#   --start-period=30s  AdminJS compiles its React bundle on first boot (~3-6 s)
+#                       and TypeORM opens the connection pool; give the app time
+#                       before counting failures against the retry budget.
+#   --interval=15s      Poll every 15 s once the start period has elapsed.
+#   --timeout=5s        Individual request must respond within 5 s.
+#   --retries=3         3 consecutive failures → container marked unhealthy.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO /dev/null http://localhost:3001/v1/health || exit 1
+
+# tini handles SIGTERM cleanly so containers stop/restart fast.
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/main.js"]

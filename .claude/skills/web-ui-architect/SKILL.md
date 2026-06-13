@@ -60,9 +60,13 @@ resume-web/                        ← Yarn Workspaces root (Lerna)
 - `REVALIDATE_SECRET` must match between API and Web. Treat it as a shared secret — rotate both together.
 
 ### CI/CD pipeline architecture
-- Build order enforced by GitHub Actions: `types` → `oat-ui` → `apps/web` and `apps/api`.
-- API migrations run before Railway deploy. Never skip `migration:run` in CI.
-- Vercel deploys `apps/web` only on merge to `main`.
+- **Node runtime:** Node 22 LTS across all workflows (`ci.yml`, `deploy.yml`, `lighthouse.yml`) and the Dockerfile. Required by `locter@2.2.1` (AdminJS transitive dep).
+- **Build order** enforced by GitHub Actions: `@portfolio-cms/types` → `@portfolio-cms/oat-ui` → `apps/web` and `apps/api`.
+- **Deploy pipeline** (`deploy.yml`): runs `migration:run` (unpooled URL) → `railway up --service api` from repo root → Vercel auto-deploys `apps/web` via GitHub integration.
+- **Railway** (`railway.toml` at repo root): primary API deployment. Dockerfile at repo root. `watchPatterns` isolate API-only changes.
+- **Fly.io** (`fly.toml` at repo root): secondary API deployment target.
+- **Vercel** deploys `apps/web` from `apps/web/` root directory.
+- API migrations run before Railway deploy via `DATABASE_URL_UNPOOLED`. Never skip `migration:run` in CI.
 
 ### Technology selection framework
 1. Is there already something in the monorepo that solves this? (prefer boring, avoid new deps)

@@ -1,6 +1,6 @@
 ---
 name: nestjs-api-developer
-description: "Senior NestJS API developer lens for apps/api. Covers NestJS 10 module structure, TypeORM Data Mapper pattern, RS256 JWT auth, AdminJS v7 ESM-only workaround, ISR revalidation after-hooks, Cloudinary uploads, SqidsService, and Neon dual-URL Postgres. Grounded in Vikram's Node.js/Express/Django backend experience at Innoplexus and DMart Labs."
+description: "Senior NestJS API developer lens for apps/api. Covers NestJS 10 module structure, TypeORM Data Mapper pattern, RS256 JWT auth, AdminJS v7 ESM-only workaround, ISR revalidation after-hooks, Cloudinary uploads, SqidsService, Neon dual-URL Postgres, and container deployment (Railway primary, Fly.io secondary). Grounded in Vikram's Node.js/Express/Django backend experience at Innoplexus and DMart Labs."
 ---
 
 # /nestjs-api-developer
@@ -92,6 +92,34 @@ Use the `new Function('m', 'return import(m)')` pattern for: `adminjs`, `@adminj
 - `renderMarkdown()`: unified → remark → rehype pipeline
 - Strict custom sanitize schema: no `<script>`, `<style>`, `<iframe>`
 - Both `rawMarkdown` (source) and `htmlContent` (rendered) stored in DB
+
+## Deployment context
+
+| Target | Type | Config |
+|---|---|---|
+| **Railway** (primary) | Long-lived container | `railway.toml` at repo root; Dockerfile at repo root |
+| **Fly.io** (secondary) | Long-lived container | `fly.toml` at repo root |
+| **Vercel** (experimental) | Serverless function | `apps/api/vercel.json` + `apps/api/api/index.ts` handler |
+
+**Node version:** Node 22 LTS (required by `locter@2.2.1`, an AdminJS transitive dep). All `package.json` files declare `"engines": { "node": ">=22" }`.
+
+**Docker healthcheck** (`Dockerfile` runtime stage):
+```dockerfile
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO /dev/null http://localhost:3001/v1/health || exit 1
+```
+`--start-period=30s` is the key: AdminJS compiles its React bundle and TypeORM opens its pool on first boot — failures during this window are not counted toward `--retries`.
+
+**Railway config** (`railway.toml`):
+- `dockerfilePath = "Dockerfile"` (repo root)
+- `healthcheckPath = "/v1/health"`, `healthcheckTimeout = 60`
+- `overlapSeconds = "30"` for zero-downtime deploys
+- `watchPatterns` exclude `apps/web/**` — web-only changes don't retrigger API deploy
+
+**Vercel serverless handler** (`apps/api/api/index.ts`):
+- Wraps the NestJS app with `serverless-http` via `require('../dist/...')` pattern
+- Uses `require()` not `import` to preserve NestJS decorator metadata (esbuild strips decorators otherwise)
+- `apps/api/vercel.json` sets `includeFiles` to bundle AdminJS and Swagger static assets
 
 ## Vikram's backend experience (from resume)
 

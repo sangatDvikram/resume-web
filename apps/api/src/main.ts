@@ -1,3 +1,4 @@
+import http from 'http';
 import path from 'path';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -8,6 +9,27 @@ import { AppModule } from './app.module';
 import { AdminJsModule } from './admin/admin.module';
 
 async function bootstrap() {
+  const port = Number(process.env.PORT ?? 3001);
+
+  // ── Early healthcheck server ───────────────────────────────────────────────
+  // Railway fires its HTTP healthcheck immediately when the container starts.
+  // AdminJS + NestJS bootstrap takes ~3–6 s, so the port is closed during that
+  // window → Railway gets ECONNREFUSED → "Network error" → deployment fails.
+  //
+  // Fix: bind the port NOW with a minimal HTTP server that responds 200 to
+  // /v1/health (and 503 to everything else) while the real app is booting.
+  // Once NestJS is fully up, we close this server and hand the port to NestJS.
+  const earlyServer = http.createServer((req, res) => {
+    if (req.method === 'GET' && req.url === '/v1/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'starting' }));
+    } else {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'booting' }));
+    }
+  });
+  await new Promise<void>((resolve) => earlyServer.listen(port, resolve));
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   const esmImport = new Function('m', 'return import(m)') as (
     m: string,
@@ -125,8 +147,10 @@ async function bootstrap() {
   // ── Cookie parser (required for session cookies) ──────────────────────────
   app.use(cookieParser());
 
-  // ── Start ─────────────────────────────────────────────────────────────────
-  const port = process.env.PORT ?? 3001;
+  // ── Hand off port from early server to NestJS ────────────────────────────
+  await new Promise<void>((resolve, reject) =>
+    earlyServer.close((err) => (err ? reject(err) : resolve())),
+  );
   await app.listen(port);
   console.info(`🚀 API running at http://localhost:${port}/v1`);
   console.info(`📚 Swagger docs at http://localhost:${port}/v1/docs`);

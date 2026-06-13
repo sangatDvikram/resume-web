@@ -2,16 +2,15 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "yarn install --immutable",
   "buildCommand": "yarn workspace @portfolio-cms/types build && yarn workspace api build",
-  "outputDirectory": "dist",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD ./ ../../packages/types ../../yarn.lock ../../package.json",
   "functions": {
-    "dist/main.js": {
+    "api/index.ts": {
       "memory": 1024,
       "maxDuration": 30,
-      "includeFiles": "{public/**,node_modules/@adminjs/**,node_modules/adminjs/**,node_modules/swagger-ui-dist/**}"
+      "includeFiles": "{dist/**,public/**,node_modules/@adminjs/**,node_modules/adminjs/**,node_modules/swagger-ui-dist/**}"
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/dist/main.js" }
+    { "source": "/(.*)", "destination": "/api/index" }
   ]
 }

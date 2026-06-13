@@ -8,6 +8,9 @@
     "./next": "./next.js",
     "./nestjs": "./nestjs.js"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "lint": "echo 'No lint for eslint-config package'"
   },

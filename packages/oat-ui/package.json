@@ -12,6 +12,9 @@
       "require": "./dist/index.cjs"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",

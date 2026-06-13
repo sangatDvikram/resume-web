@@ -6,7 +6,7 @@
 #   builder  — installs full workspace + builds @portfolio-cms/types and api
 #   runtime  — minimal Node 20 Alpine image running `node dist/main.js`
 # ──────────────────────────────────────────────────────────────────────────────
-ARG NODE_VERSION=20-alpine
+ARG NODE_VERSION=22-alpine
 
 # ─── Stage 1: builder ─────────────────────────────────────────────────────────
 FROM node:${NODE_VERSION} AS builder

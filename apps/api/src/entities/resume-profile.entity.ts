@@ -6,14 +6,14 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-/**
- * Singleton table — there is always exactly one row.
- * Profile information is upserted (never deleted).
- */
 @Entity('resume_profile')
 export class ResumeProfile extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
+
+  /** URL-safe slug identifying this resume variant — e.g. "default", "patent-attorney" */
+  @Column({ unique: true, length: 100, default: 'default' })
+  slug!: string;
 
   /** Full name — PROFILE.name / RESUME.name */
   @Column({ length: 255 })

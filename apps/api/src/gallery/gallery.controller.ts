@@ -42,10 +42,7 @@ export class GalleryController {
 
   /** GET /v1/gallery/albums/:slug — album detail + first page of photos */
   @Get('albums/:slug')
-  getAlbum(
-    @Param('slug') slug: string,
-    @Query('cursor') cursor?: string,
-  ) {
+  getAlbum(@Param('slug') slug: string, @Query('cursor') cursor?: string) {
     return this.galleryService.findAlbumBySlug(slug, cursor, true);
   }
 
@@ -55,7 +52,7 @@ export class GalleryController {
   @Get('photos')
   listPhotos(
     @Query('albumId') albumId?: string,
-    @Query('cursor')  cursor?: string,
+    @Query('cursor') cursor?: string,
   ) {
     return this.galleryService.listPhotos(albumId, undefined, cursor, true);
   }
@@ -97,7 +94,7 @@ export class GalleryController {
   @Get('admin/photos')
   listPhotosAdmin(
     @Query('albumId') albumId?: string,
-    @Query('cursor')  cursor?: string,
+    @Query('cursor') cursor?: string,
   ) {
     return this.galleryService.listPhotosAdmin(albumId, cursor);
   }
@@ -124,15 +121,17 @@ export class GalleryController {
     @Query('albumId') albumId?: string,
   ) {
     const results = await Promise.allSettled(
-      files.map(f => this.galleryService.uploadPhoto(f, albumId)),
+      files.map((f) => this.galleryService.uploadPhoto(f, albumId)),
     );
     return {
       succeeded: results
-        .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
-        .map(r => r.value),
+        .filter(
+          (r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled',
+        )
+        .map((r) => r.value),
       failed: results
         .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-        .map(r => ({ reason: r.reason?.message ?? String(r.reason) })),
+        .map((r) => ({ reason: r.reason?.message ?? String(r.reason) })),
     };
   }
 

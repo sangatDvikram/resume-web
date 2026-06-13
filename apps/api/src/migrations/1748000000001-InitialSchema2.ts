@@ -157,10 +157,14 @@ export class InitialSchema21748000000001 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE IF EXISTS "project_videos"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "project_media"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "project_skills"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_projects_published_sort"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_projects_published_sort"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "projects"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "post_tags"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_blog_posts_published_at"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_blog_posts_published_at"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "blog_posts"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "tags"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "awards"`);

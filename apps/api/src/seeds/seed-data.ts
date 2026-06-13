@@ -11,6 +11,7 @@ import { SkillCategory } from '../entities/enums';
 // ─── Profile ──────────────────────────────────────────────────────────────────
 
 export const PROFILE_SEED = {
+  slug: 'default',
   name: 'Vikram Sangat',
   position: 'Senior Software Engineer',
   description:
@@ -33,55 +34,55 @@ export const PROFILE_SEED = {
 
 export const SKILLS_SEED: Array<{ name: string; category: SkillCategory }> = [
   // Languages
-  { name: 'JavaScript',    category: SkillCategory.language },
-  { name: 'TypeScript',    category: SkillCategory.language },
-  { name: 'Python',        category: SkillCategory.language },
-  { name: 'Dart',          category: SkillCategory.language },
-  { name: 'PHP',           category: SkillCategory.language },
-  { name: 'C#',            category: SkillCategory.language },
-  { name: 'Java',          category: SkillCategory.language },
-  { name: 'HTML',          category: SkillCategory.language },
-  { name: 'CSS',           category: SkillCategory.language },
+  { name: 'JavaScript', category: SkillCategory.language },
+  { name: 'TypeScript', category: SkillCategory.language },
+  { name: 'Python', category: SkillCategory.language },
+  { name: 'Dart', category: SkillCategory.language },
+  { name: 'PHP', category: SkillCategory.language },
+  { name: 'C#', category: SkillCategory.language },
+  { name: 'Java', category: SkillCategory.language },
+  { name: 'HTML', category: SkillCategory.language },
+  { name: 'CSS', category: SkillCategory.language },
 
   // Frameworks & Libraries
-  { name: 'React',         category: SkillCategory.framework },
-  { name: 'Redux',         category: SkillCategory.framework },
-  { name: 'RxJS',          category: SkillCategory.framework },
-  { name: 'Next.js',       category: SkillCategory.framework },
-  { name: 'Node.js',       category: SkillCategory.framework },
-  { name: 'Express',       category: SkillCategory.framework },
-  { name: 'NestJS',        category: SkillCategory.framework },
-  { name: 'Django',        category: SkillCategory.framework },
-  { name: 'Flutter',       category: SkillCategory.framework },
-  { name: 'D3.js',         category: SkillCategory.framework },
-  { name: 'Single-SPA',   category: SkillCategory.framework },
-  { name: 'Material-UI',  category: SkillCategory.framework },
+  { name: 'React', category: SkillCategory.framework },
+  { name: 'Redux', category: SkillCategory.framework },
+  { name: 'RxJS', category: SkillCategory.framework },
+  { name: 'Next.js', category: SkillCategory.framework },
+  { name: 'Node.js', category: SkillCategory.framework },
+  { name: 'Express', category: SkillCategory.framework },
+  { name: 'NestJS', category: SkillCategory.framework },
+  { name: 'Django', category: SkillCategory.framework },
+  { name: 'Flutter', category: SkillCategory.framework },
+  { name: 'D3.js', category: SkillCategory.framework },
+  { name: 'Single-SPA', category: SkillCategory.framework },
+  { name: 'Material-UI', category: SkillCategory.framework },
   { name: 'Tailwind CSS', category: SkillCategory.framework },
-  { name: 'Bootstrap',    category: SkillCategory.framework },
-  { name: 'CodeIgniter',  category: SkillCategory.framework },
-  { name: '.NET',          category: SkillCategory.framework },
+  { name: 'Bootstrap', category: SkillCategory.framework },
+  { name: 'CodeIgniter', category: SkillCategory.framework },
+  { name: '.NET', category: SkillCategory.framework },
 
   // Databases
-  { name: 'PostgreSQL',    category: SkillCategory.database },
-  { name: 'MongoDB',       category: SkillCategory.database },
-  { name: 'MySQL',         category: SkillCategory.database },
+  { name: 'PostgreSQL', category: SkillCategory.database },
+  { name: 'MongoDB', category: SkillCategory.database },
+  { name: 'MySQL', category: SkillCategory.database },
   { name: 'Elasticsearch', category: SkillCategory.database },
-  { name: 'Redis',         category: SkillCategory.database },
+  { name: 'Redis', category: SkillCategory.database },
 
   // Tools & Platforms
-  { name: 'Docker',           category: SkillCategory.tool },
-  { name: 'AWS',              category: SkillCategory.tool },
-  { name: 'Azure',            category: SkillCategory.tool },
-  { name: 'Git',              category: SkillCategory.tool },
-  { name: 'GitHub Actions',   category: SkillCategory.tool },
-  { name: 'Webpack 5',        category: SkillCategory.tool },
+  { name: 'Docker', category: SkillCategory.tool },
+  { name: 'AWS', category: SkillCategory.tool },
+  { name: 'Azure', category: SkillCategory.tool },
+  { name: 'Git', category: SkillCategory.tool },
+  { name: 'GitHub Actions', category: SkillCategory.tool },
+  { name: 'Webpack 5', category: SkillCategory.tool },
   { name: 'Module Federation', category: SkillCategory.tool },
-  { name: 'Vite',             category: SkillCategory.tool },
-  { name: 'Storybook',        category: SkillCategory.tool },
-  { name: 'GraphQL',          category: SkillCategory.tool },
-  { name: 'REST API',         category: SkillCategory.tool },
-  { name: 'Augment',          category: SkillCategory.tool },
-  { name: 'Claude Code',      category: SkillCategory.tool },
+  { name: 'Vite', category: SkillCategory.tool },
+  { name: 'Storybook', category: SkillCategory.tool },
+  { name: 'GraphQL', category: SkillCategory.tool },
+  { name: 'REST API', category: SkillCategory.tool },
+  { name: 'Augment', category: SkillCategory.tool },
+  { name: 'Claude Code', category: SkillCategory.tool },
 ];
 
 // ─── Experience ───────────────────────────────────────────────────────────────
@@ -101,7 +102,15 @@ export const EXPERIENCE_SEED = [
       'Owned the full frontend lifecycle of DRP Onboarding modules — from component design and Redux state architecture to performance profiling and production release.',
       'Integrated agentic AI tools — Augment and Claude Code — into daily engineering workflows, accelerating feature delivery and improving code quality at scale.',
     ],
-    techStack: ['React', 'Redux', 'TypeScript', 'Webpack 5', 'Module Federation', 'Augment', 'Claude Code'],
+    techStack: [
+      'React',
+      'Redux',
+      'TypeScript',
+      'Webpack 5',
+      'Module Federation',
+      'Augment',
+      'Claude Code',
+    ],
   },
   {
     title: 'Senior Software Engineer - UI',
@@ -117,7 +126,14 @@ export const EXPERIENCE_SEED = [
       'Built and published a shared UI component library integrated into the Rapid Seller Onboarding Platform, cutting per-feature UI development effort by 40%.',
       'Integrated backend APIs from ThreatMatrix, Giact, and Experian directly into the React layer, handling async state, error boundaries, and retry logic for KYC compliance flows.',
     ],
-    techStack: ['React', 'Redux', 'TypeScript', 'Single-SPA', 'RxJS', 'Material-UI'],
+    techStack: [
+      'React',
+      'Redux',
+      'TypeScript',
+      'Single-SPA',
+      'RxJS',
+      'Material-UI',
+    ],
   },
   {
     title: 'Web Full Stack Developer',
@@ -133,7 +149,16 @@ export const EXPERIENCE_SEED = [
       'Built a Node.js framework library exposing a unified API for HTTP networking, push notifications, and cross-app event streaming via RxJS observables.',
       'Developed a Flutter and React-based hybrid mobile application for in-store operations, shipped to Android and iOS with a shared business-logic layer.',
     ],
-    techStack: ['React', 'Redux', 'TypeScript', 'Node.js', 'Single-SPA', 'RxJS', 'Flutter', 'Material-UI'],
+    techStack: [
+      'React',
+      'Redux',
+      'TypeScript',
+      'Node.js',
+      'Single-SPA',
+      'RxJS',
+      'Flutter',
+      'Material-UI',
+    ],
   },
   {
     title: 'Software Engineer - Frontend',
@@ -149,7 +174,16 @@ export const EXPERIENCE_SEED = [
       'Engineered Python data pipelines with Pandas to compute Simple and Extended Patent Family statistics, processing large-scale document corpora with optimised MongoDB aggregations.',
       'Collaborated directly with clients to translate analytical requirements into interactive dashboard features, accelerating insight delivery and strategic decision-making.',
     ],
-    techStack: ['React', 'D3.js', 'Node.js', 'Express', 'Django', 'Elasticsearch', 'MongoDB', 'Python'],
+    techStack: [
+      'React',
+      'D3.js',
+      'Node.js',
+      'Express',
+      'Django',
+      'Elasticsearch',
+      'MongoDB',
+      'Python',
+    ],
   },
   {
     title: 'Co-Founder',
@@ -312,43 +346,55 @@ export const PHOTOS_SEED = [
   {
     title: 'Misty Mountains',
     location: 'Scottish Highlands',
-    originalUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=2400&h=1800',
-    thumbUrl:    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600',
+    originalUrl:
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=2400&h=1800',
+    thumbUrl:
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600',
     sortOrder: 0,
   },
   {
     title: 'City Lights',
     location: 'Urban',
-    originalUrl: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=2400&h=1800',
-    thumbUrl:    'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&h=600',
+    originalUrl:
+      'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=2400&h=1800',
+    thumbUrl:
+      'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&h=600',
     sortOrder: 1,
   },
   {
     title: 'Golden Hour',
     location: 'Park',
-    originalUrl: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=2400&h=1800',
-    thumbUrl:    'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&h=600',
+    originalUrl:
+      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=2400&h=1800',
+    thumbUrl:
+      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&h=600',
     sortOrder: 2,
   },
   {
     title: 'Forest Path',
     location: 'Forest',
-    originalUrl: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=2400&h=1800',
-    thumbUrl:    'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&h=600',
+    originalUrl:
+      'https://images.unsplash.com/photo-1448375240586-882707db888b?w=2400&h=1800',
+    thumbUrl:
+      'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&h=600',
     sortOrder: 3,
   },
   {
     title: 'Ocean Sunset',
     location: 'Beach',
-    originalUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=2400&h=1800',
-    thumbUrl:    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600',
+    originalUrl:
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=2400&h=1800',
+    thumbUrl:
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600',
     sortOrder: 4,
   },
   {
     title: 'Architecture',
     location: 'City',
-    originalUrl: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=2400&h=1800',
-    thumbUrl:    'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600',
+    originalUrl:
+      'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=2400&h=1800',
+    thumbUrl:
+      'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=600',
     sortOrder: 5,
   },
 ];

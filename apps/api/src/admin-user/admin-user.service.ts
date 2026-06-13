@@ -51,10 +51,7 @@ export class AdminUserService implements OnApplicationBootstrap {
     return this.repo.findOne({ where: { email } });
   }
 
-  async validatePassword(
-    plain: string,
-    hash: string,
-  ): Promise<boolean> {
+  async validatePassword(plain: string, hash: string): Promise<boolean> {
     return bcrypt.compare(plain, hash);
   }
 

@@ -49,7 +49,12 @@ export class Project extends BaseEntity {
   @Column({ type: 'varchar', length: 1000, nullable: true, name: 'github_url' })
   githubUrl!: string | null;
 
-  @Column({ type: 'varchar', length: 1000, nullable: true, name: 'live_demo_url' })
+  @Column({
+    type: 'varchar',
+    length: 1000,
+    nullable: true,
+    name: 'live_demo_url',
+  })
   liveDemoUrl!: string | null;
 
   /** Flag for the featured project strip on the homepage */

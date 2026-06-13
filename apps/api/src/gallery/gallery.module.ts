@@ -7,12 +7,9 @@ import { GalleryService } from './gallery.service';
 import { GalleryController } from './gallery.controller';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Album, Photo]),
-    UploadModule,
-  ],
-  providers:   [GalleryService],
+  imports: [TypeOrmModule.forFeature([Album, Photo]), UploadModule],
+  providers: [GalleryService],
   controllers: [GalleryController],
-  exports:     [GalleryService],
+  exports: [GalleryService],
 })
 export class GalleryModule {}

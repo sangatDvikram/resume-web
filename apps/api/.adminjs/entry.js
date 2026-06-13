@@ -1,15 +1,15 @@
 AdminJS.UserComponents = {}
-import MarkdownEditor from '../dist/src/admin/components/markdown-editor'
+import MarkdownEditor from '../dist/admin/components/markdown-editor'
 AdminJS.UserComponents.MarkdownEditor = MarkdownEditor
-import TagPicker from '../dist/src/admin/components/tag-picker'
+import TagPicker from '../dist/admin/components/tag-picker'
 AdminJS.UserComponents.TagPicker = TagPicker
-import SkillPicker from '../dist/src/admin/components/skill-picker'
+import SkillPicker from '../dist/admin/components/skill-picker'
 AdminJS.UserComponents.SkillPicker = SkillPicker
-import MediaUploader from '../dist/src/admin/components/media-uploader'
+import MediaUploader from '../dist/admin/components/media-uploader'
 AdminJS.UserComponents.MediaUploader = MediaUploader
-import VideoManager from '../dist/src/admin/components/video-manager'
+import VideoManager from '../dist/admin/components/video-manager'
 AdminJS.UserComponents.VideoManager = VideoManager
-import PhotoUploader from '../dist/src/admin/components/photo-uploader'
+import PhotoUploader from '../dist/admin/components/photo-uploader'
 AdminJS.UserComponents.PhotoUploader = PhotoUploader
-import Dashboard from '../dist/src/admin/components/dashboard'
+import Dashboard from '../dist/admin/components/dashboard'
 AdminJS.UserComponents.Dashboard = Dashboard

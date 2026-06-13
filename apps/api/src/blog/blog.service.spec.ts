@@ -28,23 +28,24 @@ const mockRepo = () => ({
   createQueryBuilder: jest.fn(),
 });
 
-const makePost = (overrides: Partial<BlogPost> = {}): BlogPost => ({
-  id: 'post-1',
-  title: 'Hello World',
-  slug: 'hello-world',
-  content: '# Hi',
-  htmlContent: '<h1>Hi</h1>',
-  excerpt: 'Hi',
-  published: true,
-  publishedAt: new Date().toISOString() as any,
-  readingTime: 1,
-  tags: [],
-  coverImageUrl: null,
-  coverImagePublicId: null,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  ...overrides,
-} as BlogPost);
+const makePost = (overrides: Partial<BlogPost> = {}): BlogPost =>
+  ({
+    id: 'post-1',
+    title: 'Hello World',
+    slug: 'hello-world',
+    content: '# Hi',
+    htmlContent: '<h1>Hi</h1>',
+    excerpt: 'Hi',
+    published: true,
+    publishedAt: new Date().toISOString() as any,
+    readingTime: 1,
+    tags: [],
+    coverImageUrl: null,
+    coverImagePublicId: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  }) as BlogPost;
 
 describe('BlogService', () => {
   let service: BlogService;
@@ -53,14 +54,17 @@ describe('BlogService', () => {
 
   beforeEach(async () => {
     postRepo = mockRepo();
-    tagRepo  = mockRepo();
+    tagRepo = mockRepo();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BlogService,
         { provide: getRepositoryToken(BlogPost), useValue: postRepo },
-        { provide: getRepositoryToken(Tag),      useValue: tagRepo },
-        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+        { provide: getRepositoryToken(Tag), useValue: tagRepo },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -100,14 +104,18 @@ describe('BlogService', () => {
 
     it('throws NotFoundException for an unknown slug', async () => {
       postRepo.findOne.mockResolvedValue(null);
-      await expect(service.findBySlug('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.findBySlug('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('remove', () => {
     it('throws NotFoundException when deleting a non-existent post', async () => {
       postRepo.delete.mockResolvedValue({ affected: 0 });
-      await expect(service.remove('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('resolves without error when post exists', async () => {

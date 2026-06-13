@@ -82,9 +82,7 @@ export class SqidsService {
    * Reconstruct a UUID string from four 32-bit unsigned integers.
    */
   private numbersToUuid(numbers: number[]): string {
-    const hex = numbers
-      .map((n) => n.toString(16).padStart(8, '0'))
-      .join('');
+    const hex = numbers.map((n) => n.toString(16).padStart(8, '0')).join('');
 
     return [
       hex.slice(0, 8),

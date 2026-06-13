@@ -35,13 +35,16 @@ export class JwtRefreshStrategy extends PassportStrategy(
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          return (req?.cookies?.['refresh_token'] as string | undefined) ?? null;
+          return (
+            (req?.cookies?.['refresh_token'] as string | undefined) ?? null
+          );
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: (
-        config.get<string>('JWT_PUBLIC_KEY') ?? ''
-      ).replace(/\\n/g, '\n'),
+      secretOrKey: (config.get<string>('JWT_PUBLIC_KEY') ?? '').replace(
+        /\\n/g,
+        '\n',
+      ),
       algorithms: ['RS256'],
     });
   }

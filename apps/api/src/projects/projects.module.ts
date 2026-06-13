@@ -8,7 +8,9 @@ import { ProjectsService } from './projects.service';
 import { ProjectsController } from './projects.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Project, ProjectMedia, ProjectVideo, Skill])],
+  imports: [
+    TypeOrmModule.forFeature([Project, ProjectMedia, ProjectVideo, Skill]),
+  ],
   providers: [ProjectsService],
   controllers: [ProjectsController],
   exports: [ProjectsService],

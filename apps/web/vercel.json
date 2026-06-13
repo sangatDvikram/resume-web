@@ -4,5 +4,5 @@
   "installCommand": "yarn install --immutable",
   "buildCommand": "yarn workspace @portfolio-cms/types build && yarn workspace @portfolio-cms/utils build && yarn workspace @portfolio-cms/oat-ui build && yarn workspace web build",
   "outputDirectory": ".next",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./ ../../packages ../../yarn.lock ../../package.json"
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- apps/web packages yarn.lock package.json"
 }

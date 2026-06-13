@@ -23,20 +23,21 @@ const mockRepo = () => ({
   createQueryBuilder: jest.fn(),
 });
 
-const makeAlbum = (overrides: Partial<Album> = {}): Album => ({
-  id: 'album-1',
-  slug: 'test-album',
-  name: 'Test Album',
-  description: 'A test album',
-  location: null,
-  coverId: null,
-  published: true,
-  sortOrder: 0,
-  photos: [],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  ...overrides,
-} as Album);
+const makeAlbum = (overrides: Partial<Album> = {}): Album =>
+  ({
+    id: 'album-1',
+    slug: 'test-album',
+    name: 'Test Album',
+    description: 'A test album',
+    location: null,
+    coverId: null,
+    published: true,
+    sortOrder: 0,
+    photos: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  }) as Album;
 
 describe('GalleryService', () => {
   let service: GalleryService;
@@ -56,7 +57,10 @@ describe('GalleryService', () => {
           provide: UploadService,
           useValue: { uploadPhoto: jest.fn(), uploadImage: jest.fn() },
         },
-        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -109,14 +113,18 @@ describe('GalleryService', () => {
 
     it('throws BadRequestException when slug already exists', async () => {
       albumRepo.findOne.mockResolvedValue(makeAlbum()); // slug clash
-      await expect(service.createAlbum({ name: 'Test Album' })).rejects.toThrow(BadRequestException);
+      await expect(service.createAlbum({ name: 'Test Album' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('deleteAlbum', () => {
     it('throws NotFoundException when album does not exist', async () => {
       albumRepo.delete.mockResolvedValue({ affected: 0 });
-      await expect(service.deleteAlbum('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.deleteAlbum('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('resolves when album is deleted', async () => {

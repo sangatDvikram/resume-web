@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { AlbumSummaryDto, PhotoDto, PhotoPageDto } from "@/lib/api";
+import { ApiEndpoint } from "@/lib/config";
 import { Lightbox } from "./Lightbox";
 import { OatSpinner } from "@portfolio-cms/oat-ui";
 
@@ -17,7 +18,8 @@ type Layout = "masonry" | "grid";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 async function fetchMorePhotos(cursor: string): Promise<PhotoPageDto> {
-  const url = `${API_BASE}/v1/gallery/photos?cursor=${encodeURIComponent(cursor)}`;
+  const url = `${API_BASE}${ApiEndpoint.GALLERY_PHOTOS}?cursor=${encodeURIComponent(cursor)}`;
+  if (process.env.NODE_ENV !== "production") console.log(`[API →] ${url}`);
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch more photos");
   return res.json() as Promise<PhotoPageDto>;

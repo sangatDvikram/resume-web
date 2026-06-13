@@ -4,11 +4,15 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToMany,
+  ManyToOne,
+  JoinColumn,
   JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { Skill } from './skill.entity';
+import { ResumeProfile } from './resume-profile.entity';
 
 @Entity('experience_entries')
 export class ExperienceEntry extends BaseEntity {
@@ -65,6 +69,12 @@ export class ExperienceEntry extends BaseEntity {
     inverseJoinColumn: { name: 'skill_id' },
   })
   skills!: Skill[];
+
+  /** Resume variant this entry belongs to */
+  @ManyToOne(() => ResumeProfile, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'profile_id' })
+  @Index()
+  profile!: ResumeProfile;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

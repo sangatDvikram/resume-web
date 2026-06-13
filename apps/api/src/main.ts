@@ -65,10 +65,18 @@ async function bootstrap() {
       (l: any) => l.name === 'expressInit',
     );
     const insertAt = (corsIdx >= 0 ? corsIdx : initIdx) + 1;
-    router.stack.splice(insertAt, 0, ...admin, ...jsonParser, ...urlencodedParser);
+    router.stack.splice(
+      insertAt,
+      0,
+      ...admin,
+      ...jsonParser,
+      ...urlencodedParser,
+    );
   };
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule.withAdmin(adminModule));
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule.withAdmin(adminModule),
+  );
 
   // ── Static assets (favicon, etc.) ────────────────────────────────────────
   app.useStaticAssets(path.join(process.cwd(), 'public'));
@@ -82,17 +90,27 @@ async function bootstrap() {
     process.env.FRONTEND_URL ?? 'http://localhost:3000',
     'http://localhost:3001',
   ];
+  if (process.env.API_EXTERNAL_URL) {
+    allowedOrigins.push(process.env.API_EXTERNAL_URL);
+  }
   const extra = process.env.EXTRA_CORS_ORIGINS;
   if (extra) {
-    extra.split(',').map(o => o.trim()).filter(Boolean).forEach(o => allowedOrigins.push(o));
+    extra
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)
+      .forEach((o) => allowedOrigins.push(o));
   }
 
   app.enableCors({
     origin: (origin, callback) => {
       // Allow server-to-server requests (no Origin header) and allowed origins
-      if (!origin || allowedOrigins.some(o =>
-        typeof o === 'string' ? o === origin : o.test(origin),
-      )) {
+      if (
+        !origin ||
+        allowedOrigins.some((o) =>
+          typeof o === 'string' ? o === origin : o.test(origin),
+        )
+      ) {
         callback(null, true);
       } else {
         callback(new Error(`CORS: origin "${origin}" is not allowed`));

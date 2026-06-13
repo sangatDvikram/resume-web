@@ -42,9 +42,11 @@ import { SqidsModule } from './common/sqids.module';
           migrations: [__dirname + '/migrations/*{.ts,.js}'],
           synchronize:
             !isProduction && config.get<string>('DB_SYNC') === 'true',
-          logging: !isProduction
-            ? (['query', 'error', 'migration'] as const)
-            : (['error', 'migration'] as const),
+          logging: isProduction
+            ? (['error', 'migration'] as const)
+            : config.get<string>('DB_LOGGING') === 'true'
+              ? (['query', 'error', 'migration'] as const)
+              : (['error', 'migration'] as const),
           extra: {
             max: parseInt(config.get<string>('DB_POOL_MAX') ?? '10', 10),
             ...(useSSL && { ssl: { rejectUnauthorized: isProduction } }),
@@ -101,6 +103,6 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(NoIndexMiddleware)
-      .forRoutes({ path: 'admin*', method: RequestMethod.ALL });
+      .forRoutes({ path: 'admin/*', method: RequestMethod.ALL });
   }
 }

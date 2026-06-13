@@ -7,7 +7,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiCookieAuth,
+} from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -52,7 +57,10 @@ export class AuthController {
   @Throttle({ login: { ttl: 15 * 60 * 1000, limit: 10 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login with email + password — returns access token + sets refresh cookie' })
+  @ApiOperation({
+    summary:
+      'Login with email + password — returns access token + sets refresh cookie',
+  })
   login(
     @CurrentUser() user: AdminUser,
     @Res({ passthrough: true }) res: Response,
@@ -113,7 +121,9 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Logout — clears refresh cookie, client drops access token' })
+  @ApiOperation({
+    summary: 'Logout — clears refresh cookie, client drops access token',
+  })
   logout(@Res({ passthrough: true }) res: Response): void {
     res.clearCookie(REFRESH_COOKIE, {
       ...REFRESH_COOKIE_OPTIONS,

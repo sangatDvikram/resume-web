@@ -11,7 +11,9 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-const esmImport = new Function('m', 'return import(m)') as (m: string) => Promise<any>;
+const esmImport = new Function('m', 'return import(m)') as (
+  m: string,
+) => Promise<any>;
 
 /**
  * Strict custom rehype-sanitize allowlist (E10-S1).
@@ -21,19 +23,52 @@ const esmImport = new Function('m', 'return import(m)') as (m: string) => Promis
  * and any element not in the list below.
  */
 const SANITIZE_SCHEMA = {
-  strip: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'textarea', 'button'],
+  strip: [
+    'script',
+    'style',
+    'iframe',
+    'object',
+    'embed',
+    'form',
+    'input',
+    'textarea',
+    'button',
+  ],
   allowComments: false,
   allowDoctypes: false,
   tagNames: [
-    'h1','h2','h3','h4','h5','h6',
-    'p','br','hr',
-    'strong','em','del','code','pre','blockquote',
-    'ul','ol','li',
-    'table','thead','tbody','tr','th','td',
-    'a','img',
-    'div','span',
-    'details','summary',
-    'sup','sub',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'p',
+    'br',
+    'hr',
+    'strong',
+    'em',
+    'del',
+    'code',
+    'pre',
+    'blockquote',
+    'ul',
+    'ol',
+    'li',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
+    'a',
+    'img',
+    'div',
+    'span',
+    'details',
+    'summary',
+    'sup',
+    'sub',
     'kbd',
   ],
   attributes: {
@@ -53,7 +88,7 @@ const SANITIZE_SCHEMA = {
   },
   protocols: {
     href: ['https', 'http', 'mailto'],
-    src:  ['https'],
+    src: ['https'],
   },
 };
 
@@ -67,12 +102,12 @@ const SANITIZE_SCHEMA = {
  * @returns Sanitized HTML string.
  */
 export async function renderMarkdown(markdown: string): Promise<string> {
-  const { unified }                   = await esmImport('unified');
-  const { default: remarkParse }      = await esmImport('remark-parse');
-  const { default: remarkGfm }        = await esmImport('remark-gfm');
-  const { default: remarkRehype }     = await esmImport('remark-rehype');
-  const { default: rehypeSanitize }   = await esmImport('rehype-sanitize');
-  const { default: rehypeStringify }  = await esmImport('rehype-stringify');
+  const { unified } = await esmImport('unified');
+  const { default: remarkParse } = await esmImport('remark-parse');
+  const { default: remarkGfm } = await esmImport('remark-gfm');
+  const { default: remarkRehype } = await esmImport('remark-rehype');
+  const { default: rehypeSanitize } = await esmImport('rehype-sanitize');
+  const { default: rehypeStringify } = await esmImport('rehype-stringify');
 
   const file = await unified()
     .use(remarkParse)

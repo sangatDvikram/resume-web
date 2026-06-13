@@ -26,7 +26,12 @@ export class BlogPost extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   excerpt!: string | null;
 
-  @Column({ type: 'varchar', length: 1000, nullable: true, name: 'cover_image_url' })
+  @Column({
+    type: 'varchar',
+    length: 1000,
+    nullable: true,
+    name: 'cover_image_url',
+  })
   coverImageUrl!: string | null;
 
   /** Raw Markdown source authored by admin */

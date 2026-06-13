@@ -3,9 +3,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
+import { ResumeProfile } from './resume-profile.entity';
 
 @Entity('certifications')
 export class Certification extends BaseEntity {
@@ -24,6 +28,12 @@ export class Certification extends BaseEntity {
 
   @Column({ default: 0, name: 'sort_order' })
   sortOrder!: number;
+
+  /** Resume variant this certification belongs to */
+  @ManyToOne(() => ResumeProfile, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'profile_id' })
+  @Index()
+  profile!: ResumeProfile;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

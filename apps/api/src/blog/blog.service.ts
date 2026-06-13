@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -37,7 +33,9 @@ export class BlogService {
     const revalidateUrl = this.config.get<string>('NEXT_REVALIDATE_URL');
     const secret = this.config.get<string>('REVALIDATE_SECRET');
     if (!revalidateUrl || !secret) {
-      this.logger.warn('NEXT_REVALIDATE_URL or REVALIDATE_SECRET not set — skipping ISR revalidation.');
+      this.logger.warn(
+        'NEXT_REVALIDATE_URL or REVALIDATE_SECRET not set — skipping ISR revalidation.',
+      );
       return;
     }
     try {
@@ -48,7 +46,9 @@ export class BlogService {
         signal: AbortSignal.timeout(5_000),
       });
       if (!res.ok) {
-        this.logger.warn(`ISR revalidation returned ${res.status} for tags: ${tags.join(', ')}`);
+        this.logger.warn(
+          `ISR revalidation returned ${res.status} for tags: ${tags.join(', ')}`,
+        );
       } else {
         this.logger.log(`ISR revalidated: ${tags.join(', ')}`);
       }
@@ -90,8 +90,18 @@ export class BlogService {
       where: { published: true },
       relations: ['tags'],
       order: { publishedAt: 'DESC' },
-      select: ['id', 'slug', 'title', 'excerpt', 'coverImageUrl',
-               'readingTime', 'published', 'publishedAt', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'slug',
+        'title',
+        'excerpt',
+        'coverImageUrl',
+        'readingTime',
+        'published',
+        'publishedAt',
+        'createdAt',
+        'updatedAt',
+      ],
     });
     return posts as BlogPostSummaryDto[];
   }
@@ -100,8 +110,18 @@ export class BlogService {
     const posts = await this.postRepo.find({
       relations: ['tags'],
       order: { createdAt: 'DESC' },
-      select: ['id', 'slug', 'title', 'excerpt', 'coverImageUrl',
-               'readingTime', 'published', 'publishedAt', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'slug',
+        'title',
+        'excerpt',
+        'coverImageUrl',
+        'readingTime',
+        'published',
+        'publishedAt',
+        'createdAt',
+        'updatedAt',
+      ],
     });
     return posts as BlogPostSummaryDto[];
   }
@@ -118,12 +138,12 @@ export class BlogService {
   // ── Mutations ─────────────────────────────────────────────────────────────
 
   async create(dto: CreateBlogPostDto): Promise<BlogPostDetailDto> {
-    const slug        = generateSlug(dto.title);
+    const slug = generateSlug(dto.title);
     const htmlContent = await renderMarkdown(dto.rawMarkdown);
     const readingTime = estimateReadingTime(dto.rawMarkdown);
-    const tags        = await this.upsertTags(dto.tagNames);
+    const tags = await this.upsertTags(dto.tagNames);
 
-    const published   = dto.published ?? false;
+    const published = dto.published ?? false;
     const publishedAt = published ? new Date() : null;
 
     const post = this.postRepo.create({
@@ -145,21 +165,26 @@ export class BlogService {
   }
 
   async update(id: string, dto: UpdateBlogPostDto): Promise<BlogPostDetailDto> {
-    const post = await this.postRepo.findOne({ where: { id }, relations: ['tags'] });
+    const post = await this.postRepo.findOne({
+      where: { id },
+      relations: ['tags'],
+    });
     if (!post) throw new NotFoundException(`Blog post ${id} not found.`);
 
     if (dto.rawMarkdown !== undefined) {
-      post.rawMarkdown  = dto.rawMarkdown;
-      post.htmlContent  = await renderMarkdown(dto.rawMarkdown);
-      post.readingTime  = estimateReadingTime(dto.rawMarkdown);
+      post.rawMarkdown = dto.rawMarkdown;
+      post.htmlContent = await renderMarkdown(dto.rawMarkdown);
+      post.readingTime = estimateReadingTime(dto.rawMarkdown);
     }
-    if (dto.title        !== undefined) post.title        = dto.title;
-    if (dto.excerpt      !== undefined) post.excerpt      = dto.excerpt ?? null;
-    if (dto.coverImageUrl !== undefined) post.coverImageUrl = dto.coverImageUrl ?? null;
-    if (dto.tagNames     !== undefined) post.tags         = await this.upsertTags(dto.tagNames);
+    if (dto.title !== undefined) post.title = dto.title;
+    if (dto.excerpt !== undefined) post.excerpt = dto.excerpt ?? null;
+    if (dto.coverImageUrl !== undefined)
+      post.coverImageUrl = dto.coverImageUrl ?? null;
+    if (dto.tagNames !== undefined)
+      post.tags = await this.upsertTags(dto.tagNames);
 
     if (dto.published !== undefined) {
-      post.published   = dto.published;
+      post.published = dto.published;
       if (dto.published && !post.publishedAt) post.publishedAt = new Date();
       if (!dto.published) post.publishedAt = null;
     }
@@ -171,7 +196,8 @@ export class BlogService {
 
   async remove(id: string): Promise<void> {
     const result = await this.postRepo.delete(id);
-    if (result.affected === 0) throw new NotFoundException(`Blog post ${id} not found.`);
+    if (result.affected === 0)
+      throw new NotFoundException(`Blog post ${id} not found.`);
     void this.revalidate(['blog']);
   }
 }

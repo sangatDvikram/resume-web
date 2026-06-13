@@ -81,10 +81,11 @@ async function main(): Promise<void> {
   try {
     const repo = AppDataSource.getRepository(AdminUser);
 
-    const existing = await repo.findOne({ where: { email } });
-    if (existing) {
-      console.error(`Admin user already exists: ${email}`);
-      process.exit(1);
+    // Remove ALL existing admin users before creating the new one.
+    const existing = await repo.find();
+    if (existing.length > 0) {
+      await repo.remove(existing);
+      console.log(`  ✓ Removed ${existing.length} existing admin user(s).`);
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);

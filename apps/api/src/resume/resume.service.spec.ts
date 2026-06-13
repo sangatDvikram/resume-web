@@ -20,22 +20,23 @@ const mockRepo = () => ({
   update: jest.fn(),
 });
 
-const makeProfile = (): ResumeProfile => ({
-  id: 'profile-1',
-  name: 'John Doe',
-  position: 'Software Engineer',
-  description: 'A developer',
-  email: 'john@example.com',
-  phone: '555-1234',
-  location: 'NYC',
-  linkedInUrl: 'https://linkedin.com/in/johndoe',
-  githubUrl: 'https://github.com/johndoe',
-  websiteUrl: null,
-  avatarUrl: 'https://example.com/avatar.jpg',
-  careerStartDate: new Date('2016-07-01'),
-  freelanceStartDate: new Date('2012-03-01'),
-  updatedAt: new Date(),
-} as ResumeProfile);
+const makeProfile = (): ResumeProfile =>
+  ({
+    id: 'profile-1',
+    name: 'John Doe',
+    position: 'Software Engineer',
+    description: 'A developer',
+    email: 'john@example.com',
+    phone: '555-1234',
+    location: 'NYC',
+    linkedInUrl: 'https://linkedin.com/in/johndoe',
+    githubUrl: 'https://github.com/johndoe',
+    websiteUrl: null,
+    avatarUrl: 'https://example.com/avatar.jpg',
+    careerStartDate: new Date('2016-07-01'),
+    freelanceStartDate: new Date('2012-03-01'),
+    updatedAt: new Date(),
+  }) as ResumeProfile;
 
 describe('ResumeService', () => {
   let service: ResumeService;
@@ -49,24 +50,27 @@ describe('ResumeService', () => {
 
   beforeEach(async () => {
     profileRepo = mockRepo();
-    skillRepo   = mockRepo();
-    expRepo     = mockRepo();
-    eduRepo     = mockRepo();
-    certRepo    = mockRepo();
-    awardRepo   = mockRepo();
-    patentRepo  = mockRepo();
+    skillRepo = mockRepo();
+    expRepo = mockRepo();
+    eduRepo = mockRepo();
+    certRepo = mockRepo();
+    awardRepo = mockRepo();
+    patentRepo = mockRepo();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ResumeService,
-        { provide: getRepositoryToken(ResumeProfile),   useValue: profileRepo },
-        { provide: getRepositoryToken(Skill),           useValue: skillRepo },
+        { provide: getRepositoryToken(ResumeProfile), useValue: profileRepo },
+        { provide: getRepositoryToken(Skill), useValue: skillRepo },
         { provide: getRepositoryToken(ExperienceEntry), useValue: expRepo },
-        { provide: getRepositoryToken(EducationEntry),  useValue: eduRepo },
-        { provide: getRepositoryToken(Certification),   useValue: certRepo },
-        { provide: getRepositoryToken(Award),           useValue: awardRepo },
-        { provide: getRepositoryToken(Patent),          useValue: patentRepo },
-        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+        { provide: getRepositoryToken(EducationEntry), useValue: eduRepo },
+        { provide: getRepositoryToken(Certification), useValue: certRepo },
+        { provide: getRepositoryToken(Award), useValue: awardRepo },
+        { provide: getRepositoryToken(Patent), useValue: patentRepo },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -96,7 +100,7 @@ describe('ResumeService', () => {
       awardRepo.find.mockResolvedValue([]);
       patentRepo.find.mockResolvedValue([]);
 
-      const result = await service.getResume();
+      const result = await service.getResume('default');
       expect(result.profile.name).toBe('John Doe');
       expect(result.profile.yearsOfExperienceString).toMatch(/^\d+\+$/);
     });
@@ -110,13 +114,15 @@ describe('ResumeService', () => {
       awardRepo.find.mockResolvedValue([]);
       patentRepo.find.mockResolvedValue([]);
 
-      await expect(service.getResume()).rejects.toThrow(NotFoundException);
+      await expect(service.getResume('default')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findAllSkills', () => {
     it('returns all skills', async () => {
-      skillRepo.find.mockResolvedValue([{ id: 's1', name: 'TypeScript', category: 'Languages' }]);
+      skillRepo.find.mockResolvedValue([
+        { id: 's1', name: 'TypeScript', category: 'Languages' },
+      ]);
       const result = await service.findAllSkills();
       expect(result).toHaveLength(1);
     });

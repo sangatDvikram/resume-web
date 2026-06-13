@@ -26,28 +26,29 @@ const mockRepo = () => ({
   createQueryBuilder: jest.fn(),
 });
 
-const makeProject = (overrides: Partial<Project> = {}): Project => ({
-  id: 'proj-1',
-  slug: 'my-project',
-  title: 'My Project',
-  company: 'ACME',
-  role: 'Dev',
-  description: 'Description',
-  htmlDescription: '<p>desc</p>',
-  startDate: new Date('2024-01-01'),
-  endDate: null,
-  githubUrl: null,
-  liveDemoUrl: null,
-  featured: false,
-  published: true,
-  sortOrder: 0,
-  skills: [],
-  media: [],
-  videos: [],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  ...overrides,
-} as Project);
+const makeProject = (overrides: Partial<Project> = {}): Project =>
+  ({
+    id: 'proj-1',
+    slug: 'my-project',
+    title: 'My Project',
+    company: 'ACME',
+    role: 'Dev',
+    description: 'Description',
+    htmlDescription: '<p>desc</p>',
+    startDate: new Date('2024-01-01'),
+    endDate: null,
+    githubUrl: null,
+    liveDemoUrl: null,
+    featured: false,
+    published: true,
+    sortOrder: 0,
+    skills: [],
+    media: [],
+    videos: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  }) as Project;
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -58,18 +59,21 @@ describe('ProjectsService', () => {
 
   beforeEach(async () => {
     projectRepo = mockRepo();
-    mediaRepo   = mockRepo();
-    videoRepo   = mockRepo();
-    skillRepo   = mockRepo();
+    mediaRepo = mockRepo();
+    videoRepo = mockRepo();
+    skillRepo = mockRepo();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProjectsService,
-        { provide: getRepositoryToken(Project),      useValue: projectRepo },
+        { provide: getRepositoryToken(Project), useValue: projectRepo },
         { provide: getRepositoryToken(ProjectMedia), useValue: mediaRepo },
         { provide: getRepositoryToken(ProjectVideo), useValue: videoRepo },
-        { provide: getRepositoryToken(Skill),        useValue: skillRepo },
-        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+        { provide: getRepositoryToken(Skill), useValue: skillRepo },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -100,14 +104,18 @@ describe('ProjectsService', () => {
 
     it('throws NotFoundException for unknown slug', async () => {
       projectRepo.findOne.mockResolvedValue(null);
-      await expect(service.findBySlug('nope')).rejects.toThrow(NotFoundException);
+      await expect(service.findBySlug('nope')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('remove', () => {
     it('throws NotFoundException when project does not exist', async () => {
       projectRepo.findOne.mockResolvedValue(null);
-      await expect(service.remove('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('resolves when project is found and deleted', async () => {

@@ -34,20 +34,39 @@ import {
 export class AdminJsModule {
   static async createAsync(): Promise<DynamicModule> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    const esmImport = new Function('m', 'return import(m)') as (m: string) => Promise<any>;
+    const esmImport = new Function('m', 'return import(m)') as (
+      m: string,
+    ) => Promise<any>;
 
     // Type assertions are used here because typeof import() requires moduleResolution
     // node16/nodenext/bundler, which is incompatible with NestJS's CommonJS output.
-    const { AdminModule } = await esmImport('@adminjs/nestjs') as { AdminModule: any };
-    const { default: AdminJS, ComponentLoader, BaseRecord: AdminBaseRecord } = await esmImport('adminjs') as { default: any; ComponentLoader: any; BaseRecord: any };
-    const { Database, Resource: TypeOrmResource } = await esmImport('@adminjs/typeorm') as { Database: any; Resource: any };
+    const { AdminModule } = (await esmImport('@adminjs/nestjs')) as {
+      AdminModule: any;
+    };
+    const {
+      default: AdminJS,
+      ComponentLoader,
+      BaseRecord: AdminBaseRecord,
+    } = (await esmImport('adminjs')) as {
+      default: any;
+      ComponentLoader: any;
+      BaseRecord: any;
+    };
+    const { Database, Resource: TypeOrmResource } = (await esmImport(
+      '@adminjs/typeorm',
+    )) as { Database: any; Resource: any };
 
     // ── M2M helper ────────────────────────────────────────────────────────────
     // Returns the submitted IDs for a M2M field, or null if the field was not
     // touched (so we can distinguish "unchanged" from "cleared").
     // The SkillPicker / TagPicker emit '__empty__' when the user removes all items.
-    function extractM2MIds(params: Record<string, any>, field: string): string[] | null {
-      const keys = Object.keys(params).filter((k) => new RegExp(`^${field}\\.\\d+$`).test(k));
+    function extractM2MIds(
+      params: Record<string, any>,
+      field: string,
+    ): string[] | null {
+      const keys = Object.keys(params).filter((k) =>
+        new RegExp(`^${field}\\.\\d+$`).test(k),
+      );
       if (keys.length === 0) return null;
       return keys
         .map((k) => params[k] as string)
@@ -60,7 +79,10 @@ export class AdminJsModule {
     // handles scalar columns; it silently ignores M2M join tables).
     class ProjectResource extends (TypeOrmResource as any) {
       private _ds: DataSource;
-      constructor(model: any, ds: DataSource) { super(model); this._ds = ds; }
+      constructor(model: any, ds: DataSource) {
+        super(model);
+        this._ds = ds;
+      }
 
       async findOne(id: string) {
         const instance = await this._ds
@@ -79,9 +101,14 @@ export class AdminJsModule {
         if (skillIds !== null) {
           const pr = this._ds.getRepository(Project);
           const sr = this._ds.getRepository(Skill);
-          const p = await pr.findOne({ where: { id: pk }, relations: ['skills'] });
+          const p = await pr.findOne({
+            where: { id: pk },
+            relations: ['skills'],
+          });
           if (p) {
-            p.skills = skillIds.length ? await sr.findBy({ id: In(skillIds) }) : [];
+            p.skills = skillIds.length
+              ? await sr.findBy({ id: In(skillIds) })
+              : [];
             await pr.save(p);
           }
         }
@@ -97,8 +124,14 @@ export class AdminJsModule {
         if (skillIds?.length && result?.id) {
           const pr = this._ds.getRepository(Project);
           const sr = this._ds.getRepository(Skill);
-          const p = await pr.findOne({ where: { id: result.id }, relations: ['skills'] });
-          if (p) { p.skills = await sr.findBy({ id: In(skillIds) }); await pr.save(p); }
+          const p = await pr.findOne({
+            where: { id: result.id },
+            relations: ['skills'],
+          });
+          if (p) {
+            p.skills = await sr.findBy({ id: In(skillIds) });
+            await pr.save(p);
+          }
         }
         return result;
       }
@@ -108,7 +141,10 @@ export class AdminJsModule {
     // Same pattern for the tags M2M on BlogPost.
     class BlogPostResource extends (TypeOrmResource as any) {
       private _ds: DataSource;
-      constructor(model: any, ds: DataSource) { super(model); this._ds = ds; }
+      constructor(model: any, ds: DataSource) {
+        super(model);
+        this._ds = ds;
+      }
 
       async findOne(id: string) {
         const instance = await this._ds
@@ -127,9 +163,14 @@ export class AdminJsModule {
         if (tagIds !== null) {
           const br = this._ds.getRepository(BlogPost);
           const tr = this._ds.getRepository(Tag);
-          const post = await br.findOne({ where: { id: pk }, relations: ['tags'] });
+          const post = await br.findOne({
+            where: { id: pk },
+            relations: ['tags'],
+          });
           if (post) {
-            post.tags = tagIds.length ? await tr.findBy({ id: In(tagIds) }) : [];
+            post.tags = tagIds.length
+              ? await tr.findBy({ id: In(tagIds) })
+              : [];
             await br.save(post);
           }
         }
@@ -145,8 +186,14 @@ export class AdminJsModule {
         if (tagIds?.length && result?.id) {
           const br = this._ds.getRepository(BlogPost);
           const tr = this._ds.getRepository(Tag);
-          const post = await br.findOne({ where: { id: result.id }, relations: ['tags'] });
-          if (post) { post.tags = await tr.findBy({ id: In(tagIds) }); await br.save(post); }
+          const post = await br.findOne({
+            where: { id: result.id },
+            relations: ['tags'],
+          });
+          if (post) {
+            post.tags = await tr.findBy({ id: In(tagIds) });
+            await br.save(post);
+          }
         }
         return result;
       }
@@ -158,7 +205,7 @@ export class AdminJsModule {
     // ComponentLoader is created once and shared via closure into useFactory.
     // AdminJS's internal esbuild bundler compiles these .tsx files at startup.
     const componentLoader = new ComponentLoader();
-    const componentsDir   = path.join(__dirname, 'components');
+    const componentsDir = path.join(__dirname, 'components');
 
     const MarkdownEditorComp = componentLoader.add(
       'MarkdownEditor',
@@ -206,11 +253,20 @@ export class AdminJsModule {
             // before AdminJS builds its resource list in onModuleInit.
             const entities = [
               AdminUser,
-              ResumeProfile, Skill, ExperienceEntry, EducationEntry,
-              Patent, Certification, Award,
-              Tag, BlogPost,
-              Project, ProjectMedia, ProjectVideo,
-              Album, Photo,
+              ResumeProfile,
+              Skill,
+              ExperienceEntry,
+              EducationEntry,
+              Patent,
+              Certification,
+              Award,
+              Tag,
+              BlogPost,
+              Project,
+              ProjectMedia,
+              ProjectVideo,
+              Album,
+              Photo,
             ];
             for (const entity of entities) {
               entity.useDataSource(dataSource);
@@ -234,29 +290,29 @@ export class AdminJsModule {
               return response;
             };
 
-            const afterResume   = makeAfterHook(['resume']);
-            const afterBlog     = makeAfterHook(['blog']);
+            const afterResume = makeAfterHook(['resume']);
+            const afterBlog = makeAfterHook(['blog']);
             const afterProjects = makeAfterHook(['projects']);
-            const afterGallery  = makeAfterHook(['gallery']);
+            const afterGallery = makeAfterHook(['gallery']);
 
             /** Resume mutation hooks — applied to edit, new, delete */
             const resumeActions = {
-              edit:   { after: afterResume },
-              new:    { after: afterResume },
+              edit: { after: afterResume },
+              new: { after: afterResume },
               delete: { after: afterResume },
             };
 
             /** Blog mutation hooks */
             const blogActions = {
-              edit:   { after: afterBlog },
-              new:    { after: afterBlog },
+              edit: { after: afterBlog },
+              new: { after: afterBlog },
               delete: { after: afterBlog },
             };
 
             /** Project mutation hooks */
             const projectActions = {
-              edit:   { after: afterProjects },
-              new:    { after: afterProjects },
+              edit: { after: afterProjects },
+              new: { after: afterProjects },
               delete: { after: afterProjects },
             };
 
@@ -287,9 +343,18 @@ export class AdminJsModule {
                     options: {
                       actions: resumeActions,
                       editProperties: [
-                        'name', 'position', 'description', 'email', 'phone',
-                        'location', 'linkedInUrl', 'githubUrl', 'websiteUrl',
-                        'avatarUrl', 'careerStartDate', 'freelanceStartDate',
+                        'name',
+                        'position',
+                        'description',
+                        'email',
+                        'phone',
+                        'location',
+                        'linkedInUrl',
+                        'githubUrl',
+                        'websiteUrl',
+                        'avatarUrl',
+                        'careerStartDate',
+                        'freelanceStartDate',
                       ],
                     },
                   },
@@ -305,10 +370,22 @@ export class AdminJsModule {
                     resource: ExperienceEntry,
                     options: {
                       actions: resumeActions,
-                      listProperties: ['title', 'company', 'location', 'isCurrent', 'sortOrder'],
+                      listProperties: [
+                        'title',
+                        'company',
+                        'location',
+                        'isCurrent',
+                        'sortOrder',
+                      ],
                       editProperties: [
-                        'title', 'company', 'location', 'startDate', 'endDate',
-                        'isCurrent', 'tasks', 'sortOrder',
+                        'title',
+                        'company',
+                        'location',
+                        'startDate',
+                        'endDate',
+                        'isCurrent',
+                        'tasks',
+                        'sortOrder',
                       ],
                     },
                   },
@@ -316,8 +393,18 @@ export class AdminJsModule {
                     resource: EducationEntry,
                     options: {
                       actions: resumeActions,
-                      listProperties: ['degree', 'university', 'duration', 'sortOrder'],
-                      editProperties: ['degree', 'university', 'duration', 'sortOrder'],
+                      listProperties: [
+                        'degree',
+                        'university',
+                        'duration',
+                        'sortOrder',
+                      ],
+                      editProperties: [
+                        'degree',
+                        'university',
+                        'duration',
+                        'sortOrder',
+                      ],
                     },
                   },
                   {
@@ -357,10 +444,21 @@ export class AdminJsModule {
                     resource: new BlogPostResource(BlogPost, dataSource),
                     options: {
                       actions: blogActions,
-                      listProperties: ['title', 'slug', 'published', 'publishedAt', 'readingTime'],
+                      listProperties: [
+                        'title',
+                        'slug',
+                        'published',
+                        'publishedAt',
+                        'readingTime',
+                      ],
                       editProperties: [
-                        'title', 'excerpt', 'coverImageUrl', 'tags',
-                        'rawMarkdown', 'published', 'publishedAt',
+                        'title',
+                        'excerpt',
+                        'coverImageUrl',
+                        'tags',
+                        'rawMarkdown',
+                        'published',
+                        'publishedAt',
                       ],
                       properties: {
                         // ── E5-S6: Markdown editor with image upload ──────────
@@ -379,11 +477,27 @@ export class AdminJsModule {
                     resource: new ProjectResource(Project, dataSource),
                     options: {
                       actions: projectActions,
-                      listProperties: ['title', 'slug', 'company', 'featured', 'published', 'sortOrder'],
+                      listProperties: [
+                        'title',
+                        'slug',
+                        'company',
+                        'featured',
+                        'published',
+                        'sortOrder',
+                      ],
                       editProperties: [
-                        'title', 'company', 'role', 'startDate', 'endDate',
-                        'githubUrl', 'liveDemoUrl', 'featured', 'published', 'sortOrder',
-                        'skills', 'description',
+                        'title',
+                        'company',
+                        'role',
+                        'startDate',
+                        'endDate',
+                        'githubUrl',
+                        'liveDemoUrl',
+                        'featured',
+                        'published',
+                        'sortOrder',
+                        'skills',
+                        'description',
                       ],
                       properties: {
                         description: {
@@ -422,14 +536,24 @@ export class AdminJsModule {
                     resource: Album,
                     options: {
                       actions: {
-                        edit:   { after: afterGallery },
-                        new:    { after: afterGallery },
+                        edit: { after: afterGallery },
+                        new: { after: afterGallery },
                         delete: { after: afterGallery },
                       },
-                      listProperties: ['name', 'slug', 'location', 'published', 'sortOrder'],
+                      listProperties: [
+                        'name',
+                        'slug',
+                        'location',
+                        'published',
+                        'sortOrder',
+                      ],
                       editProperties: [
-                        'name', 'description', 'location',
-                        'coverId', 'published', 'sortOrder',
+                        'name',
+                        'description',
+                        'location',
+                        'coverId',
+                        'published',
+                        'sortOrder',
                       ],
                     },
                   },
@@ -437,18 +561,32 @@ export class AdminJsModule {
                     resource: Photo,
                     options: {
                       actions: {
-                        edit:   { after: afterGallery },
-                        new:    { after: afterGallery },
+                        edit: { after: afterGallery },
+                        new: { after: afterGallery },
                         delete: { after: afterGallery },
                       },
-                      listProperties: ['thumbUrl', 'title', 'location', 'published', 'sortOrder'],
+                      listProperties: [
+                        'thumbUrl',
+                        'title',
+                        'location',
+                        'published',
+                        'sortOrder',
+                      ],
                       editProperties: [
-                        'originalUrl', 'title', 'altText', 'location',
-                        'album', 'published', 'sortOrder',
+                        'originalUrl',
+                        'title',
+                        'altText',
+                        'location',
+                        'album',
+                        'published',
+                        'sortOrder',
                       ],
                       properties: {
                         originalUrl: {
-                          components: { edit: PhotoUploaderComp, show: PhotoUploaderComp },
+                          components: {
+                            edit: PhotoUploaderComp,
+                            show: PhotoUploaderComp,
+                          },
                         },
                       },
                     },
@@ -466,14 +604,23 @@ export class AdminJsModule {
                 },
                 cookieName:
                   config.get<string>('SESSION_COOKIE_NAME') ?? 'adminjs',
+                // @adminjs/express uses cookiePassword as the express-session
+                // secret (see buildAuthenticatedRouter.js:66). It is required —
+                // removing it causes "secret option required for sessions".
                 cookiePassword:
-                  config.get<string>('SESSION_SECRET') ?? 'change-me-in-prod',
+                  config.get<string>('SESSION_SECRET') || 'change-me-in-prod',
               },
+              // sessionOptions are spread before cookiePassword is applied as
+              // the secret, so setting `secret` here has no effect.
               sessionOptions: {
                 resave: false,
                 saveUninitialized: false,
-                secret:
-                  config.get<string>('SESSION_SECRET') ?? 'change-me-in-prod',
+                cookie: {
+                  httpOnly: true,
+                  secure: config.get('NODE_ENV') === 'production',
+                  sameSite: 'lax' as const,
+                  maxAge: 24 * 60 * 60 * 1000, // 24 h
+                },
               },
             };
           },

@@ -28,39 +28,44 @@ const PAGE_SIZE = 24;
 
 function toPhotoDto(p: Photo): PhotoDto {
   return {
-    id:          p.id,
-    title:       p.title,
-    altText:     p.altText,
-    location:    p.location,
-    publicId:    p.publicId,
+    id: p.id,
+    title: p.title,
+    altText: p.altText,
+    location: p.location,
+    publicId: p.publicId,
     originalUrl: p.originalUrl,
-    thumbUrl:    p.thumbUrl,
-    lqipUrl:     p.lqipUrl,
-    width:       p.width,
-    height:      p.height,
-    exif:        p.exif as any ?? null,
-    sortOrder:   p.sortOrder,
-    published:   p.published,
-    albumId:     (p.album as any)?.id ?? null,
-    createdAt:   p.createdAt.toISOString(),
-    updatedAt:   p.updatedAt.toISOString(),
+    thumbUrl: p.thumbUrl,
+    lqipUrl: p.lqipUrl,
+    width: p.width,
+    height: p.height,
+    exif: (p.exif as any) ?? null,
+    sortOrder: p.sortOrder,
+    published: p.published,
+    albumId: (p.album as any)?.id ?? null,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
   };
 }
 
-function toAlbumSummary(album: Album, coverUrl: string | null, lqipUrl: string | null, photoCount: number): AlbumSummaryDto {
+function toAlbumSummary(
+  album: Album,
+  coverUrl: string | null,
+  lqipUrl: string | null,
+  photoCount: number,
+): AlbumSummaryDto {
   return {
-    id:          album.id,
-    slug:        album.slug,
-    name:        album.name,
+    id: album.id,
+    slug: album.slug,
+    name: album.name,
     description: album.description,
-    location:    album.location,
+    location: album.location,
     coverUrl,
     lqipUrl,
     photoCount,
-    published:   album.published,
-    sortOrder:   album.sortOrder,
-    createdAt:   album.createdAt.toISOString(),
-    updatedAt:   album.updatedAt.toISOString(),
+    published: album.published,
+    sortOrder: album.sortOrder,
+    createdAt: album.createdAt.toISOString(),
+    updatedAt: album.updatedAt.toISOString(),
   };
 }
 
@@ -85,17 +90,17 @@ export class GalleryService {
 
   private async revalidate(tags: string[] = ['gallery']): Promise<void> {
     const revalidateUrl = this.config.get<string>('NEXT_REVALIDATE_URL');
-    const secret        = this.config.get<string>('REVALIDATE_SECRET');
+    const secret = this.config.get<string>('REVALIDATE_SECRET');
     if (!revalidateUrl || !secret) return;
     try {
       const res = await fetch(revalidateUrl, {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ tags, secret }),
-        signal:  AbortSignal.timeout(5_000),
+        body: JSON.stringify({ tags, secret }),
+        signal: AbortSignal.timeout(5_000),
       });
       if (!res.ok) this.logger.warn(`ISR revalidation returned ${res.status}`);
-      else         this.logger.log(`ISR revalidated: ${tags.join(', ')}`);
+      else this.logger.log(`ISR revalidated: ${tags.join(', ')}`);
     } catch (err) {
       this.logger.error('ISR revalidation fetch failed', err);
     }
@@ -103,14 +108,19 @@ export class GalleryService {
 
   // ── Cover resolution helper ───────────────────────────────────────────────
 
-  private async resolveCoverUrls(albums: Album[]): Promise<Map<string, { coverUrl: string | null; lqipUrl: string | null }>> {
-    const coverIds = albums.map(a => a.coverId).filter(Boolean) as string[];
+  private async resolveCoverUrls(
+    albums: Album[],
+  ): Promise<Map<string, { coverUrl: string | null; lqipUrl: string | null }>> {
+    const coverIds = albums.map((a) => a.coverId).filter(Boolean) as string[];
     const covers = coverIds.length
       ? await this.photoRepo.findByIds(coverIds)
       : [];
-    const coverMap = new Map(covers.map(p => [p.id, p]));
+    const coverMap = new Map(covers.map((p) => [p.id, p]));
 
-    const result = new Map<string, { coverUrl: string | null; lqipUrl: string | null }>();
+    const result = new Map<
+      string,
+      { coverUrl: string | null; lqipUrl: string | null }
+    >();
     for (const album of albums) {
       if (album.coverId && coverMap.has(album.coverId)) {
         const p = coverMap.get(album.coverId)!;
@@ -138,28 +148,48 @@ export class GalleryService {
       .where(publishedOnly ? 'p.published = true' : '1=1')
       .groupBy('p.album_id')
       .getRawMany<{ albumId: string; cnt: string }>();
-    const countMap = new Map(counts.map(r => [r.albumId, Number(r.cnt)]));
+    const countMap = new Map(counts.map((r) => [r.albumId, Number(r.cnt)]));
 
     const coverUrls = await this.resolveCoverUrls(albums);
 
-    return albums.map(a => {
-      const { coverUrl, lqipUrl } = coverUrls.get(a.id) ?? { coverUrl: null, lqipUrl: null };
+    return albums.map((a) => {
+      const { coverUrl, lqipUrl } = coverUrls.get(a.id) ?? {
+        coverUrl: null,
+        lqipUrl: null,
+      };
       return toAlbumSummary(a, coverUrl, lqipUrl, countMap.get(a.id) ?? 0);
     });
   }
 
-  async findAlbumBySlug(slug: string, cursor?: string, publishedOnly = true): Promise<AlbumDetailDto> {
+  async findAlbumBySlug(
+    slug: string,
+    cursor?: string,
+    publishedOnly = true,
+  ): Promise<AlbumDetailDto> {
     const album = await this.albumRepo.findOne({
       where: publishedOnly ? { slug, published: true } : { slug },
     });
     if (!album) throw new NotFoundException(`Album "${slug}" not found.`);
 
-    const { photos, nextCursor, total } = await this.listPhotos(undefined, album.id, cursor, publishedOnly);
+    const { photos, nextCursor, total } = await this.listPhotos(
+      undefined,
+      album.id,
+      cursor,
+      publishedOnly,
+    );
 
     const coverUrls = await this.resolveCoverUrls([album]);
-    const { coverUrl, lqipUrl } = coverUrls.get(album.id) ?? { coverUrl: null, lqipUrl: null };
+    const { coverUrl, lqipUrl } = coverUrls.get(album.id) ?? {
+      coverUrl: null,
+      lqipUrl: null,
+    };
 
-    return { ...toAlbumSummary(album, coverUrl, lqipUrl, total), photos, nextCursor, total };
+    return {
+      ...toAlbumSummary(album, coverUrl, lqipUrl, total),
+      photos,
+      nextCursor,
+      total,
+    };
   }
 
   // ── Photos: public ────────────────────────────────────────────────────────
@@ -173,7 +203,9 @@ export class GalleryService {
     cursor?: string,
     publishedOnly = true,
   ): Promise<PhotoPageDto> {
-    const offset = cursor ? Number(Buffer.from(cursor, 'base64').toString('utf8')) : 0;
+    const offset = cursor
+      ? Number(Buffer.from(cursor, 'base64').toString('utf8'))
+      : 0;
     const effectiveAlbum = albumId ?? albumIdFilter;
 
     const qb = this.photoRepo
@@ -183,14 +215,20 @@ export class GalleryService {
       .addOrderBy('p.createdAt', 'ASC');
 
     if (publishedOnly) qb.andWhere('p.published = true');
-    if (effectiveAlbum) qb.andWhere('album.id = :albumId', { albumId: effectiveAlbum });
+    if (effectiveAlbum)
+      qb.andWhere('album.id = :albumId', { albumId: effectiveAlbum });
 
-    const [photos, total] = await qb.skip(offset).take(PAGE_SIZE + 1).getManyAndCount();
+    const [photos, total] = await qb
+      .skip(offset)
+      .take(PAGE_SIZE + 1)
+      .getManyAndCount();
 
-    const hasMore   = photos.length > PAGE_SIZE;
-    const slice     = hasMore ? photos.slice(0, PAGE_SIZE) : photos;
+    const hasMore = photos.length > PAGE_SIZE;
+    const slice = hasMore ? photos.slice(0, PAGE_SIZE) : photos;
     const nextOffset = offset + PAGE_SIZE;
-    const nextCursor = hasMore ? Buffer.from(String(nextOffset)).toString('base64') : null;
+    const nextCursor = hasMore
+      ? Buffer.from(String(nextOffset)).toString('base64')
+      : null;
 
     return { photos: slice.map(toPhotoDto), nextCursor, total };
   }
@@ -200,7 +238,8 @@ export class GalleryService {
   async createAlbum(dto: CreateAlbumDto): Promise<AlbumSummaryDto> {
     const slug = generateSlug(dto.name);
     const existing = await this.albumRepo.findOne({ where: { slug } });
-    if (existing) throw new BadRequestException(`Slug "${slug}" already exists.`);
+    if (existing)
+      throw new BadRequestException(`Slug "${slug}" already exists.`);
 
     const album = this.albumRepo.create({
       ...dto,
@@ -219,31 +258,36 @@ export class GalleryService {
 
     if (dto.name && dto.name !== album.name) {
       const newSlug = generateSlug(dto.name);
-      const clash   = await this.albumRepo.findOne({ where: { slug: newSlug } });
-      if (clash && clash.id !== id) throw new BadRequestException(`Slug "${newSlug}" already in use.`);
+      const clash = await this.albumRepo.findOne({ where: { slug: newSlug } });
+      if (clash && clash.id !== id)
+        throw new BadRequestException(`Slug "${newSlug}" already in use.`);
       album.slug = newSlug;
     }
 
     Object.assign(album, {
-      ...(dto.name        !== undefined && { name:        dto.name }),
+      ...(dto.name !== undefined && { name: dto.name }),
       ...(dto.description !== undefined && { description: dto.description }),
-      ...(dto.location    !== undefined && { location:    dto.location }),
-      ...(dto.published   !== undefined && { published:   dto.published }),
-      ...(dto.sortOrder   !== undefined && { sortOrder:   dto.sortOrder }),
-      ...(dto.coverId     !== undefined && { coverId:     dto.coverId }),
+      ...(dto.location !== undefined && { location: dto.location }),
+      ...(dto.published !== undefined && { published: dto.published }),
+      ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
+      ...(dto.coverId !== undefined && { coverId: dto.coverId }),
     });
 
     const saved = await this.albumRepo.save(album);
     void this.revalidate(['gallery']);
     const coverUrls = await this.resolveCoverUrls([saved]);
-    const { coverUrl, lqipUrl } = coverUrls.get(saved.id) ?? { coverUrl: null, lqipUrl: null };
+    const { coverUrl, lqipUrl } = coverUrls.get(saved.id) ?? {
+      coverUrl: null,
+      lqipUrl: null,
+    };
     const cnt = await this.photoRepo.count({ where: { album: { id } } });
     return toAlbumSummary(saved, coverUrl, lqipUrl, cnt);
   }
 
   async deleteAlbum(id: string): Promise<void> {
     const result = await this.albumRepo.delete(id);
-    if (result.affected === 0) throw new NotFoundException(`Album ${id} not found.`);
+    if (result.affected === 0)
+      throw new NotFoundException(`Album ${id} not found.`);
     void this.revalidate(['gallery']);
   }
 
@@ -267,18 +311,18 @@ export class GalleryService {
       .select('MAX(p.sort_order)', 'max')
       .where(albumId ? 'p.album_id = :albumId' : '1=1', { albumId })
       .getRawOne<{ max: string | null }>();
-    const sortOrder = (Number(maxOrder?.max ?? -1) + 1);
+    const sortOrder = Number(maxOrder?.max ?? -1) + 1;
 
     const photo = this.photoRepo.create({
       originalUrl: uploadResult.originalUrl,
-      thumbUrl:    uploadResult.thumbUrl,
-      lqipUrl:     uploadResult.lqipUrl,
-      publicId:    uploadResult.publicId,
-      width:       uploadResult.width,
-      height:      uploadResult.height,
-      exif:        uploadResult.exif as any,
+      thumbUrl: uploadResult.thumbUrl,
+      lqipUrl: uploadResult.lqipUrl,
+      publicId: uploadResult.publicId,
+      width: uploadResult.width,
+      height: uploadResult.height,
+      exif: uploadResult.exif as any,
       sortOrder,
-      published:   true,
+      published: true,
       album,
     });
     const saved = await this.photoRepo.save(photo);
@@ -287,23 +331,29 @@ export class GalleryService {
   }
 
   async updatePhoto(id: string, dto: UpdatePhotoDto): Promise<PhotoDto> {
-    const photo = await this.photoRepo.findOne({ where: { id }, relations: ['album'] });
+    const photo = await this.photoRepo.findOne({
+      where: { id },
+      relations: ['album'],
+    });
     if (!photo) throw new NotFoundException(`Photo ${id} not found.`);
 
     if (dto.albumId !== undefined) {
       if (dto.albumId === null) {
         photo.album = null;
       } else {
-        const album = await this.albumRepo.findOne({ where: { id: dto.albumId } });
-        if (!album) throw new NotFoundException(`Album ${dto.albumId} not found.`);
+        const album = await this.albumRepo.findOne({
+          where: { id: dto.albumId },
+        });
+        if (!album)
+          throw new NotFoundException(`Album ${dto.albumId} not found.`);
         photo.album = album;
       }
     }
 
     Object.assign(photo, {
-      ...(dto.title     !== undefined && { title:     dto.title }),
-      ...(dto.altText   !== undefined && { altText:   dto.altText }),
-      ...(dto.location  !== undefined && { location:  dto.location }),
+      ...(dto.title !== undefined && { title: dto.title }),
+      ...(dto.altText !== undefined && { altText: dto.altText }),
+      ...(dto.location !== undefined && { location: dto.location }),
       ...(dto.published !== undefined && { published: dto.published }),
       ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
     });
@@ -315,11 +365,15 @@ export class GalleryService {
 
   async deletePhoto(id: string): Promise<void> {
     const result = await this.photoRepo.delete(id);
-    if (result.affected === 0) throw new NotFoundException(`Photo ${id} not found.`);
+    if (result.affected === 0)
+      throw new NotFoundException(`Photo ${id} not found.`);
     void this.revalidate(['gallery']);
   }
 
-  async reorderPhotos(albumId: string | undefined, dto: ReorderPhotosDto): Promise<void> {
+  async reorderPhotos(
+    albumId: string | undefined,
+    dto: ReorderPhotosDto,
+  ): Promise<void> {
     // Validate all IDs belong to this album (or are uncategorised)
     const updates = dto.ids.map((photoId, idx) =>
       this.photoRepo.update({ id: photoId }, { sortOrder: idx }),
@@ -334,7 +388,10 @@ export class GalleryService {
     return this.findAllAlbums(false);
   }
 
-  async listPhotosAdmin(albumId?: string, cursor?: string): Promise<PhotoPageDto> {
+  async listPhotosAdmin(
+    albumId?: string,
+    cursor?: string,
+  ): Promise<PhotoPageDto> {
     return this.listPhotos(albumId, undefined, cursor, false);
   }
 }

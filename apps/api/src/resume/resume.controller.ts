@@ -13,22 +13,14 @@ import {
 } from '@nestjs/common';
 import { ResumeService } from './resume.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { UpdateProfileDto }                      from './dto/update-profile.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CreateExperienceDto, UpdateExperienceDto } from './dto/experience.dto';
-import { CreateEducationDto, UpdateEducationDto }   from './dto/education.dto';
-import { CreateSkillDto, UpdateSkillDto }           from './dto/skill.dto';
+import { CreateEducationDto, UpdateEducationDto } from './dto/education.dto';
+import { CreateSkillDto, UpdateSkillDto } from './dto/skill.dto';
 
 @Controller('resume')
 export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
-
-  // ── Public endpoint ───────────────────────────────────────────────────────
-
-  /** GET /v1/resume — Full resume snapshot (public, cached by Next.js ISR) */
-  @Get()
-  getResume() {
-    return this.resumeService.getResume();
-  }
 
   // ── Profile (auth required) ───────────────────────────────────────────────
 
@@ -126,5 +118,13 @@ export class ResumeController {
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteEducation(@Param('id', ParseUUIDPipe) id: string) {
     return this.resumeService.deleteEducation(id);
+  }
+
+  // ── Public slug endpoint (must be last — after all static routes) ─────────
+
+  /** GET /v1/resume/:slug — Full resume snapshot for a given profile slug. */
+  @Get(':slug')
+  getResume(@Param('slug') slug: string) {
+    return this.resumeService.getResume(slug);
   }
 }

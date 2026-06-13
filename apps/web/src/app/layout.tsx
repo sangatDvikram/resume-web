@@ -103,6 +103,7 @@ export default function RootLayout({
       lang="en"
       className={`${lato.variable} ${roboto.variable} h-full`}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col antialiased bg-background text-foreground">
         <ThemeProvider

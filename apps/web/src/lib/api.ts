@@ -163,24 +163,39 @@ export interface ProjectDetailDto extends ProjectSummaryDto {
 
 // ─── Client ───────────────────────────────────────────────────────────────────
 
+import { ApiEndpoint } from './config';
+
 /** Base URL for server-side fetches — prefers internal network URL over public. */
 function getApiBase(): string {
   // API_INTERNAL_URL is a Railway/Docker internal URL (e.g. http://api:3001)
   // that bypasses the public internet and is not exposed to the client.
-  return (
+  const base =
     process.env.API_INTERNAL_URL ??
     process.env.NEXT_PUBLIC_API_URL ??
-    'http://localhost:3001'
-  );
+    'http://localhost:3001';
+  return base;
 }
 
 /**
- * Fetch the full resume snapshot.
- * Tagged with "resume" so `revalidateTag('resume')` can purge it on-demand.
+ * Thin fetch wrapper that logs the full URL in development.
+ * Logging is suppressed in production to keep output clean.
+ */
+function loggedFetch(url: string | URL, init?: RequestInit): ReturnType<typeof fetch> {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[API →] ${url.toString()}`);
+  }
+  return fetch(url as string, init);
+}
+
+/**
+ * Fetch the full resume snapshot for the configured profile slug.
+ * Slug is set via NEXT_PUBLIC_RESUME_SLUG (defaults to "default").
+ * Tagged with "resume" and "resume-<slug>" for on-demand ISR revalidation.
  */
 export async function getResume(): Promise<ResumeResponseDto> {
-  const res = await fetch(`${getApiBase()}/v1/resume`, {
-    next: { tags: ['resume'], revalidate: 60 },
+  const slug = process.env.NEXT_PUBLIC_RESUME_SLUG ?? 'default';
+  const res = await loggedFetch(`${getApiBase()}${ApiEndpoint.RESUME(slug)}`, {
+    next: { tags: ['resume', `resume-${slug}`], revalidate: 60 },
   });
 
   if (!res.ok) {
@@ -195,7 +210,7 @@ export async function getResume(): Promise<ResumeResponseDto> {
  * Tagged with "blog" so `revalidateTag('blog')` can purge it on-demand.
  */
 export async function getBlogPosts(): Promise<BlogPostSummaryDto[]> {
-  const res = await fetch(`${getApiBase()}/v1/blog`, {
+  const res = await loggedFetch(`${getApiBase()}${ApiEndpoint.BLOG}`, {
     next: { tags: ['blog'], revalidate: 3600 },
   });
 
@@ -211,7 +226,7 @@ export async function getBlogPosts(): Promise<BlogPostSummaryDto[]> {
  * Tagged with "blog" and "blog-<slug>" for granular revalidation.
  */
 export async function getBlogPost(slug: string): Promise<BlogPostDetailDto> {
-  const res = await fetch(`${getApiBase()}/v1/blog/${encodeURIComponent(slug)}`, {
+  const res = await loggedFetch(`${getApiBase()}${ApiEndpoint.BLOG_POST(slug)}`, {
     next: { tags: ['blog', `blog-${slug}`], revalidate: 3600 },
   });
 
@@ -281,7 +296,7 @@ export interface PhotoPageDto {
 
 /** Fetch all published albums with cover image + photo count. */
 export async function getAlbums(): Promise<AlbumSummaryDto[]> {
-  const res = await fetch(`${getApiBase()}/v1/gallery/albums`, {
+  const res = await loggedFetch(`${getApiBase()}${ApiEndpoint.GALLERY_ALBUMS}`, {
     next: { tags: ['gallery'], revalidate: 3600 },
   });
   if (!res.ok) throw new Error(`Failed to fetch albums: ${res.status}`);
@@ -290,9 +305,9 @@ export async function getAlbums(): Promise<AlbumSummaryDto[]> {
 
 /** Fetch a single published album by slug (includes first page of photos). */
 export async function getAlbum(slug: string, cursor?: string): Promise<AlbumDetailDto> {
-  const url = new URL(`${getApiBase()}/v1/gallery/albums/${encodeURIComponent(slug)}`);
+  const url = new URL(`${getApiBase()}${ApiEndpoint.GALLERY_ALBUM(slug)}`);
   if (cursor) url.searchParams.set('cursor', cursor);
-  const res = await fetch(url.toString(), {
+  const res = await loggedFetch(url, {
     next: { tags: ['gallery', `album-${slug}`], revalidate: 3600 },
   });
   if (!res.ok) throw new Error(`Failed to fetch album "${slug}": ${res.status}`);
@@ -301,10 +316,10 @@ export async function getAlbum(slug: string, cursor?: string): Promise<AlbumDeta
 
 /** Fetch a paginated photo feed (optionally filtered by albumId). */
 export async function getPhotos(albumId?: string, cursor?: string): Promise<PhotoPageDto> {
-  const url = new URL(`${getApiBase()}/v1/gallery/photos`);
+  const url = new URL(`${getApiBase()}${ApiEndpoint.GALLERY_PHOTOS}`);
   if (albumId) url.searchParams.set('albumId', albumId);
   if (cursor)  url.searchParams.set('cursor', cursor);
-  const res = await fetch(url.toString(), {
+  const res = await loggedFetch(url, {
     next: { tags: ['gallery'], revalidate: 3600 },
   });
   if (!res.ok) throw new Error(`Failed to fetch photos: ${res.status}`);
@@ -318,7 +333,7 @@ export async function getPhotos(albumId?: string, cursor?: string): Promise<Phot
  * Tagged with "projects" so `revalidateTag('projects')` can purge on-demand.
  */
 export async function getProjects(): Promise<ProjectSummaryDto[]> {
-  const res = await fetch(`${getApiBase()}/v1/projects`, {
+  const res = await loggedFetch(`${getApiBase()}${ApiEndpoint.PROJECTS}`, {
     next: { tags: ['projects'], revalidate: 60 },
   });
 
@@ -334,7 +349,7 @@ export async function getProjects(): Promise<ProjectSummaryDto[]> {
  * Tagged with "projects" and "project-<slug>" for granular revalidation.
  */
 export async function getProject(slug: string): Promise<ProjectDetailDto> {
-  const res = await fetch(`${getApiBase()}/v1/projects/${encodeURIComponent(slug)}`, {
+  const res = await loggedFetch(`${getApiBase()}${ApiEndpoint.PROJECT(slug)}`, {
     next: { tags: ['projects', `project-${slug}`], revalidate: 60 },
   });
 

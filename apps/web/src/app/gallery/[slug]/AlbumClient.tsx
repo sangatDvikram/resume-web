@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { PhotoDto, PhotoPageDto } from "@/lib/api";
+import { ApiEndpoint } from "@/lib/config";
 import { Lightbox } from "../Lightbox";
 
 interface Props {
@@ -15,7 +16,8 @@ interface Props {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 async function fetchMore(albumSlug: string, cursor: string): Promise<PhotoPageDto> {
-  const url = `${API_BASE}/v1/gallery/albums/${encodeURIComponent(albumSlug)}?cursor=${encodeURIComponent(cursor)}`;
+  const url = `${API_BASE}${ApiEndpoint.GALLERY_ALBUM(albumSlug)}?cursor=${encodeURIComponent(cursor)}`;
+  if (process.env.NODE_ENV !== "production") console.log(`[API →] ${url}`);
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch more photos");
   const data = await res.json() as { photos: PhotoDto[]; nextCursor: string | null; total: number };

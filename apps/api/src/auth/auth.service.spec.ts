@@ -43,7 +43,9 @@ describe('AuthService', () => {
   describe('signTokens', () => {
     it('should return accessToken, refreshToken, and expiresIn', () => {
       configService.get.mockReturnValue('1d');
-      jwtService.sign.mockReturnValueOnce('access.token').mockReturnValueOnce('refresh.token');
+      jwtService.sign
+        .mockReturnValueOnce('access.token')
+        .mockReturnValueOnce('refresh.token');
 
       const result = service.signTokens(mockUser());
 

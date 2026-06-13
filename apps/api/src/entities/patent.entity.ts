@@ -3,9 +3,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
+import { ResumeProfile } from './resume-profile.entity';
 
 @Entity('patents')
 export class Patent extends BaseEntity {
@@ -25,6 +29,12 @@ export class Patent extends BaseEntity {
 
   @Column({ default: 0, name: 'sort_order' })
   sortOrder!: number;
+
+  /** Resume variant this patent belongs to */
+  @ManyToOne(() => ResumeProfile, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'profile_id' })
+  @Index()
+  profile!: ResumeProfile;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

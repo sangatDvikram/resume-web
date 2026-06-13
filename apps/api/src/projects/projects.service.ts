@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -52,7 +48,9 @@ export class ProjectsService {
     const revalidateUrl = this.config.get<string>('NEXT_REVALIDATE_URL');
     const secret = this.config.get<string>('REVALIDATE_SECRET');
     if (!revalidateUrl || !secret) {
-      this.logger.warn('NEXT_REVALIDATE_URL or REVALIDATE_SECRET not set — skipping ISR revalidation.');
+      this.logger.warn(
+        'NEXT_REVALIDATE_URL or REVALIDATE_SECRET not set — skipping ISR revalidation.',
+      );
       return;
     }
     try {
@@ -63,7 +61,9 @@ export class ProjectsService {
         signal: AbortSignal.timeout(5_000),
       });
       if (!res.ok) {
-        this.logger.warn(`ISR revalidation returned ${res.status} for tags: ${tags.join(', ')}`);
+        this.logger.warn(
+          `ISR revalidation returned ${res.status} for tags: ${tags.join(', ')}`,
+        );
       } else {
         this.logger.log(`ISR revalidated: ${tags.join(', ')}`);
       }
@@ -79,7 +79,13 @@ export class ProjectsService {
   }
 
   private toVideoDto(v: ProjectVideo): ProjectVideoDto {
-    return { id: v.id, source: v.source as ProjectVideoDto['source'], url: v.url, title: v.title, sortOrder: v.sortOrder };
+    return {
+      id: v.id,
+      source: v.source as ProjectVideoDto['source'],
+      url: v.url,
+      title: v.title,
+      sortOrder: v.sortOrder,
+    };
   }
 
   private toSummaryDto(p: Project): ProjectSummaryDto {
@@ -96,8 +102,14 @@ export class ProjectsService {
       featured: p.featured,
       published: p.published,
       sortOrder: p.sortOrder,
-      skills: (p.skills ?? []).map(s => ({ id: s.id, name: s.name, category: s.category })),
-      media: (p.media ?? []).sort((a, b) => a.sortOrder - b.sortOrder).map(this.toMediaDto),
+      skills: (p.skills ?? []).map((s) => ({
+        id: s.id,
+        name: s.name,
+        category: s.category,
+      })),
+      media: (p.media ?? [])
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(this.toMediaDto),
       createdAt: p.createdAt.toISOString(),
       updatedAt: p.updatedAt.toISOString(),
     };
@@ -108,7 +120,9 @@ export class ProjectsService {
       ...this.toSummaryDto(p),
       description: p.description,
       htmlDescription: p.htmlDescription,
-      videos: (p.videos ?? []).sort((a, b) => a.sortOrder - b.sortOrder).map(this.toVideoDto),
+      videos: (p.videos ?? [])
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(this.toVideoDto),
     };
   }
 
@@ -120,7 +134,7 @@ export class ProjectsService {
       relations: ['skills', 'media'],
       order: { sortOrder: 'ASC', createdAt: 'DESC' },
     });
-    return projects.map(p => this.toSummaryDto(p));
+    return projects.map((p) => this.toSummaryDto(p));
   }
 
   async findAll(): Promise<ProjectSummaryDto[]> {
@@ -128,7 +142,7 @@ export class ProjectsService {
       relations: ['skills', 'media'],
       order: { sortOrder: 'ASC', createdAt: 'DESC' },
     });
-    return projects.map(p => this.toSummaryDto(p));
+    return projects.map((p) => this.toSummaryDto(p));
   }
 
   async findBySlug(slug: string): Promise<ProjectDetailDto> {
@@ -140,7 +154,11 @@ export class ProjectsService {
     return this.toDetailDto(project);
   }
 
-  async findRelated(projectId: string, skillIds: string[], limit = 3): Promise<ProjectSummaryDto[]> {
+  async findRelated(
+    projectId: string,
+    skillIds: string[],
+    limit = 3,
+  ): Promise<ProjectSummaryDto[]> {
     if (!skillIds.length) return [];
     const all = await this.projectRepo
       .createQueryBuilder('p')
@@ -151,19 +169,24 @@ export class ProjectsService {
       .getMany();
 
     const scored = all
-      .map(p => ({ p, score: (p.skills ?? []).filter(s => skillIds.includes(s.id)).length }))
-      .filter(x => x.score > 0)
+      .map((p) => ({
+        p,
+        score: (p.skills ?? []).filter((s) => skillIds.includes(s.id)).length,
+      }))
+      .filter((x) => x.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
 
-    return scored.map(x => this.toSummaryDto(x.p));
+    return scored.map((x) => this.toSummaryDto(x.p));
   }
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
   async create(dto: CreateProjectDto): Promise<ProjectDetailDto> {
     const slug = generateSlug(dto.title);
-    const htmlDescription = dto.description ? await renderMarkdown(dto.description) : null;
+    const htmlDescription = dto.description
+      ? await renderMarkdown(dto.description)
+      : null;
     const skills = dto.skillIds?.length
       ? await this.skillRepo.findBy({ id: In(dto.skillIds) })
       : [];
@@ -197,20 +220,25 @@ export class ProjectsService {
     });
     if (!project) throw new NotFoundException(`Project ${id} not found.`);
 
-    if (dto.title       !== undefined) project.title       = dto.title;
-    if (dto.company     !== undefined) project.company     = dto.company ?? null;
-    if (dto.role        !== undefined) project.role        = dto.role ?? null;
-    if (dto.startDate   !== undefined) project.startDate   = dto.startDate ? new Date(dto.startDate) : null;
-    if (dto.endDate     !== undefined) project.endDate     = dto.endDate ? new Date(dto.endDate) : null;
-    if (dto.githubUrl   !== undefined) project.githubUrl   = dto.githubUrl ?? null;
-    if (dto.liveDemoUrl !== undefined) project.liveDemoUrl = dto.liveDemoUrl ?? null;
-    if (dto.featured    !== undefined) project.featured    = dto.featured;
-    if (dto.published   !== undefined) project.published   = dto.published;
-    if (dto.sortOrder   !== undefined) project.sortOrder   = dto.sortOrder;
+    if (dto.title !== undefined) project.title = dto.title;
+    if (dto.company !== undefined) project.company = dto.company ?? null;
+    if (dto.role !== undefined) project.role = dto.role ?? null;
+    if (dto.startDate !== undefined)
+      project.startDate = dto.startDate ? new Date(dto.startDate) : null;
+    if (dto.endDate !== undefined)
+      project.endDate = dto.endDate ? new Date(dto.endDate) : null;
+    if (dto.githubUrl !== undefined) project.githubUrl = dto.githubUrl ?? null;
+    if (dto.liveDemoUrl !== undefined)
+      project.liveDemoUrl = dto.liveDemoUrl ?? null;
+    if (dto.featured !== undefined) project.featured = dto.featured;
+    if (dto.published !== undefined) project.published = dto.published;
+    if (dto.sortOrder !== undefined) project.sortOrder = dto.sortOrder;
 
     if (dto.description !== undefined) {
-      project.description     = dto.description ?? null;
-      project.htmlDescription = dto.description ? await renderMarkdown(dto.description) : null;
+      project.description = dto.description ?? null;
+      project.htmlDescription = dto.description
+        ? await renderMarkdown(dto.description)
+        : null;
     }
 
     if (dto.skillIds !== undefined) {
@@ -233,9 +261,15 @@ export class ProjectsService {
 
   // ── Media sub-resource ────────────────────────────────────────────────────
 
-  async addMedia(projectId: string, dto: AddMediaDto): Promise<ProjectMediaDto> {
-    const project = await this.projectRepo.findOne({ where: { id: projectId } });
-    if (!project) throw new NotFoundException(`Project ${projectId} not found.`);
+  async addMedia(
+    projectId: string,
+    dto: AddMediaDto,
+  ): Promise<ProjectMediaDto> {
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+    });
+    if (!project)
+      throw new NotFoundException(`Project ${projectId} not found.`);
 
     const media = this.mediaRepo.create({
       url: dto.url,
@@ -249,29 +283,47 @@ export class ProjectsService {
   }
 
   async reorderMedia(projectId: string, dto: ReorderMediaDto): Promise<void> {
-    const project = await this.projectRepo.findOne({ where: { id: projectId } });
-    if (!project) throw new NotFoundException(`Project ${projectId} not found.`);
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+    });
+    if (!project)
+      throw new NotFoundException(`Project ${projectId} not found.`);
 
     await Promise.all(
       dto.ids.map((mediaId, index) =>
-        this.mediaRepo.update({ id: mediaId, project: { id: projectId } }, { sortOrder: index }),
+        this.mediaRepo.update(
+          { id: mediaId, project: { id: projectId } },
+          { sortOrder: index },
+        ),
       ),
     );
     void this.revalidate(['projects', `project-${project.slug}`]);
   }
 
   async removeMedia(projectId: string, mediaId: string): Promise<void> {
-    const result = await this.mediaRepo.delete({ id: mediaId, project: { id: projectId } });
-    if (result.affected === 0) throw new NotFoundException(`Media ${mediaId} not found.`);
-    const project = await this.projectRepo.findOne({ where: { id: projectId } });
+    const result = await this.mediaRepo.delete({
+      id: mediaId,
+      project: { id: projectId },
+    });
+    if (result.affected === 0)
+      throw new NotFoundException(`Media ${mediaId} not found.`);
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+    });
     if (project) void this.revalidate(['projects', `project-${project.slug}`]);
   }
 
   // ── Video sub-resource ────────────────────────────────────────────────────
 
-  async addVideo(projectId: string, dto: AddVideoDto): Promise<ProjectVideoDto> {
-    const project = await this.projectRepo.findOne({ where: { id: projectId } });
-    if (!project) throw new NotFoundException(`Project ${projectId} not found.`);
+  async addVideo(
+    projectId: string,
+    dto: AddVideoDto,
+  ): Promise<ProjectVideoDto> {
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+    });
+    if (!project)
+      throw new NotFoundException(`Project ${projectId} not found.`);
 
     const video = this.videoRepo.create({
       source: dto.source as VideoSource,
@@ -286,21 +338,33 @@ export class ProjectsService {
   }
 
   async reorderVideos(projectId: string, dto: ReorderVideosDto): Promise<void> {
-    const project = await this.projectRepo.findOne({ where: { id: projectId } });
-    if (!project) throw new NotFoundException(`Project ${projectId} not found.`);
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+    });
+    if (!project)
+      throw new NotFoundException(`Project ${projectId} not found.`);
 
     await Promise.all(
       dto.ids.map((videoId, index) =>
-        this.videoRepo.update({ id: videoId, project: { id: projectId } }, { sortOrder: index }),
+        this.videoRepo.update(
+          { id: videoId, project: { id: projectId } },
+          { sortOrder: index },
+        ),
       ),
     );
     void this.revalidate(['projects', `project-${project.slug}`]);
   }
 
   async removeVideo(projectId: string, videoId: string): Promise<void> {
-    const result = await this.videoRepo.delete({ id: videoId, project: { id: projectId } });
-    if (result.affected === 0) throw new NotFoundException(`Video ${videoId} not found.`);
-    const project = await this.projectRepo.findOne({ where: { id: projectId } });
+    const result = await this.videoRepo.delete({
+      id: videoId,
+      project: { id: projectId },
+    });
+    if (result.affected === 0)
+      throw new NotFoundException(`Video ${videoId} not found.`);
+    const project = await this.projectRepo.findOne({
+      where: { id: projectId },
+    });
     if (project) void this.revalidate(['projects', `project-${project.slug}`]);
   }
 }

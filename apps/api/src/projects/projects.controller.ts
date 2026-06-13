@@ -89,10 +89,7 @@ export class ProjectsController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/media')
   @HttpCode(HttpStatus.CREATED)
-  addMedia(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AddMediaDto,
-  ) {
+  addMedia(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AddMediaDto) {
     return this.projectsService.addMedia(id, dto);
   }
 
@@ -124,10 +121,7 @@ export class ProjectsController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/videos')
   @HttpCode(HttpStatus.CREATED)
-  addVideo(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AddVideoDto,
-  ) {
+  addVideo(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AddVideoDto) {
     return this.projectsService.addVideo(id, dto);
   }
 

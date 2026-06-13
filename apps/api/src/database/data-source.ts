@@ -47,7 +47,9 @@ export const dataSourceOptions: DataSourceOptions = {
   synchronize: !isProduction && process.env.DB_SYNC === 'true',
 
   // Log queries in development
-  logging: !isProduction ? ['query', 'error', 'migration'] : ['error', 'migration'],
+  logging: !isProduction
+    ? ['query', 'error', 'migration']
+    : ['error', 'migration'],
 
   // Extra pg pool options (relevant for the pooler endpoint at runtime)
   extra: {

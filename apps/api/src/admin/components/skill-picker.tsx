@@ -59,7 +59,8 @@ export default function SkillPicker({ property, record, onChange }: Props) {
     (id: string) => {
       setSelected((prev) => {
         const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-        onChange(property.path, next);
+        // '__empty__' sentinel tells the server the field was explicitly cleared
+        onChange(property.path, next.length > 0 ? next : ['__empty__']);
         return next;
       });
     },

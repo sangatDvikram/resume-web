@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lato, Roboto } from "next/font/google";
 import { ThemeProvider } from "@teispace/next-themes";
+import { Nav } from "./components/Nav";
 import "./globals.css";
 
 const lato = Lato({
@@ -20,26 +21,46 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: {
     template: "%s | Vikram Sangat",
-    default: "Vikram Sangat — Portfolio",
+    default: "Vikram Sangat — Senior Software Engineer",
   },
   description:
-    "Personal portfolio of Vikram Sangat — software engineer, technical lead, and inventor. Showcasing work experience, open-source projects, photography, and published patents.",
+    "Portfolio of Vikram Sangat — Senior Software Engineer with 10 years of experience. Specialising in React micro-frontends, Node.js, Python, Flutter, and agentic AI. Two patent holder based in Bangalore, India.",
+  keywords: [
+    "Vikram Sangat",
+    "Senior Software Engineer",
+    "React",
+    "JavaScript",
+    "TypeScript",
+    "Node.js",
+    "Python",
+    "Flutter",
+    "micro-frontend",
+    "Single-SPA",
+    "Webpack 5",
+    "Module Federation",
+    "Bangalore",
+    "India",
+    "portfolio",
+  ],
+  authors: [{ name: "Vikram Sangat", url: "https://www.linkedin.com/in/sangatdvikram/" }],
+  creator: "Vikram Sangat",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://portfolio.example.com"
   ),
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Vikram Sangat — Portfolio",
-    title: "Vikram Sangat — Portfolio",
+    siteName: "Vikram Sangat",
+    title: "Vikram Sangat — Senior Software Engineer",
     description:
-      "Software engineer, technical lead, and inventor. Showcasing projects, blog posts, photography, and patents.",
+      "10 years of experience in React, Node.js, Python, and Flutter. Architect of micro-frontend systems, agentic AI integrations, and two patent holder. Bangalore, India.",
     images: [{ url: "/profile.jpeg", width: 400, height: 400, alt: "Vikram Sangat" }],
   },
   twitter: {
     card: "summary",
-    title: "Vikram Sangat — Portfolio",
-    description: "Software engineer, technical lead, and inventor.",
+    title: "Vikram Sangat — Senior Software Engineer",
+    description:
+      "React · Node.js · Python · Flutter · Micro-frontends · Agentic AI · Two patent holder · Bangalore, India.",
     images: ["/profile.jpeg"],
   },
   icons: {
@@ -89,7 +110,13 @@ export default function RootLayout({
           defaultTheme="light"
           disableTransitionOnChange
         >
+          <Nav />
           {children}
+          <footer className="border-t border-border py-8 mt-auto">
+            <div className="section-container text-center text-sm text-muted-foreground">
+              Vikram Sangat &mdash; {new Date().getFullYear()}
+            </div>
+          </footer>
         </ThemeProvider>
       </body>
     </html>

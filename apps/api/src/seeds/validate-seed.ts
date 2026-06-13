@@ -9,10 +9,10 @@
  * Acceptance criteria (from E3-S4):
  *   ✅ 1 ResumeProfile row with correct name, email, careerStartDate
  *   ✅ ≥ 4 Skill categories present (language, framework, database, tool)
- *   ✅ 4 ExperienceEntry rows
- *   ✅ 1 EducationEntry row
+ *   ✅ 6 ExperienceEntry rows
+ *   ✅ 2 EducationEntry rows
  *   ✅ 2 Patent rows
- *   ✅ 2 Certification rows
+ *   ✅ 1 Certification row
  *   ✅ 2 Award rows
  *   ✅ 3 Project rows (all published)
  *   ✅ 1 Album row (slug = "general")
@@ -63,8 +63,8 @@ async function validate(): Promise<void> {
       results.push(check('name set', profile.name.length > 0, profile.name));
       results.push(check('email set', profile.email.includes('@'), profile.email));
       results.push(check(
-        'careerStartDate = 2016-07-01',
-        profile.careerStartDate.toISOString().startsWith('2016-07-01'),
+        'careerStartDate = 2016-06-01',
+        profile.careerStartDate.toISOString().startsWith('2016-06-01'),
         profile.careerStartDate.toISOString(),
       ));
       results.push(check(
@@ -97,7 +97,7 @@ async function validate(): Promise<void> {
       .leftJoin('e.skills', 's')
       .where('s.id IS NOT NULL')
       .getCount();
-    results.push(check('4 experience rows', expCount === 4, `${expCount} rows`));
+    results.push(check('6 experience rows', expCount === 6, `${expCount} rows`));
     results.push(check('has skills via join table', expWithSkills > 0, `${expWithSkills} with skills`));
 
     const currentExp = await expRepo.findOne({ where: { isCurrent: true } });
@@ -107,7 +107,7 @@ async function validate(): Promise<void> {
     console.log('\nEducationEntries:');
     const eduRepo  = AppDataSource.getRepository(EducationEntry);
     const eduCount = await eduRepo.count();
-    results.push(check('1 education row', eduCount === 1, `${eduCount} rows`));
+    results.push(check('2 education rows', eduCount === 2, `${eduCount} rows`));
 
     // ── Patents ───────────────────────────────────────────────────────────
     console.log('\nPatents:');
@@ -124,7 +124,7 @@ async function validate(): Promise<void> {
     console.log('\nCertifications:');
     const certRepo  = AppDataSource.getRepository(Certification);
     const certCount = await certRepo.count();
-    results.push(check('2 certification rows', certCount === 2, `${certCount} rows`));
+    results.push(check('1 certification row', certCount === 1, `${certCount} rows`));
 
     // ── Awards ────────────────────────────────────────────────────────────
     console.log('\nAwards:');

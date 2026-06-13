@@ -2,7 +2,7 @@ import path from 'path';
 import { Module, DynamicModule } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { getDataSourceToken } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { AdminUserModule } from '../admin-user/admin-user.module';
 import { AdminUserService } from '../admin-user/admin-user.service';
 import { AdminUser } from '../admin-user/admin-user.entity';
@@ -39,10 +39,120 @@ export class AdminJsModule {
     // Type assertions are used here because typeof import() requires moduleResolution
     // node16/nodenext/bundler, which is incompatible with NestJS's CommonJS output.
     const { AdminModule } = await esmImport('@adminjs/nestjs') as { AdminModule: any };
-    const { default: AdminJS, ComponentLoader } = await esmImport('adminjs') as { default: any; ComponentLoader: any };
-    const { Database, Resource } = await esmImport('@adminjs/typeorm') as { Database: any; Resource: any };
+    const { default: AdminJS, ComponentLoader, BaseRecord: AdminBaseRecord } = await esmImport('adminjs') as { default: any; ComponentLoader: any; BaseRecord: any };
+    const { Database, Resource: TypeOrmResource } = await esmImport('@adminjs/typeorm') as { Database: any; Resource: any };
 
-    AdminJS.registerAdapter({ Database, Resource });
+    // ── M2M helper ────────────────────────────────────────────────────────────
+    // Returns the submitted IDs for a M2M field, or null if the field was not
+    // touched (so we can distinguish "unchanged" from "cleared").
+    // The SkillPicker / TagPicker emit '__empty__' when the user removes all items.
+    function extractM2MIds(params: Record<string, any>, field: string): string[] | null {
+      const keys = Object.keys(params).filter((k) => new RegExp(`^${field}\\.\\d+$`).test(k));
+      if (keys.length === 0) return null;
+      return keys
+        .map((k) => params[k] as string)
+        .filter((id) => id && id !== '__empty__');
+    }
+
+    // ── ProjectResource ───────────────────────────────────────────────────────
+    // Overrides findOne/update/create so that the skills M2M relation is loaded
+    // for display and correctly persisted on save (the base TypeORM adapter only
+    // handles scalar columns; it silently ignores M2M join tables).
+    class ProjectResource extends (TypeOrmResource as any) {
+      private _ds: DataSource;
+      constructor(model: any, ds: DataSource) { super(model); this._ds = ds; }
+
+      async findOne(id: string) {
+        const instance = await this._ds
+          .getRepository(Project)
+          .findOne({ where: { id }, relations: ['skills'] });
+        if (!instance) return null;
+        return new (AdminBaseRecord as any)(instance, this);
+      }
+
+      async update(pk: string, params: Record<string, any> = {}) {
+        const skillIds = extractM2MIds(params, 'skills');
+        const clean = Object.fromEntries(
+          Object.entries(params).filter(([k]) => !/^skills(\..*)?$/.test(k)),
+        );
+        const result = await super.update(pk, clean);
+        if (skillIds !== null) {
+          const pr = this._ds.getRepository(Project);
+          const sr = this._ds.getRepository(Skill);
+          const p = await pr.findOne({ where: { id: pk }, relations: ['skills'] });
+          if (p) {
+            p.skills = skillIds.length ? await sr.findBy({ id: In(skillIds) }) : [];
+            await pr.save(p);
+          }
+        }
+        return result;
+      }
+
+      async create(params: Record<string, any>) {
+        const skillIds = extractM2MIds(params, 'skills');
+        const clean = Object.fromEntries(
+          Object.entries(params).filter(([k]) => !/^skills(\..*)?$/.test(k)),
+        );
+        const result = await super.create(clean);
+        if (skillIds?.length && result?.id) {
+          const pr = this._ds.getRepository(Project);
+          const sr = this._ds.getRepository(Skill);
+          const p = await pr.findOne({ where: { id: result.id }, relations: ['skills'] });
+          if (p) { p.skills = await sr.findBy({ id: In(skillIds) }); await pr.save(p); }
+        }
+        return result;
+      }
+    }
+
+    // ── BlogPostResource ──────────────────────────────────────────────────────
+    // Same pattern for the tags M2M on BlogPost.
+    class BlogPostResource extends (TypeOrmResource as any) {
+      private _ds: DataSource;
+      constructor(model: any, ds: DataSource) { super(model); this._ds = ds; }
+
+      async findOne(id: string) {
+        const instance = await this._ds
+          .getRepository(BlogPost)
+          .findOne({ where: { id }, relations: ['tags'] });
+        if (!instance) return null;
+        return new (AdminBaseRecord as any)(instance, this);
+      }
+
+      async update(pk: string, params: Record<string, any> = {}) {
+        const tagIds = extractM2MIds(params, 'tags');
+        const clean = Object.fromEntries(
+          Object.entries(params).filter(([k]) => !/^tags(\..*)?$/.test(k)),
+        );
+        const result = await super.update(pk, clean);
+        if (tagIds !== null) {
+          const br = this._ds.getRepository(BlogPost);
+          const tr = this._ds.getRepository(Tag);
+          const post = await br.findOne({ where: { id: pk }, relations: ['tags'] });
+          if (post) {
+            post.tags = tagIds.length ? await tr.findBy({ id: In(tagIds) }) : [];
+            await br.save(post);
+          }
+        }
+        return result;
+      }
+
+      async create(params: Record<string, any>) {
+        const tagIds = extractM2MIds(params, 'tags');
+        const clean = Object.fromEntries(
+          Object.entries(params).filter(([k]) => !/^tags(\..*)?$/.test(k)),
+        );
+        const result = await super.create(clean);
+        if (tagIds?.length && result?.id) {
+          const br = this._ds.getRepository(BlogPost);
+          const tr = this._ds.getRepository(Tag);
+          const post = await br.findOne({ where: { id: result.id }, relations: ['tags'] });
+          if (post) { post.tags = await tr.findBy({ id: In(tagIds) }); await br.save(post); }
+        }
+        return result;
+      }
+    }
+
+    AdminJS.registerAdapter({ Database, Resource: TypeOrmResource });
 
     // ── Custom component registration ────────────────────────────────────────
     // ComponentLoader is created once and shared via closure into useFactory.
@@ -244,7 +354,7 @@ export class AdminJsModule {
                     },
                   },
                   {
-                    resource: BlogPost,
+                    resource: new BlogPostResource(BlogPost, dataSource),
                     options: {
                       actions: blogActions,
                       listProperties: ['title', 'slug', 'published', 'publishedAt', 'readingTime'],
@@ -266,7 +376,7 @@ export class AdminJsModule {
                   },
                   // ── Projects ─────────────────────────────────────────────
                   {
-                    resource: Project,
+                    resource: new ProjectResource(Project, dataSource),
                     options: {
                       actions: projectActions,
                       listProperties: ['title', 'slug', 'company', 'featured', 'published', 'sortOrder'],

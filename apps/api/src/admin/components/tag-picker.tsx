@@ -33,19 +33,37 @@ const TagPicker = ({ property, record, onChange }: any) => {
       .then((tags: Tag[]) => setAllTags(tags))
       .catch(() => {/* non-fatal */});
 
-    // Populate current selection from AdminJS's populated relation data.
+    // Our BlogPostResource.findOne loads tags with relations, so they appear
+    // as flat params: "tags.0.id", "tags.0.name", "tags.1.id", etc.
+    const params = record?.params ?? {};
+    const fromParams: Tag[] = [];
+    let i = 0;
+    while (params[`${property.path}.${i}.id`]) {
+      const id   = params[`${property.path}.${i}.id`] as string;
+      const name = params[`${property.path}.${i}.name`] as string;
+      if (id && name) fromParams.push({ id, name });
+      i++;
+    }
+
+    // Fallback: AdminJS populated relation (populated in memory via adapter)
     const populated: any[] = record?.populated?.[property.path] ?? [];
-    const current: Tag[] = populated
+    const fromPopulated: Tag[] = populated
       .map((r: any) => ({ id: r.params?.id, name: r.params?.name }))
       .filter((t: Tag) => t.id && t.name);
-    setSelected(current);
+
+    // Merge, deduplicate by id
+    const seen = new Set<string>();
+    const merged = [...fromParams, ...fromPopulated].filter(
+      (t) => !seen.has(t.id) && seen.add(t.id),
+    );
+    setSelected(merged);
   }, [record?.id]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   const emit = (tags: Tag[]) => {
-    // AdminJS v7 + TypeORM adapter expects M2M changes as an array of ids.
-    onChange(property.path, tags.map(t => t.id));
+    // '__empty__' sentinel tells the server the field was explicitly cleared.
+    onChange(property.path, tags.length > 0 ? tags.map(t => t.id) : ['__empty__']);
   };
 
   const addTag = (tag: Tag) => {

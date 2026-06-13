@@ -1,12 +1,12 @@
 /**
- * Portfolio CMS — idempotent seed script.
+ * Portfolio CMS — clear-then-seed script.
  *
  * Usage:
  *   npm run seed           (from apps/api)
  *   yarn workspace api seed
  *
- * Running this script twice against the same database produces the same
- * result (upsert / skip-if-exists semantics for every entity).
+ * Truncates all content tables (preserving admin_users), then inserts
+ * canonical seed data from seed-data.ts.
  *
  * Data source: src/seeds/seed-data.ts
  */
@@ -37,165 +37,143 @@ import {
 } from './seed-data';
 
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Clear ────────────────────────────────────────────────────────────────────
+
+async function clearDatabase(ds: typeof AppDataSource): Promise<void> {
+  console.log('🗑️  Clearing existing data…');
+  // TRUNCATE with CASCADE handles:
+  //   • circular FK between albums.coverId and photos.album_id
+  //   • M2M join tables: experience_skills, project_skills, post_tags
+  // admin_users is intentionally excluded — admin accounts must survive reseeds.
+  await ds.query(`
+    TRUNCATE TABLE
+      photos, albums,
+      project_media, project_videos, projects,
+      post_tags, blog_posts, tags,
+      experience_skills, experience_entries,
+      awards, certifications, patents, education_entries,
+      skills, resume_profile
+    RESTART IDENTITY CASCADE
+  `);
+  console.log('  ✓ Done\n');
+}
+
+
+// ─── Seed ─────────────────────────────────────────────────────────────────────
 
 async function seed(): Promise<void> {
   console.log('🌱 Connecting to database…');
   await AppDataSource.initialize();
 
   try {
+    await clearDatabase(AppDataSource);
+
     // ── 1. Resume profile ─────────────────────────────────────────────────
     const profileRepo = AppDataSource.getRepository(ResumeProfile);
-    let profile = await profileRepo.findOne({ where: {} });
-    if (!profile) {
-      profile = profileRepo.create(PROFILE_SEED);
-      await profileRepo.save(profile);
-      console.log('  ✓ ResumeProfile created');
-    } else {
-      console.log('  – ResumeProfile already exists, skipping');
-    }
+    await profileRepo.save(profileRepo.create(PROFILE_SEED));
+    console.log('  ✓ ResumeProfile');
 
     // ── 2. Skills ─────────────────────────────────────────────────────────
     const skillRepo = AppDataSource.getRepository(Skill);
     const skillMap = new Map<string, Skill>();
 
     for (const s of SKILLS_SEED) {
-      let skill = await skillRepo.findOne({ where: { name: s.name } });
-      if (!skill) {
-        skill = skillRepo.create(s);
-        await skillRepo.save(skill);
-        console.log(`  ✓ Skill: ${s.name}`);
-      }
+      const skill = await skillRepo.save(skillRepo.create(s));
       skillMap.set(s.name, skill);
     }
+    console.log(`  ✓ Skills (${SKILLS_SEED.length})`);
 
     // ── 3. Experience entries ─────────────────────────────────────────────
     const expRepo = AppDataSource.getRepository(ExperienceEntry);
     for (const e of EXPERIENCE_SEED) {
-      const existing = await expRepo.findOne({
-        where: { title: e.title, company: e.company },
-      });
-      if (!existing) {
-        const skills = e.techStack
-          .map((name) => skillMap.get(name))
-          .filter((s): s is Skill => s !== undefined);
+      const skills = e.techStack
+        .map((name) => skillMap.get(name))
+        .filter((s): s is Skill => s !== undefined);
 
-        const entry = expRepo.create({
-          title:     e.title,
-          company:   e.company,
-          location:  e.location,
-          startDate: e.startDate,
-          endDate:   e.endDate,
-          isCurrent: e.isCurrent,
-          tasks:     e.tasks,
-          sortOrder: e.sortOrder,
-          skills,
-        });
-        await expRepo.save(entry);
-        console.log(`  ✓ Experience: ${e.title} @ ${e.company}`);
-      } else {
-        console.log(`  – Experience already exists: ${e.title} @ ${e.company}`);
-      }
+      await expRepo.save(expRepo.create({
+        title:     e.title,
+        company:   e.company,
+        location:  e.location,
+        startDate: e.startDate,
+        endDate:   e.endDate,
+        isCurrent: e.isCurrent,
+        tasks:     e.tasks,
+        sortOrder: e.sortOrder,
+        skills,
+      }));
+      console.log(`  ✓ Experience: ${e.title} @ ${e.company}`);
     }
 
     // ── 4. Education entries ──────────────────────────────────────────────
     const eduRepo = AppDataSource.getRepository(EducationEntry);
     for (const ed of EDUCATION_SEED) {
-      const existing = await eduRepo.findOne({ where: { degree: ed.degree } });
-      if (!existing) {
-        await eduRepo.save(eduRepo.create(ed));
-        console.log(`  ✓ Education: ${ed.degree}`);
-      }
+      await eduRepo.save(eduRepo.create(ed));
+      console.log(`  ✓ Education: ${ed.degree}`);
     }
 
     // ── 5. Patents ────────────────────────────────────────────────────────
     const patentRepo = AppDataSource.getRepository(Patent);
     for (const p of PATENTS_SEED) {
-      const existing = await patentRepo.findOne({ where: { link: p.link } });
-      if (!existing) {
-        await patentRepo.save(patentRepo.create(p));
-        console.log(`  ✓ Patent: ${p.link}`);
-      }
+      await patentRepo.save(patentRepo.create(p));
+      console.log(`  ✓ Patent: ${p.link}`);
     }
 
     // ── 6. Certifications ─────────────────────────────────────────────────
     const certRepo = AppDataSource.getRepository(Certification);
     for (const c of CERTIFICATIONS_SEED) {
-      const existing = await certRepo.findOne({ where: { title: c.title } });
-      if (!existing) {
-        await certRepo.save(certRepo.create(c));
-        console.log(`  ✓ Certification: ${c.title}`);
-      }
+      await certRepo.save(certRepo.create(c));
+      console.log(`  ✓ Certification: ${c.title}`);
     }
 
     // ── 7. Awards ─────────────────────────────────────────────────────────
     const awardRepo = AppDataSource.getRepository(Award);
     for (const a of AWARDS_SEED) {
-      const existing = await awardRepo.findOne({ where: { title: a.title } });
-      if (!existing) {
-        await awardRepo.save(awardRepo.create(a));
-        console.log(`  ✓ Award: ${a.title}`);
-      }
+      await awardRepo.save(awardRepo.create(a));
+      console.log(`  ✓ Award: ${a.title}`);
     }
 
     // ── 8. Projects ───────────────────────────────────────────────────────
     const projectRepo = AppDataSource.getRepository(Project);
     for (const p of PROJECTS_SEED) {
-      const existing = await projectRepo.findOne({ where: { slug: p.slug } });
-      if (!existing) {
-        const skills = p.techStack
-          .map((name) => skillMap.get(name))
-          .filter((s): s is Skill => s !== undefined);
+      const skills = p.techStack
+        .map((name) => skillMap.get(name))
+        .filter((s): s is Skill => s !== undefined);
 
-        const project = projectRepo.create({
-          slug:        p.slug,
-          title:       p.title,
-          company:     p.company ?? null,
-          role:        p.role ?? null,
-          startDate:   p.startDate ?? null,
-          endDate:     p.endDate ?? null,
-          description: p.description ?? null,
-          githubUrl:   p.githubUrl ?? null,
-          liveDemoUrl: p.liveDemoUrl ?? null,
-          featured:    p.featured,
-          published:   p.published,
-          sortOrder:   p.sortOrder,
-          skills,
-        });
-        await projectRepo.save(project);
-        console.log(`  ✓ Project: ${p.title}`);
-      } else {
-        console.log(`  – Project already exists: ${p.title}`);
-      }
+      await projectRepo.save(projectRepo.create({
+        slug:        p.slug,
+        title:       p.title,
+        company:     p.company ?? null,
+        role:        p.role ?? null,
+        startDate:   p.startDate ?? null,
+        endDate:     p.endDate ?? null,
+        description: p.description ?? null,
+        githubUrl:   p.githubUrl ?? null,
+        liveDemoUrl: p.liveDemoUrl ?? null,
+        featured:    p.featured,
+        published:   p.published,
+        sortOrder:   p.sortOrder,
+        skills,
+      }));
+      console.log(`  ✓ Project: ${p.title}`);
     }
 
     // ── 9. Gallery — default album + photos ───────────────────────────────
     const albumRepo = AppDataSource.getRepository(Album);
-    let album = await albumRepo.findOne({ where: { slug: DEFAULT_ALBUM.slug } });
-    if (!album) {
-      album = albumRepo.create(DEFAULT_ALBUM);
-      await albumRepo.save(album);
-      console.log(`  ✓ Album: ${DEFAULT_ALBUM.name}`);
-    }
+    const album = await albumRepo.save(albumRepo.create(DEFAULT_ALBUM));
+    console.log(`  ✓ Album: ${DEFAULT_ALBUM.name}`);
 
     const photoRepo = AppDataSource.getRepository(Photo);
     for (const ph of PHOTOS_SEED) {
-      const existing = await photoRepo.findOne({
-        where: { originalUrl: ph.originalUrl },
-      });
-      if (!existing) {
-        const photo = photoRepo.create({
-          title:       ph.title ?? null,
-          location:    ph.location ?? null,
-          originalUrl: ph.originalUrl,
-          thumbUrl:    ph.thumbUrl,
-          sortOrder:   ph.sortOrder,
-          published:   true,
-          album,
-        });
-        await photoRepo.save(photo);
-        console.log(`  ✓ Photo: ${ph.title ?? ph.sortOrder}`);
-      }
+      await photoRepo.save(photoRepo.create({
+        title:       ph.title ?? null,
+        location:    ph.location ?? null,
+        originalUrl: ph.originalUrl,
+        thumbUrl:    ph.thumbUrl,
+        sortOrder:   ph.sortOrder,
+        published:   true,
+        album,
+      }));
+      console.log(`  ✓ Photo: ${ph.title ?? ph.sortOrder}`);
     }
 
     console.log('\n✅ Seed complete — database is ready.');

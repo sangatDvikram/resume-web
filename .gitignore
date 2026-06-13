@@ -55,3 +55,4 @@ apps/api/coverage
 Thumbs.db
 Desktop.ini
 package-lock.json
+graphify-out

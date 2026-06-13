@@ -1,0 +1,47 @@
+# Dependency trees — installed inside the image
+**/node_modules
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Build outputs — produced inside the image
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/tsconfig.tsbuildinfo
+
+# VCS + editor + OS metadata
+.git
+.github
+.vscode
+.idea
+**/.DS_Store
+**/Thumbs.db
+
+# Local environment files — secrets must come from Fly secrets, not the image
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Logs
+**/*.log
+**/logs
+
+# Docs / non-code surfaces
+docs
+README.md
+CLAUDE.md
+LICENSE
+**/*.md
+
+# Other platform configs — irrelevant inside the API image
+**/vercel.json
+docker-compose*.yml
+fly.toml
+.dockerignore
+Dockerfile
+
+# Frontend app — not needed by the API container
+apps/web

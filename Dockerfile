@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.7
 # ──────────────────────────────────────────────────────────────────────────────
 # Portfolio CMS — apps/api (NestJS) container image
-# Used by Fly.io (and locally for parity). Multi-stage build:
+# Used by Railway (apps/api/railway.toml) and Fly.io (fly.toml).
+# Multi-stage build:
 #   builder  — installs full workspace + builds @portfolio-cms/types and api
 #   runtime  — minimal Node 20 Alpine image running `node dist/main.js`
 # ──────────────────────────────────────────────────────────────────────────────
@@ -16,8 +17,12 @@ RUN corepack enable
 
 WORKDIR /app
 
-# Copy every workspace manifest first so `yarn install` is cacheable across
-# source-only edits.
+# Copy workspace manifests first for cacheable yarn install.
+# apps/web/package.json is required: Yarn Berry validates every workspace
+# declared in the root package.json even if we never build it.
+# The actual apps/web source is excluded by .dockerignore.
+# packages/{utils,oat-ui,eslint-config} stubs are included so Yarn resolves
+# the workspace graph without errors, but their source is not copied.
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
@@ -29,9 +34,9 @@ COPY packages/eslint-config/package.json packages/eslint-config/
 # Full install (devDependencies needed to compile TypeScript).
 RUN yarn install --immutable
 
-# Source for the API and the shared package it consumes (@portfolio-cms/types).
+# Copy only the source the API actually needs.
 COPY tsconfig*.json ./
-COPY packages packages
+COPY packages/types packages/types
 COPY apps/api apps/api
 
 # Build shared types, then the API.

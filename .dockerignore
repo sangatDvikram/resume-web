@@ -43,5 +43,8 @@ fly.toml
 .dockerignore
 Dockerfile
 
-# Frontend app — not needed by the API container
+# Frontend app — not needed by the API container.
+# apps/web/package.json must remain accessible: Yarn Berry reads every
+# workspace manifest during `yarn install` even if we never build the package.
 apps/web
+!apps/web/package.json

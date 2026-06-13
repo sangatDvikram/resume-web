@@ -1,0 +1,77 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Railway config-as-code for apps/api (NestJS 10).
+#
+# Railway clones the full repository when building (GitHub integration), so
+# dockerfilePath is relative to the repo root, not this file's directory.
+#
+# First-time setup:
+#   1. Create a Railway project and add a service linked to this GitHub repo.
+#   2. Set the service's Root Directory to /  (repo root — Railway auto-detects
+#      railway.toml files in subdirectories for config, but builds from root).
+#   3. Add all required environment variables via Railway dashboard or CLI:
+#        railway variables set DATABASE_URL="..."
+#        railway variables set DATABASE_URL_UNPOOLED="..."
+#        railway variables set JWT_PRIVATE_KEY="..."
+#        railway variables set JWT_PUBLIC_KEY="..."
+#        railway variables set SESSION_SECRET="..."
+#        railway variables set SESSION_COOKIE_NAME="adminjs"
+#        railway variables set CLOUDINARY_CLOUD_NAME="..."
+#        railway variables set CLOUDINARY_API_KEY="..."
+#        railway variables set CLOUDINARY_API_SECRET="..."
+#        railway variables set REVALIDATE_SECRET="..."
+#        railway variables set NEXT_REVALIDATE_URL="https://<web>/api/revalidate"
+#        railway variables set FRONTEND_URL="https://<web-host>"
+#        railway variables set ADMIN_EMAIL="..."
+#        railway variables set ADMIN_PASSWORD="..."
+#   4. Migrations run via GitHub Actions (deploy.yml) BEFORE this service
+#      deploys — never configure Railway to run them on startup.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[build]
+  # Use the multi-stage Dockerfile at the repo root.
+  # Railway's build context is always the repo root when using GitHub
+  # integration, so this path resolves correctly.
+  builder        = "DOCKERFILE"
+  dockerfilePath = "Dockerfile"
+
+  # Only trigger a new build when files relevant to the API change.
+  # Changes to apps/web alone will not redeploy this service.
+  watchPatterns = [
+    "apps/api/**",
+    "packages/types/**",
+    "package.json",
+    "yarn.lock",
+    ".yarnrc.yml",
+    "Dockerfile",
+    ".dockerignore"
+  ]
+
+[deploy]
+  # Matches the CMD in the Dockerfile runtime stage.
+  startCommand = "node dist/main.js"
+
+  # AdminJS + TypeORM boot takes ~3-6 s; give Railway enough time before
+  # marking the deployment unhealthy.
+  healthcheckPath    = "/v1/health"
+  healthcheckTimeout = 60
+
+  # Restart automatically on crash; 3 retries before Railway gives up and
+  # marks the deploy failed (prevents infinite crash loops eating resources).
+  restartPolicyType       = "ON_FAILURE"
+  restartPolicyMaxRetries = 3
+
+  # Zero-downtime: keep the old container alive for 30 s while the new one
+  # warms up (AdminJS bundle compile + DB pool connect), then drain for 10 s.
+  overlapSeconds  = "30"
+  drainingSeconds = "10"
+
+# ── Non-secret environment variables ─────────────────────────────────────────
+# Secrets (DATABASE_URL, JWT_*, CLOUDINARY_*, SESSION_SECRET, REVALIDATE_*)
+# must be set via Railway dashboard / CLI — never committed here.
+[deploy.env]
+  NODE_ENV        = "production"
+  PORT            = "3001"
+  SWAGGER_ENABLED = "false"
+  DB_SSL          = "true"
+  THROTTLE_TTL    = "60"
+  THROTTLE_LIMIT  = "20"

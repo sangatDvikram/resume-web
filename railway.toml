@@ -62,8 +62,8 @@
 
   # Zero-downtime: keep the old container alive for 30 s while the new one
   # warms up (AdminJS bundle compile + DB pool connect), then drain for 10 s.
-  overlapSeconds  = "30"
-  drainingSeconds = "10"
+  overlapSeconds  = 30
+  drainingSeconds = 10
 
 # ── Non-secret environment variables ─────────────────────────────────────────
 # Secrets (DATABASE_URL, JWT_*, CLOUDINARY_*, SESSION_SECRET, REVALIDATE_*)

@@ -7,7 +7,7 @@ FROM node:${NODE_VERSION} AS builder
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install
+RUN npm pkg delete devDependencies.@portfolio-cms/eslint-config && npm install
 
 COPY . .
 RUN npm run build

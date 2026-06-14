@@ -33,7 +33,6 @@ import {
 @Module({})
 export class AdminJsModule {
   static async createAsync(): Promise<DynamicModule> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     const esmImport = new Function('m', 'return import(m)') as (
       m: string,
     ) => Promise<any>;

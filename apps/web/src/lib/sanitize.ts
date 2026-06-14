@@ -10,34 +10,6 @@
  * Runs on the server (RSC) — no browser DOMParser needed.
  */
 
-/** Elements whose content is kept but the tag itself is stripped. */
-const ALLOWED_TAGS = new Set([
-  'h1','h2','h3','h4','h5','h6',
-  'p','br','hr',
-  'strong','em','del','code','pre','blockquote',
-  'ul','ol','li',
-  'table','thead','tbody','tr','th','td',
-  'a','img',
-  'div','span',
-  'details','summary',
-  'sup','sub','kbd',
-]);
-
-/** Attributes allowed per element (empty = none allowed). */
-const ALLOWED_ATTRS: Record<string, Set<string>> = {
-  a:    new Set(['href','title','target','rel']),
-  img:  new Set(['src','alt','title','width','height','loading']),
-  th:   new Set(['align']),
-  td:   new Set(['align']),
-  code: new Set(['class']),
-  pre:  new Set(['class']),
-  div:  new Set(['class']),
-  span: new Set(['class']),
-};
-
-/** Protocols allowed in href/src attributes. */
-const SAFE_PROTOCOLS = /^(https?|mailto):/i;
-
 /**
  * Strips tags not in ALLOWED_TAGS, removes unsafe attributes and protocols.
  * Works without a DOM — uses simple regex passes sufficient for server-side RSC.

@@ -110,10 +110,22 @@ export class ResumeService {
           relations: ['skills'],
           order: { sortOrder: 'ASC' },
         }),
-        this.eduRepo.find({ where: profileFilter, order: { sortOrder: 'ASC' } }),
-        this.certRepo.find({ where: profileFilter, order: { sortOrder: 'ASC' } }),
-        this.awardRepo.find({ where: profileFilter, order: { sortOrder: 'ASC' } }),
-        this.patentRepo.find({ where: profileFilter, order: { sortOrder: 'ASC' } }),
+        this.eduRepo.find({
+          where: profileFilter,
+          order: { sortOrder: 'ASC' },
+        }),
+        this.certRepo.find({
+          where: profileFilter,
+          order: { sortOrder: 'ASC' },
+        }),
+        this.awardRepo.find({
+          where: profileFilter,
+          order: { sortOrder: 'ASC' },
+        }),
+        this.patentRepo.find({
+          where: profileFilter,
+          order: { sortOrder: 'ASC' },
+        }),
       ]);
 
     return {
@@ -135,7 +147,9 @@ export class ResumeService {
   // ── Profile ───────────────────────────────────────────────────────────────
 
   async updateProfile(dto: UpdateProfileDto): Promise<ResumeProfile> {
-    const profile = await this.profileRepo.findOne({ where: { slug: 'default' } });
+    const profile = await this.profileRepo.findOne({
+      where: { slug: 'default' },
+    });
     if (!profile) throw new NotFoundException('Resume profile not found.');
     Object.assign(profile, dto);
     const saved = await this.profileRepo.save(profile);

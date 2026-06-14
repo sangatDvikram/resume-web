@@ -24,7 +24,7 @@ async function fetchMore(albumSlug: string, cursor: string): Promise<PhotoPageDt
   return { photos: data.photos, nextCursor: data.nextCursor, total: data.total };
 }
 
-export function AlbumClient({ albumSlug, initialPhotos, initialNextCursor, total }: Props) {
+export function AlbumClient({ albumSlug, initialPhotos, initialNextCursor }: Props) {
   const [photos, setPhotos] = useState<PhotoDto[]>(initialPhotos);
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
   const [loading, setLoading] = useState(false);

@@ -1,5 +1,10 @@
 import { Controller, Get, Redirect } from '@nestjs/common';
-import { ApiExcludeEndpoint, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExcludeEndpoint,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AppService, HealthResponse } from './app.service';
 
 @ApiTags('health')

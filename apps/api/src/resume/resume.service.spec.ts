@@ -114,7 +114,9 @@ describe('ResumeService', () => {
       awardRepo.find.mockResolvedValue([]);
       patentRepo.find.mockResolvedValue([]);
 
-      await expect(service.getResume('default')).rejects.toThrow(NotFoundException);
+      await expect(service.getResume('default')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

@@ -30,7 +30,6 @@ async function bootstrap() {
   });
   await new Promise<void>((resolve) => earlyServer.listen(port, resolve));
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   const esmImport = new Function('m', 'return import(m)') as (
     m: string,
   ) => Promise<any>;
@@ -119,7 +118,7 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['X-Request-Id'],
+    exposedHeaders: ['X-Request-Id', 'ETag'],
     maxAge: 86400, // preflight cache: 24 h
   });
 

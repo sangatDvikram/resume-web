@@ -39,10 +39,14 @@ export const dataSourceOptions: DataSourceOptions = {
 
   // Entity discovery — scan all .entity.ts files under src/
   // Use forward slashes: path.join produces backslashes on Windows which breaks glob
-  entities: [path.join(__dirname, '../**/*.entity{.ts,.js}').replace(/\\/g, '/')],
+  entities: [
+    path.join(__dirname, '../**/*.entity{.ts,.js}').replace(/\\/g, '/'),
+  ],
 
   // Migration files
-  migrations: [path.join(__dirname, '../migrations/*{.ts,.js}').replace(/\\/g, '/')],
+  migrations: [
+    path.join(__dirname, '../migrations/*{.ts,.js}').replace(/\\/g, '/'),
+  ],
 
   // NEVER allow TypeORM to auto-sync schema in production
   synchronize: !isProduction && process.env.DB_SYNC === 'true',

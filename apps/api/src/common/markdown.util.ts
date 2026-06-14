@@ -10,7 +10,6 @@
  * dynamic import at runtime, where Node.js can load ESM-only packages.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const esmImport = new Function('m', 'return import(m)') as (
   m: string,
 ) => Promise<any>;

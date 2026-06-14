@@ -171,9 +171,13 @@ export class InitialSchema1748000000000 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_patents_profile"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "patents"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_education_entries_profile"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_education_entries_profile"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "education_entries"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_experience_entries_profile"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_experience_entries_profile"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "experience_skills"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "experience_entries"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_skills_name_category"`);

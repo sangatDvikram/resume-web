@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Lato, Roboto } from "next/font/google";
 import { ThemeProvider } from "@teispace/next-themes";
 import { Nav } from "./components/Nav";
+import { ServiceWorkerRegistrar } from "./components/ServiceWorkerRegistrar";
 import "./globals.css";
 
 const lato = Lato({
@@ -111,6 +112,7 @@ export default function RootLayout({
           defaultTheme="light"
           disableTransitionOnChange
         >
+          <ServiceWorkerRegistrar />
           <Nav />
           {children}
           <footer className="border-t border-border py-8 mt-auto">

@@ -35,7 +35,6 @@ function ExifPanel({ exif }: { exif: ExifDto }) {
 export function Lightbox({ photos, initialIndex, onClose }: Props) {
   const [index, setIndex] = useState(initialIndex);
   const [showExif, setShowExif] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
 
@@ -52,10 +51,8 @@ export function Lightbox({ photos, initialIndex, onClose }: Props) {
       if (e.key === "f" || e.key === "F") {
         if (!document.fullscreenElement) {
           containerRef.current?.requestFullscreen().catch(() => null);
-          setIsFullscreen(true);
         } else {
           document.exitFullscreen().catch(() => null);
-          setIsFullscreen(false);
         }
       }
       if (e.key === "i" || e.key === "I") setShowExif(s => !s);

@@ -13,7 +13,7 @@
     "test": "lerna run test",
     "web": "yarn workspace web dev",
     "api": "yarn workspace api start:dev",
-    "mcp": "npm run dev --prefix apps/mcp",
+    "mcp": "yarn workspace mcp dev",
     "generate:openapi": "yarn workspace api generate:openapi",
     "generate:types": "yarn generate:openapi && openapi-typescript docs/openapi.json -o packages/types/src/api.d.ts && yarn workspace @portfolio-cms/types build"
   },

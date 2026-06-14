@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1.7
+# Build context: repo root (Railway Root Directory = /)
 ARG NODE_VERSION=22-alpine
 
 # ─── Stage 1: builder ─────────────────────────────────────────────────────────
@@ -6,10 +7,11 @@ FROM node:${NODE_VERSION} AS builder
 
 WORKDIR /app
 
-COPY package.json ./
+COPY apps/mcp/package.json ./
 RUN npm install
 
-COPY . .
+COPY apps/mcp/src ./src
+COPY apps/mcp/tsconfig.json ./
 RUN npm run build
 
 # ─── Stage 2: runtime ─────────────────────────────────────────────────────────
@@ -22,7 +24,7 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000
 
-COPY package.json ./
+COPY apps/mcp/package.json ./
 RUN npm install --omit=dev
 
 COPY --from=builder /app/dist ./dist

@@ -1,14 +1,16 @@
 /**
- * Portfolio CMS — clear-then-seed script.
+ * Portfolio CMS — drop-migrate-seed script.
  *
  * Usage:
  *   yarn workspace api seed
  *
- * Pre-truncates all content tables via a raw pg connection BEFORE TypeORM
- * initialises so that auto-sync (DB_SYNC=true) can safely add NOT NULL FK
- * columns without hitting existing-row constraint violations.
+ * Flow:
+ *   1. Drop all content tables + typeorm_migrations (raw pg, unpooled).
+ *      admin_users is intentionally excluded.
+ *   2. AppDataSource.initialize() + runMigrations() recreates schema cleanly.
+ *   3. Seed data in FK-dependency order.
  *
- * Seed order respects FK dependencies:
+ * Seed order:
  *   Skills → ResumeProfile → Experience/Education/Patent/Cert/Award
  *   → Projects → Gallery
  */
@@ -39,10 +41,9 @@ import {
   PHOTOS_SEED,
 } from './seed-data';
 
-// ─── Pre-truncate (raw pg, before TypeORM auto-sync) ─────────────────────────
-// Must run before AppDataSource.initialize() so that DB_SYNC=true can add
-// NOT NULL FK columns without hitting "column of relation contains null values".
-// Uses DATABASE_URL_UNPOOLED (loaded by data-source.ts import above via dotenv).
+// ─── Pre-drop (raw pg, unpooled) ─────────────────────────────────────────────
+// Runs before AppDataSource.initialize() so migrations start from a blank slate.
+// Uses DATABASE_URL_UNPOOLED (loaded by data-source.ts import via dotenv).
 
 async function preTruncate(): Promise<void> {
   const client = new Client({
@@ -51,8 +52,8 @@ async function preTruncate(): Promise<void> {
   });
   try {
     await client.connect();
-    // DROP (not TRUNCATE) so TypeORM auto-sync can recreate tables with any
-    // schema changes (e.g. new NOT NULL FK columns) without "column already exists".
+    // Drop all content tables and the migration tracking table so that
+    // runMigrations() below starts from a clean slate.
     // admin_users is intentionally excluded — admin accounts survive reseeds.
     await client.query(`
       DROP TABLE IF EXISTS
@@ -62,10 +63,11 @@ async function preTruncate(): Promise<void> {
         experience_skills, project_skills,
         experience_entries,
         awards, certifications, patents, education_entries,
-        projects, skills, resume_profile
+        projects, skills, resume_profile,
+        migrations
       CASCADE
     `);
-    console.log('  ✓ Dropped content tables\n');
+    console.log('  ✓ Dropped content tables + migrations tracking\n');
   } catch (e: unknown) {
     console.error('  ✗ Pre-drop failed:', (e as Error).message);
     throw e;
@@ -80,8 +82,12 @@ async function seed(): Promise<void> {
   console.log('🗑️  Pre-truncating tables…');
   await preTruncate();
 
-  console.log('🌱 Connecting to database…');
+  console.log('🔌 Connecting to database…');
   await AppDataSource.initialize();
+
+  console.log('🔄 Running migrations…');
+  const ranMigrations = await AppDataSource.runMigrations();
+  console.log(`  ✓ Applied ${ranMigrations.length} migration(s)\n`);
 
   try {
     // ── 1. Skills (no deps) ───────────────────────────────────────────────

@@ -18,7 +18,7 @@ export class AdminUser extends BaseEntity {
   @Column({ name: 'password_hash', length: 255 })
   passwordHash!: string;
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive!: boolean;
 
   @CreateDateColumn({ name: 'created_at' })

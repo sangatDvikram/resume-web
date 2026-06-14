@@ -38,26 +38,26 @@ export class ResumeProfile extends BaseEntity {
   @Column({ length: 255 })
   location!: string;
 
-  @Column({ length: 500 })
+  @Column({ name: 'linked_in_url', length: 500 })
   linkedInUrl!: string;
 
-  @Column({ length: 500 })
+  @Column({ name: 'github_url', length: 500 })
   githubUrl!: string;
 
   /** Optional personal website / portfolio URL */
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ name: 'website_url', type: 'varchar', length: 500, nullable: true })
   websiteUrl!: string | null;
 
   /** Gravatar URL at 400 px — gravatar(400) */
-  @Column({ length: 500 })
+  @Column({ name: 'avatar_url', length: 500 })
   avatarUrl!: string;
 
   /** CAREER_START_DATE: new Date(2016, 6, 1) → 2016-07-01 */
-  @Column({ type: 'timestamptz' })
+  @Column({ name: 'career_start_date', type: 'timestamptz' })
   careerStartDate!: Date;
 
   /** Freelance start — new Date(2012, 2, 1) → 2012-03-01 */
-  @Column({ type: 'timestamptz' })
+  @Column({ name: 'freelance_start_date', type: 'timestamptz' })
   freelanceStartDate!: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })

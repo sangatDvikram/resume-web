@@ -16,10 +16,17 @@ export class InitialSchema21748000000001 implements MigrationInterface {
         "issuer"     VARCHAR(255)  NOT NULL,
         "link"       VARCHAR(1000),
         "sort_order" INTEGER       NOT NULL DEFAULT 0,
+        "profile_id" UUID          NOT NULL,
         "created_at" TIMESTAMPTZ   NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ   NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_certifications" PRIMARY KEY ("id")
+        CONSTRAINT "PK_certifications" PRIMARY KEY ("id"),
+        CONSTRAINT "FK_certifications_profile" FOREIGN KEY ("profile_id")
+          REFERENCES "resume_profile" ("id") ON DELETE CASCADE
       )
+    `);
+
+    await queryRunner.query(`
+      CREATE INDEX "IDX_certifications_profile" ON "certifications" ("profile_id")
     `);
 
     // ── Awards ────────────────────────────────────────────────────────────
@@ -29,10 +36,17 @@ export class InitialSchema21748000000001 implements MigrationInterface {
         "title"      VARCHAR(500) NOT NULL,
         "issuer"     VARCHAR(255) NOT NULL,
         "sort_order" INTEGER      NOT NULL DEFAULT 0,
+        "profile_id" UUID         NOT NULL,
         "created_at" TIMESTAMPTZ  NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_awards" PRIMARY KEY ("id")
+        CONSTRAINT "PK_awards" PRIMARY KEY ("id"),
+        CONSTRAINT "FK_awards_profile" FOREIGN KEY ("profile_id")
+          REFERENCES "resume_profile" ("id") ON DELETE CASCADE
       )
+    `);
+
+    await queryRunner.query(`
+      CREATE INDEX "IDX_awards_profile" ON "awards" ("profile_id")
     `);
 
     // ── Tags ──────────────────────────────────────────────────────────────
@@ -157,17 +171,15 @@ export class InitialSchema21748000000001 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE IF EXISTS "project_videos"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "project_media"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "project_skills"`);
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "IDX_projects_published_sort"`,
-    );
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_projects_published_sort"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "projects"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "post_tags"`);
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "IDX_blog_posts_published_at"`,
-    );
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_blog_posts_published_at"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "blog_posts"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "tags"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_awards_profile"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "awards"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_certifications_profile"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "certifications"`);
   }
 }

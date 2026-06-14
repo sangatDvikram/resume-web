@@ -24,16 +24,20 @@ export class InitialSchema1748000000000 implements MigrationInterface {
 
     // ── Enums ─────────────────────────────────────────────────────────────
     await queryRunner.query(`
-      CREATE TYPE "skill_category_enum" AS ENUM ('language', 'framework', 'database', 'tool')
+      DO $$ BEGIN
+        CREATE TYPE "skill_category_enum" AS ENUM ('language', 'framework', 'database', 'tool');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
     await queryRunner.query(`
-      CREATE TYPE "video_source_enum" AS ENUM ('youtube', 'vimeo', 'self_hosted')
+      DO $$ BEGIN
+        CREATE TYPE "video_source_enum" AS ENUM ('youtube', 'vimeo', 'self_hosted');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
-    // ── Admin users ───────────────────────────────────────────────────────
+    // ── Admin users — IF NOT EXISTS so reseeds keep existing admin accounts ──
     await queryRunner.query(`
-      CREATE TABLE "admin_users" (
+      CREATE TABLE IF NOT EXISTS "admin_users" (
         "id"            UUID        NOT NULL DEFAULT uuid_generate_v4(),
         "email"         VARCHAR(255) NOT NULL,
         "password_hash" VARCHAR(255) NOT NULL,
@@ -49,6 +53,7 @@ export class InitialSchema1748000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE "resume_profile" (
         "id"                   UUID         NOT NULL DEFAULT uuid_generate_v4(),
+        "slug"                 VARCHAR(100) NOT NULL DEFAULT 'default',
         "name"                 VARCHAR(255) NOT NULL,
         "position"             VARCHAR(255) NOT NULL,
         "description"          TEXT         NOT NULL,
@@ -62,7 +67,8 @@ export class InitialSchema1748000000000 implements MigrationInterface {
         "career_start_date"    TIMESTAMPTZ  NOT NULL,
         "freelance_start_date" TIMESTAMPTZ  NOT NULL,
         "updated_at"           TIMESTAMPTZ  NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_resume_profile" PRIMARY KEY ("id")
+        CONSTRAINT "PK_resume_profile"      PRIMARY KEY ("id"),
+        CONSTRAINT "UQ_resume_profile_slug" UNIQUE ("slug")
       )
     `);
 
@@ -93,10 +99,17 @@ export class InitialSchema1748000000000 implements MigrationInterface {
         "is_current" BOOLEAN      NOT NULL DEFAULT false,
         "tasks"      TEXT[]       NOT NULL,
         "sort_order" INTEGER      NOT NULL DEFAULT 0,
+        "profile_id" UUID         NOT NULL,
         "created_at" TIMESTAMPTZ  NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_experience_entries" PRIMARY KEY ("id")
+        CONSTRAINT "PK_experience_entries" PRIMARY KEY ("id"),
+        CONSTRAINT "FK_experience_entries_profile" FOREIGN KEY ("profile_id")
+          REFERENCES "resume_profile" ("id") ON DELETE CASCADE
       )
+    `);
+
+    await queryRunner.query(`
+      CREATE INDEX "IDX_experience_entries_profile" ON "experience_entries" ("profile_id")
     `);
 
     // Many-to-many: experience ↔ skills
@@ -120,10 +133,17 @@ export class InitialSchema1748000000000 implements MigrationInterface {
         "university" VARCHAR(255) NOT NULL,
         "duration"   VARCHAR(100) NOT NULL,
         "sort_order" INTEGER      NOT NULL DEFAULT 0,
+        "profile_id" UUID         NOT NULL,
         "created_at" TIMESTAMPTZ  NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ  NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_education_entries" PRIMARY KEY ("id")
+        CONSTRAINT "PK_education_entries" PRIMARY KEY ("id"),
+        CONSTRAINT "FK_education_entries_profile" FOREIGN KEY ("profile_id")
+          REFERENCES "resume_profile" ("id") ON DELETE CASCADE
       )
+    `);
+
+    await queryRunner.query(`
+      CREATE INDEX "IDX_education_entries_profile" ON "education_entries" ("profile_id")
     `);
 
     // ── Patents ───────────────────────────────────────────────────────────
@@ -134,16 +154,26 @@ export class InitialSchema1748000000000 implements MigrationInterface {
         "url"        VARCHAR(1000) NOT NULL,
         "title"      VARCHAR(500)  NOT NULL,
         "sort_order" INTEGER       NOT NULL DEFAULT 0,
+        "profile_id" UUID          NOT NULL,
         "created_at" TIMESTAMPTZ   NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ   NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_patents" PRIMARY KEY ("id")
+        CONSTRAINT "PK_patents" PRIMARY KEY ("id"),
+        CONSTRAINT "FK_patents_profile" FOREIGN KEY ("profile_id")
+          REFERENCES "resume_profile" ("id") ON DELETE CASCADE
       )
+    `);
+
+    await queryRunner.query(`
+      CREATE INDEX "IDX_patents_profile" ON "patents" ("profile_id")
     `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_patents_profile"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "patents"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_education_entries_profile"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "education_entries"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_experience_entries_profile"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "experience_skills"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "experience_entries"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_skills_name_category"`);

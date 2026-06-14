@@ -6,8 +6,8 @@ FROM node:${NODE_VERSION} AS builder
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm pkg delete devDependencies.@portfolio-cms/eslint-config && npm install
+COPY package.json package-lock.json* ./
+RUN npm ci
 
 COPY . .
 RUN npm run build
@@ -22,8 +22,8 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000
 
-COPY package.json ./
-RUN npm install --omit=dev
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 

@@ -15,23 +15,33 @@ if psmux has-session -t "$SESSION" 2>/dev/null; then
   exec psmux attach -t "$SESSION"
 fi
 
-# Create session (detached), window 1: api
-psmux -f "$CONF" new-session -d -s "$SESSION" -n "api" -c "$PROJECT_DIR"
-psmux send-keys -t "$SESSION:api" "yarn api" Enter
+# Create session (detached), single window "dev" with 4 panes:
+#   ┌──────────┬──────────┐
+#   │   api    │   web    │
+#   ├──────────┼──────────┤
+#   │   mcp    │  shell   │
+#   └──────────┴──────────┘
 
-# Window 2: web
-psmux new-window -t "$SESSION" -n "web" -c "$PROJECT_DIR"
-psmux send-keys -t "$SESSION:web" "yarn web" Enter
+# Pane 0 (top-left): api
+psmux -f "$CONF" new-session -d -s "$SESSION" -n "dev" -c "$PROJECT_DIR"
+psmux send-keys -t "$SESSION:dev.0" "yarn api" Enter
 
-# Window 3: mcp
-psmux new-window -t "$SESSION" -n "mcp" -c "$PROJECT_DIR"
-psmux send-keys -t "$SESSION:mcp" "yarn mcp" Enter
+# Pane 1 (top-right): web — split right from pane 0
+psmux split-window -t "$SESSION:dev.0" -h -c "$PROJECT_DIR"
+psmux send-keys -t "$SESSION:dev.1" "yarn web" Enter
 
-# Window 4: shell (interactive, starts at project root)
-psmux new-window -t "$SESSION" -n "shell" -c "$PROJECT_DIR"
+# Pane 2 (bottom-left): mcp — split down from pane 0
+psmux split-window -t "$SESSION:dev.0" -v -c "$PROJECT_DIR"
+psmux send-keys -t "$SESSION:dev.2" "yarn mcp" Enter
 
-# Land on shell window
-psmux select-window -t "$SESSION:shell"
+# Pane 3 (bottom-right): shell — split down from pane 1
+psmux split-window -t "$SESSION:dev.1" -v -c "$PROJECT_DIR"
+
+# Even out all pane sizes
+psmux select-layout -t "$SESSION:dev" tiled
+
+# Land on shell pane
+psmux select-pane -t "$SESSION:dev.3"
 
 [ "$1" = "--no-attach" ] && exit 0
 exec psmux attach -t "$SESSION"

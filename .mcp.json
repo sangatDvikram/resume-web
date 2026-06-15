@@ -3,6 +3,10 @@
     "portfolio-resume": {
       "type": "http",
       "url": "https://resume-web-mcp-production.up.railway.app/mcp"
+    },
+    "portfolio-resume-local": {
+      "type": "http",
+      "url": "http://localhost:3002/mcp"
     }
   }
 }

@@ -7,13 +7,13 @@
 
 | Metric | Value |
 |---|---|
-| Total EPICs | 10 |
-| Total Stories | 55 |
+| Total EPICs | 11 |
+| Total Stories | 61 |
 | Total Story Points | 352 SP |
 | Estimation Scale | Fibonacci (1, 2, 3, 5, 8, 13, 21) |
 | Sprint Length | 2 weeks |
 | Assumed Velocity | 25 SP / sprint (solo developer) |
-| Estimated Duration | 15 sprints ≈ 30 weeks |
+| **Status** | **Epics 1–11 complete as of 2026-06-20** |
 
 ---
 
@@ -280,23 +280,47 @@ custom components, and wire ISR revalidation hooks so every admin save propagate
 
 ---
 
+## EPIC 11 — MCP Server (Model Context Protocol)
+
+- [x] _(6 / 6 stories complete)_
+
+**Goal:** Build and deploy an MCP server (`apps/mcp`) that exposes portfolio resume data to AI agents
+via the Model Context Protocol. Supports both HTTP mode (Railway deployment) and stdio mode (Claude Desktop).
+Also includes `ResumeProfile.slug` multi-profile support and Railway early-healthcheck workaround in the API.
+
+**PRD References:** §4.1 (monorepo), §11.1 (deployment), §9.2.2 (resume endpoint)
+
+**Total Story Points: ~21**
+
+| ✅ | ID | Story | Acceptance Criteria | SP | Priority |
+|:--:|----|-------|---------------------|----|----------|
+| ✅ | E11-S1 | **`ResumeProfile.slug` multi-profile support** — Add `slug` column (unique, length 100, default `"default"`) to `ResumeProfile` entity. Change `GET /v1/resume` to `GET /v1/resume/:slug`. Experience, education, certifications, awards, and patents scoped by `profile_id` FK. Skills remain global. | `GET /v1/resume/default` returns full resume; `GET /v1/resume/unknown` returns 404; MCP server uses `RESUME_SLUG` env var. | 3 | P0 |
+| ✅ | E11-S2 | **Scaffold `apps/mcp` package** — Create `apps/mcp` workspace: `package.json` (`type: "module"`, `@modelcontextprotocol/sdk`), `tsconfig.json`, `Dockerfile`. Add `yarn mcp` script to root. | `yarn mcp` starts MCP server in stdio mode; `yarn workspace mcp build` produces `dist/index.js`. | 2 | P0 |
+| ✅ | E11-S3 | **MCP tools — resume data** — Register 8 tools: `get_resume`, `get_profile`, `get_skills`, `get_experience`, `get_education`, `get_patents`, `get_certifications`, `get_awards`. All fetch from `GET /v1/resume/:slug` and return JSON. | Each tool returns correct data matching the API response; `get_resume` returns full snapshot. | 5 | P0 |
+| ✅ | E11-S4 | **Dual transport: HTTP + stdio** — When `PORT` env var is set, run `StreamableHTTPServerTransport` (stateless, new transport per request) on that port with `/mcp` and `/health` routes. Without `PORT`, use `StdioServerTransport`. | HTTP mode responds at `/mcp` and `/health`; stdio mode connects cleanly to Claude Desktop; no session state leaks between requests. | 5 | P0 |
+| ✅ | E11-S5 | **Railway deployment + `.mcp.json`** — Deploy `apps/mcp` to Railway as a separate service. Add `.mcp.json` at repo root wiring both remote (`https://resume-web-mcp-production.up.railway.app/mcp`) and local (`http://localhost:3002/mcp`) HTTP endpoints for Claude Code. | Claude Code can call MCP tools from both remote and local endpoints; `.mcp.json` committed to repo. | 3 | P0 |
+| ✅ | E11-S6 | **API early-healthcheck workaround** — In `apps/api/src/main.ts`, bind the port with a minimal HTTP server immediately on start (responds 200 to `GET /health`, 503 to all else) while NestJS bootstraps. Once NestJS is ready, close the early server and hand the port to NestJS. | Railway healthcheck no longer fails during the 3–6 s AdminJS bootstrap window; `GET /health` always returns 200 after the early server is up. | 3 | P0 |
+
+---
+
 ## Epic Summary & Sprint Plan
 
 ### Story Points by EPIC
 
-| EPIC | Name | Stories | Total SP | Priority P0 SP |
-|------|------|---------|----------|----------------|
-| E1 | Foundation & Infrastructure | 7 | 20 | 20 |
-| E2 | Authentication & Authorization | 6 | 18 | 17 |
-| E3 | Data Migration | 5 | 21 | 18 |
-| E4 | Dynamic Resume System | 6 | 34 | 29 |
-| E5 | Blog Engine | 8 | 50 | 39 |
-| E6 | Multimedia Project Showcase | 9 | 52 | 34 |
-| E7 | Photography Gallery | 8 | 52 | 39 |
-| E8 | AdminJS Panel & Custom Components | 5 | 21 | 16 |
-| E9 | OAT UI Component Library | 8 | 31 | 26 |
-| E10 | Non-Functional Requirements & Quality | 9 | 32 | 27 |
-| **TOTAL** | | **71** | **331** | **265** |
+| EPIC | Name | Stories | Total SP | Status |
+|------|------|---------|----------|--------|
+| E1 | Foundation & Infrastructure | 7 | 20 | ✅ Complete |
+| E2 | Authentication & Authorization | 6 | 18 | ✅ Complete |
+| E3 | Data Migration | 5 | 21 | ✅ Complete |
+| E4 | Dynamic Resume System | 6 | 34 | ✅ Complete |
+| E5 | Blog Engine | 8 | 50 | ✅ Complete |
+| E6 | Multimedia Project Showcase | 9 | 52 | ✅ Complete |
+| E7 | Photography Gallery | 8 | 52 | ✅ Complete |
+| E8 | AdminJS Panel & Custom Components | 5 | 21 | ✅ Complete |
+| E9 | OAT UI Component Library | 8 | 31 | ✅ Complete |
+| E10 | Non-Functional Requirements & Quality | 9 | 32 | ✅ Complete |
+| E11 | MCP Server (Model Context Protocol) | 6 | ~21 | ✅ Complete |
+| **TOTAL** | | **77** | **~352** | **All complete** |
 
 ### Sprint Breakdown (25 SP / sprint · 2-week sprints · solo developer)
 
@@ -328,10 +352,9 @@ custom components, and wire ISR revalidation hooks so every admin save propagate
 | S24 | Quality: tests (complete) + security headers + CORS | E10-S3 (remainder), E10-S6, E10-S7 | 11 |
 | **TOTAL** | | **71 stories** | **~331 SP** |
 
-> **Duration estimate:** ~24 sprints × 2 weeks = **~48 weeks (≈ 11 months)** for a single developer
-> working at full capacity. With a 2-person team at the same velocity, duration halves to **~6 months**.
-> P0-only scope (265 SP) reduces the solo estimate to **~21 sprints (≈ 9 months)**.
+> **Actual completion (solo developer):** All 11 EPICs delivered as of 2026-06-20.
+> Original estimate was ~48 weeks; platform delivered significantly faster due to AI-assisted development.
 
 ---
 
-*End of Document — EPICS-AND-STORIES v1.0.0 · Linked to PRD-001 v1.0.0*
+*End of Document — EPICS-AND-STORIES v1.1.0 · Linked to PRD-001 v1.1.0*

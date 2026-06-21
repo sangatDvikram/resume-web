@@ -1,0 +1,65 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Fly.io config-as-code for apps/mcp (MCP server).
+#
+# This is a SEPARATE Fly app from apps/api. The build context must be the
+# repo root so the Dockerfile can COPY apps/mcp/*. Run flyctl from the repo
+# root with `--config apps/mcp/fly.toml`.
+#
+# First-time setup:
+#   1. From the repo root:
+#        flyctl launch --no-deploy --copy-config \
+#          --config apps/mcp/fly.toml --name <app-name> --region <region>
+#   2. Set required environment:
+#        flyctl secrets set --config apps/mcp/fly.toml \
+#          API_BASE_URL="https://<api-host>"
+#      (RESUME_SLUG defaults to "default" via [env] below.)
+#   3. Deploy from the repo root so the build context picks up apps/mcp/*:
+#        flyctl deploy --config apps/mcp/fly.toml
+#
+# MCP endpoint exposed at:    https://<app>.fly.dev/mcp
+# Health endpoint exposed at: https://<app>.fly.dev/health
+# ──────────────────────────────────────────────────────────────────────────────
+
+app            = "portfolio-mcp"
+primary_region = "iad"
+
+[build]
+  dockerfile = "apps/mcp/Dockerfile"
+
+# ── Non-secret environment variables ─────────────────────────────────────────
+# API_BASE_URL must be set via `flyctl secrets set` — it contains the public
+# URL of the API service.
+[env]
+  NODE_ENV    = "production"
+  PORT        = "3000"
+  RESUME_SLUG = "default"
+
+[http_service]
+  internal_port        = 3000
+  force_https          = true
+  # MCP server is stateless per request; safe to scale to zero between calls.
+  auto_stop_machines   = true
+  auto_start_machines  = true
+  min_machines_running = 0
+  processes            = ["app"]
+
+  [http_service.concurrency]
+    type       = "requests"
+    soft_limit = 100
+    hard_limit = 150
+
+# /health returns { "ok": true } once the HTTP server is up. Matches
+# apps/mcp/railway.toml healthcheckTimeout=30.
+[[http_service.checks]]
+  grace_period = "10s"
+  interval     = "15s"
+  method       = "GET"
+  timeout      = "5s"
+  path         = "/health"
+
+[deploy]
+  strategy = "rolling"
+
+[[vm]]
+  size   = "shared-cpu-1x"
+  memory = "256mb"

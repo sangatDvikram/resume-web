@@ -7,12 +7,12 @@
 | Field            | Value                                                        |
 |------------------|--------------------------------------------------------------|
 | **Document ID**  | PRD-001                                                      |
-| **Version**      | 1.0.0                                                        |
-| **Status**       | Draft                                                        |
+| **Version**      | 1.1.0                                                        |
+| **Status**       | Active — Epics 1–10 complete; Epic 11 (MCP) delivered       |
 | **Author**       | Vikram Sangat                                                |
 | **Created**      | 2026-05-03                                                   |
-| **Last Updated** | 2026-05-03                                                   |
-| **Repository**   | `resume-web` (current) → `portfolio-cms` (target)           |
+| **Last Updated** | 2026-06-20                                                   |
+| **Repository**   | `resume-web`                                                 |
 
 ---
 
@@ -50,13 +50,14 @@ This PRD defines the requirements for evolving `resume-web` into a **Portfolio &
 
 ### Target Stack at a Glance
 
-| Layer         | Current                       | Target                                    |
+| Layer         | Original (pre-v2)             | Delivered                                 |
 |---------------|-------------------------------|-------------------------------------------|
-| Frontend      | React 18 + Vite + Tailwind    | Next.js 15 (App Router) + Tailwind + OAT UI |
-| Backend       | None (static)                 | NestJS 10 + PostgreSQL                    |
-| CMS           | Hardcoded `constants/index.tsx` | Admin Dashboard → REST API → PostgreSQL  |
-| Hosting       | Vercel (static)               | Vercel (frontend) + Railway/Render (API) |
+| Frontend      | React 18 + Vite + Tailwind    | Next.js 16 (App Router) + Tailwind v4 + OAT UI |
+| Backend       | None (static)                 | NestJS 10 + PostgreSQL (Neon)             |
+| CMS           | Hardcoded `constants/index.tsx` | AdminJS → REST API → PostgreSQL         |
+| Hosting       | Vercel (static)               | Vercel (web) + Railway (API + MCP)       |
 | Auth          | None                          | JWT (RS256) + HTTP-only refresh cookies   |
+| AI / Agents   | —                             | MCP server exposing resume to AI agents   |
 
 ---
 
@@ -123,7 +124,9 @@ The project is restructured as a **Yarn Workspace + Lerna monorepo** under the r
 ```
 portfolio-cms/
 ├── apps/
-│   ├── web/                        # Next.js 15 frontend (public site only)
+│   ├── mcp/                        # MCP server — exposes resume to AI agents via Model Context Protocol
+│   │   └── src/index.ts            # Dual-mode: HTTP (Railway) or stdio (Claude Desktop)
+│   ├── web/                        # Next.js 16 frontend (public site only)
 │   │   ├── app/
 │   │   │   └── (public)/           # Public-facing routes (SSR/SSG/ISR)
 │   │   │       ├── page.tsx        # Home / portfolio landing
@@ -674,8 +677,8 @@ GET    /v1/auth/me             Auth: Bearer                    → AdminUser
 #### 9.2.2 Resume Endpoints
 
 ```
-GET    /v1/resume              Public     → Full ResumeDTO (profile + experience + education + skills + patents)
-PATCH  /v1/resume/profile      Auth       → Updated ResumeProfileDTO
+GET    /v1/resume/:slug        Public     → Full ResumeDTO for named profile (slug default: "default")
+PATCH  /v1/resume/profile      Auth       → Updated ResumeProfileDTO (always updates "default" profile)
 POST   /v1/resume/experience   Auth       → Created ExperienceEntryDTO
 PATCH  /v1/resume/experience/:id  Auth   → Updated ExperienceEntryDTO
 DELETE /v1/resume/experience/:id  Auth   → 204
@@ -809,6 +812,7 @@ export class AdminUser {
 @Entity('resume_profile')
 export class ResumeProfile {
   @PrimaryGeneratedColumn('uuid')          id: string;
+  @Column({ unique: true, length: 100, default: 'default' }) slug: string; // profile variant key
   @Column()                                name: string;           // RESUME.name
   @Column()                                position: string;       // RESUME.position
   @Column({ type: 'text' })                description: string;    // RESUME.description
@@ -1187,11 +1191,13 @@ The Swagger UI is served at `/v1/docs` in **development and staging** only. In p
 
 ### 11.1 Environment Matrix
 
-| Environment | Frontend (Next.js)     | API (NestJS)           | Database                      |
-|-------------|------------------------|------------------------|-------------------------------|
-| Development | `localhost:3000` (dev) | `localhost:3001` (dev) | Local PostgreSQL via Docker   |
-| Staging     | Vercel Preview         | Railway (staging svc)  | Neon (staging branch)         |
-| Production  | Vercel Production      | Railway (prod svc)     | Neon (production branch)      |
+| Environment | Frontend (Next.js)     | API (NestJS)           | MCP Server             | Database                      |
+|-------------|------------------------|------------------------|------------------------|-------------------------------|
+| Development | `localhost:3000` (dev) | `localhost:3001` (dev) | `localhost:3002` (dev) | Local PostgreSQL via Docker   |
+| Staging     | Vercel Preview         | Railway (staging svc)  | Railway (staging svc)  | Neon (staging branch)         |
+| Production  | Vercel Production      | Railway (prod svc)     | Railway (prod svc)     | Neon (production branch)      |
+
+**MCP deployment URL (production):** `https://resume-web-mcp-production.up.railway.app/mcp`
 
 ### 11.2 Environment Variables
 
@@ -1201,6 +1207,14 @@ The Swagger UI is served at `/v1/docs` in **development and staging** only. In p
 NEXT_PUBLIC_API_URL=https://api.portfolio.example.com
 REVALIDATE_SECRET=<random-256-bit-hex>
 JWT_PUBLIC_KEY=<RS256-public-key-PEM>
+```
+
+**MCP (`apps/mcp/.env`):**
+
+```
+API_BASE_URL=https://api.portfolio.example.com   # NestJS API base (no trailing slash)
+RESUME_SLUG=default                               # Which ResumeProfile slug to expose
+PORT=3002                                         # If set: HTTP mode; if unset: stdio mode
 ```
 
 **NestJS (`apps/api/.env`):**

@@ -341,7 +341,10 @@ export class AdminJsModule {
                     resource: ResumeProfile,
                     options: {
                       actions: resumeActions,
+                      titleProperty: 'slug',
+                      listProperties: ['slug', 'name', 'position', 'email'],
                       editProperties: [
+                        'slug',
                         'name',
                         'position',
                         'description',
@@ -374,9 +377,11 @@ export class AdminJsModule {
                         'company',
                         'location',
                         'isCurrent',
+                        'profile.id',
                         'sortOrder',
                       ],
                       editProperties: [
+                        'profile.id',
                         'title',
                         'company',
                         'location',
@@ -396,9 +401,11 @@ export class AdminJsModule {
                         'degree',
                         'university',
                         'duration',
+                        'profile.id',
                         'sortOrder',
                       ],
                       editProperties: [
+                        'profile.id',
                         'degree',
                         'university',
                         'duration',
@@ -410,24 +417,56 @@ export class AdminJsModule {
                     resource: Patent,
                     options: {
                       actions: resumeActions,
-                      listProperties: ['link', 'title', 'sortOrder'],
-                      editProperties: ['link', 'url', 'title', 'sortOrder'],
+                      listProperties: [
+                        'link',
+                        'title',
+                        'profile.id',
+                        'sortOrder',
+                      ],
+                      editProperties: [
+                        'profile.id',
+                        'link',
+                        'url',
+                        'title',
+                        'sortOrder',
+                      ],
                     },
                   },
                   {
                     resource: Certification,
                     options: {
                       actions: resumeActions,
-                      listProperties: ['title', 'issuer', 'sortOrder'],
-                      editProperties: ['title', 'issuer', 'link', 'sortOrder'],
+                      listProperties: [
+                        'title',
+                        'issuer',
+                        'profile.id',
+                        'sortOrder',
+                      ],
+                      editProperties: [
+                        'profile.id',
+                        'title',
+                        'issuer',
+                        'link',
+                        'sortOrder',
+                      ],
                     },
                   },
                   {
                     resource: Award,
                     options: {
                       actions: resumeActions,
-                      listProperties: ['title', 'issuer', 'sortOrder'],
-                      editProperties: ['title', 'issuer', 'sortOrder'],
+                      listProperties: [
+                        'title',
+                        'issuer',
+                        'profile.id',
+                        'sortOrder',
+                      ],
+                      editProperties: [
+                        'profile.id',
+                        'title',
+                        'issuer',
+                        'sortOrder',
+                      ],
                     },
                   },
                   // ── Blog ─────────────────────────────────────────────────
@@ -576,7 +615,7 @@ export class AdminJsModule {
                         'title',
                         'altText',
                         'location',
-                        'album',
+                        'album.id',
                         'published',
                         'sortOrder',
                       ],

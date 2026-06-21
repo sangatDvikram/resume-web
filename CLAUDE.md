@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Portfolio CMS** — Vikram Sangat's personal portfolio platform. Single-owner, no multi-tenancy. Yarn Workspaces + Lerna monorepo:
 - `apps/api` — NestJS 10 REST API (PostgreSQL via TypeORM, AdminJS CMS)
 - `apps/web` — Next.js 16 frontend (App Router, React 19, Tailwind CSS v4)
+- `apps/mcp` — Model Context Protocol server exposing resume data to AI agents (deployed to Railway)
 - `packages/oat-ui` — Shared React component library (`@portfolio-cms/oat-ui`)
 - `packages/utils` — Shared utilities: date helpers, slug, LaTeX resume generator (`@portfolio-cms/utils`)
 - `packages/types` — Shared TypeScript types generated from OpenAPI spec
@@ -26,6 +27,7 @@ yarn test             # Run all tests
 ```bash
 yarn web              # Next.js dev server (localhost:3000, Turbopack)
 yarn api              # NestJS dev server with watch (localhost:3001)
+yarn mcp              # MCP server dev mode (localhost:3002 when PORT=3002)
 ```
 
 ### API-specific
@@ -44,10 +46,11 @@ yarn workspace api create-admin           # Create an admin user interactively
 
 ### Type generation (API → Frontend types)
 ```bash
-yarn generate:types   # export-openapi → openapi-typescript → build @portfolio-cms/types
+yarn generate:openapi  # Export live OpenAPI spec → docs/openapi.json (API must be running)
+yarn generate:types    # generate:openapi → openapi-typescript → build @portfolio-cms/types
 ```
 
-API must be running before `generate:types` — the export script fetches the live OpenAPI spec.
+API must be running before `generate:types` — `export-openapi.ts` fetches the live spec.
 
 ---
 
@@ -55,14 +58,17 @@ API must be running before `generate:types` — the export script fetches the li
 
 ### API (NestJS)
 
-**Entry point:** `apps/api/src/main.ts` — bootstraps with AdminJS (async ESM import workaround), CORS, global `ValidationPipe`, Swagger at `/v1/docs`, and `express-session` middleware.
+**Entry point:** `apps/api/src/main.ts` — binds an early HTTP healthcheck server (responds 200 to `GET /health` immediately) while NestJS bootstraps (~3–6 s), then hands the port to NestJS. Necessary for Railway's healthcheck not to fail during AdminJS init. Bootstraps with AdminJS (async ESM import workaround), CORS, global `ValidationPipe`, Swagger at `/v1/docs`, and `express-session` middleware.
+
+**Health endpoint:** `GET /health` (no `/v1/` prefix) on `AppController` — returns `{ status, version }`. Root `GET /` redirects to `/v1/docs`.
 
 **Module structure:**
 
 ```
 apps/api/src/
-├── main.ts
+├── main.ts                    ← Early healthcheck HTTP server + NestJS bootstrap
 ├── app.module.ts              ← AppModule.withAdmin(adminModule) pattern
+├── app.controller.ts          ← GET /health, GET / → redirect /v1/docs
 ├── admin/
 │   ├── admin.module.ts        ← AdminJS v7 config; ESM-only import workaround; ISR after-hooks
 │   └── components/            ← Custom AdminJS React components (registered via ComponentLoader)
@@ -89,6 +95,9 @@ apps/api/src/
 └── seeds/
     ├── seed.ts                ← Idempotent runner (find → skip or create)
     └── seed-data.ts           ← Canonical content sourced from resume/resume.tex
+
+apps/mcp/src/
+└── index.ts                   ← MCP server; dual-mode: HTTP (Railway, PORT set) or stdio (local/Claude Desktop)
 ```
 
 **Database:** PostgreSQL via TypeORM 0.3 (Data Mapper — `@InjectRepository`, never ActiveRecord). All entities extend `BaseEntity` but repositories are always injected. Import entities from `src/entities/index.ts` barrel. Migrations in `src/migrations/`. `DB_SYNC=true` enables `synchronize` in development only — never in production.
@@ -104,6 +113,8 @@ apps/api/src/
 **ESM-only packages:** `adminjs`, `@adminjs/*`, `unified`, `remark-*`, `rehype-*`. Always `new Function('m', 'return import(m)')` — never a bare `import`.
 
 **Upload:** Cloudinary via `UploadService`. Validate file type by magic bytes (not Content-Type). Blog images → `portfolio/blog`; gallery photos → `portfolio/gallery`. LQIP (`e_blur:2000,q_1,f_auto`) and thumbnail URLs are Cloudinary transformation parameters built at upload time, stored as `lqipUrl` and `thumbUrl`.
+
+**Resume profiles:** `ResumeProfile` has a `slug` column (unique, default `"default"`). `GET /v1/resume/:slug` returns the full resume for that profile. Experience, education, certifications, awards, and patents are all scoped by `profile_id` FK — each sub-entity belongs to one profile. Skills are global (not profile-scoped). The MCP server fetches `GET /v1/resume/default` via `RESUME_SLUG` env var.
 
 **IDs:** UUIDs internally. `SqidsService` (`src/common/sqids.service.ts`) encodes UUIDs into short URL-safe IDs — expose Sqids in URL-facing responses, never raw UUIDs.
 
@@ -186,8 +197,8 @@ POST  /v1/auth/logout           → 204
 GET   /v1/auth/me               Auth → AdminUser
 
 # Resume (public read, auth write)
-GET   /v1/resume                → Full ResumeDTO
-PATCH /v1/resume/profile        Auth
+GET   /v1/resume/:slug          → Full ResumeDTO for named profile (default: "default")
+PATCH /v1/resume/profile        Auth  (always updates the "default" profile)
 POST  /v1/resume/experience     Auth
 PATCH /v1/resume/experience/:id Auth
 DELETE /v1/resume/experience/:id Auth
@@ -245,7 +256,7 @@ Entities live in `apps/api/src/entities/` — always import from the barrel `ind
 | Entity | Table | Notes |
 |---|---|---|
 | `AdminUser` | `admin_users` | bcrypt password; session auth for AdminJS |
-| `Profile` | `resume_profile` | name, position, description, contact, dates |
+| `Profile` | `resume_profile` | `slug` (unique, default "default"), name, position, description, contact, dates; experience/education/patents/certs/awards all FK to profile |
 | `Skill` | `skills` | `SkillCategory` enum: language/framework/database/tool |
 | `Experience` | `experience_entries` | bullets as `jsonb`; many-to-many `Skill` |
 | `Education` | `education_entries` | degree, university, duration string |
@@ -284,6 +295,11 @@ Key indexes: `BlogPost(published, publishedAt DESC)`, `Project(published, sortOr
 - `REVALIDATE_SECRET` — Must match the API's value
 - `NEXT_PUBLIC_SITE_URL` — Used for `metadataBase`
 
+**MCP (`apps/mcp/.env`):**
+- `API_BASE_URL` — Base URL of the NestJS API (default: `http://localhost:3001`)
+- `RESUME_SLUG` — Profile slug to fetch (default: `"default"`)
+- `PORT` — When set, server runs in HTTP/StreamableHTTP mode on this port; without PORT, runs in stdio mode for Claude Desktop
+
 ---
 
 ## Non-Functional Requirements
@@ -305,6 +321,17 @@ GitHub Actions (`.github/workflows/ci.yml`): lint + TypeScript check → API uni
 Deploy (`.github/workflows/deploy.yml`): `migration:run` (unpooled URL) → Railway API deploy → Vercel web deploy on merge to `main`. Migrations run before deploy — never skip.
 
 ---
+
+## MCP Server
+
+`apps/mcp` is an MCP server exposing portfolio resume data to AI agents via the Model Context Protocol.
+
+- **Deployed:** `https://resume-web-mcp-production.up.railway.app/mcp` (HTTP/StreamableHTTP)
+- **Local:** `http://localhost:3002/mcp` (set `PORT=3002` env var)
+- **Config:** `.mcp.json` at repo root wires both endpoints for Claude Code
+- **Transport:** HTTP mode (when `PORT` set) uses `StreamableHTTPServerTransport` in stateless mode (new transport per request). Stdio mode for Claude Desktop.
+- **Tools exposed:** `get_resume`, `get_profile`, `get_skills`, `get_experience`, `get_education`, `get_patents`, `get_certifications`, `get_awards` — all fetch from `GET /v1/resume/:slug`
+- **Health:** `GET /health` on the MCP server (separate from NestJS `GET /health`)
 
 ## Project Skills
 

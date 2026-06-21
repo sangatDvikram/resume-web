@@ -4,12 +4,13 @@ A full-stack Portfolio & CMS platform built as a Yarn Workspaces + Lerna monorep
 
 | App / Package | Tech | Dev URL |
 |---|---|---|
+| `apps/api` | NestJS 10 · TypeORM · Swagger · AdminJS | `http://localhost:3001` |
 | `apps/web` | Next.js 16 · React 19 · Tailwind v4 | `http://localhost:3000` |
-| `apps/api` | NestJS 10 · TypeORM · Swagger · AdminJS | `http://localhost:3001/v1` |
+| `apps/mcp` | MCP server · `@modelcontextprotocol/sdk` | `http://localhost:3002/mcp` |
+| `packages/oat-ui` | Shared component library (`OatButton`, `OatCard`, …) | — |
 | `packages/utils` | Shared utilities (slugify, date helpers, LaTeX) | — |
-| `packages/types` | Shared TypeScript interfaces | — |
+| `packages/types` | Shared TypeScript interfaces (generated from OpenAPI) | — |
 | `packages/eslint-config` | Shared ESLint configs | — |
-| `packages/oat-ui` | Shared component library (stub) | — |
 
 ---
 
@@ -17,7 +18,7 @@ A full-stack Portfolio & CMS platform built as a Yarn Workspaces + Lerna monorep
 
 | Tool | Version |
 |---|---|
-| Node.js | 20 LTS |
+| Node.js | 22 LTS |
 | Yarn | 1.22.x (Classic) |
 | Docker + Docker Compose | any recent version (for local Postgres) |
 
@@ -40,12 +41,17 @@ cp apps/web/.env.example apps/web/.env.local
 # 4. Start local Postgres (requires Docker)
 docker compose up -d
 
-# 5a. Run everything in parallel
+# 5. Run database migrations + seed
+yarn workspace api migration:run
+yarn workspace api seed
+
+# 6a. Run everything in parallel
 yarn dev
 
-# 5b. Or run each app individually
+# 6b. Or run each app individually
 yarn web   # Next.js  → http://localhost:3000
-yarn api   # NestJS   → http://localhost:3001/v1
+yarn api   # NestJS   → http://localhost:3001
+yarn mcp   # MCP server → http://localhost:3002/mcp (set PORT=3002 in apps/mcp/.env)
 ```
 
 ---
@@ -60,17 +66,22 @@ yarn api   # NestJS   → http://localhost:3001/v1
 | `yarn lint` | Lint all workspaces |
 | `yarn web` | Start only the Next.js dev server |
 | `yarn api` | Start only the NestJS dev server (watch mode) |
+| `yarn mcp` | Start only the MCP server (stdio mode unless PORT set) |
+| `yarn generate:openapi` | Export OpenAPI spec → `docs/openapi.json` (API must be running) |
+| `yarn generate:types` | `generate:openapi` → `openapi-typescript` → build `@portfolio-cms/types` |
 
 ### API-specific scripts (`apps/api`)
 
 ```sh
-yarn workspace api test          # Unit tests (Jest)
-yarn workspace api test:e2e      # End-to-end tests
-yarn workspace api test:cov      # Coverage report
-yarn workspace api migration:generate -- src/migrations/MigrationName
-yarn workspace api migration:run
-yarn workspace api migration:revert
-yarn workspace api create-admin    # interactive prompt — creates the first admin user
+yarn workspace api test                    # Unit tests (Jest)
+yarn workspace api test:cov                # Coverage report (80% threshold)
+yarn workspace api test:e2e                # End-to-end tests
+yarn workspace api migration:generate      # Generate new TypeORM migration from entity diff
+yarn workspace api migration:run           # Apply pending migrations (use DATABASE_URL_UNPOOLED)
+yarn workspace api migration:revert        # Revert last migration
+yarn workspace api migration:show          # Show pending migrations
+yarn workspace api seed                    # Idempotent seed (safe to run repeatedly)
+yarn workspace api create-admin            # Interactive prompt — create first admin user
 ```
 
 ---
@@ -84,28 +95,48 @@ yarn workspace api create-admin    # interactive prompt — creates the first ad
 | `NODE_ENV` | ✅ | `development` / `production` |
 | `PORT` | | API port (default `3001`) |
 | `FRONTEND_URL` | ✅ | Next.js origin — added to CORS whitelist |
-| `DATABASE_URL` | ✅ | Neon **pooler** connection string (runtime) |
-| `DATABASE_URL_UNPOOLED` | ✅ | Neon **direct** connection string (migrations only) |
+| `API_EXTERNAL_URL` | | API's own public URL (required in production for AdminJS CORS) |
+| `EXTRA_CORS_ORIGINS` | | Comma-separated extra CORS origins |
+| `DATABASE_URL` | ✅ | Neon **pooler** connection string (runtime queries) |
+| `DATABASE_URL_UNPOOLED` | ✅ | Neon **direct** connection string (migrations only — DDL incompatible with PgBouncer) |
 | `DB_POOL_MAX` | | Max PgBouncer pool size (default `10`) |
-| `DB_SSL` | | `true` enables SSL for the DB connection. Always on in production; set to `true` locally only when using a cloud DB (e.g. Neon). Leave unset for local Docker Postgres. |
-| `DB_SYNC` | | `true` enables TypeORM auto-sync in dev only |
-| `JWT_PRIVATE_KEY` | ✅ | RS256 private key (PEM) |
+| `DB_SSL` | | `true` enables SSL; always on in production; unset for local Docker Postgres |
+| `DB_SYNC` | | `true` enables TypeORM auto-sync — dev only, never production |
+| `DB_LOGGING` | | `true` logs all TypeORM queries — dev only |
+| `ADMIN_EMAIL` | ✅ | Seed admin email (used when `admin_users` table is empty on boot) |
+| `ADMIN_PASSWORD` | ✅ | Seed admin password |
+| `SESSION_SECRET` | ✅ | Long random string for `express-session` (AdminJS) |
+| `SESSION_COOKIE_NAME` | | Session cookie name (default `adminjs`) |
+| `THROTTLE_TTL` | | Rate-limit window in seconds (default `60`) |
+| `THROTTLE_LIMIT` | | Max requests per window (default `20`) |
+| `JWT_PRIVATE_KEY` | ✅ | RS256 private key (PEM, newlines as `\n` in single-line env) |
 | `JWT_PUBLIC_KEY` | ✅ | RS256 public key (PEM) |
-| `JWT_ACCESS_TTL` | | Access token TTL in seconds (default `86400` = 1 day) |
+| `JWT_EXPIRES_IN` | | Access token TTL (default `1d`) |
 | `REVALIDATE_SECRET` | ✅ | Shared secret for Next.js ISR revalidation |
-| `NEXT_REVALIDATE_URL` | ✅ | Next.js `/api/revalidate` endpoint |
+| `NEXT_REVALIDATE_URL` | ✅ | Next.js `/api/revalidate` endpoint URL |
 | `CLOUDINARY_CLOUD_NAME` | ✅ | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | ✅ | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | ✅ | Cloudinary API secret |
+| `SWAGGER_ENABLED` | | `true` enables Swagger UI at `/v1/docs` (disable in production) |
 
 ### `apps/web/.env.local`
 
 | Variable | Required | Description |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | ✅ | Canonical site URL — used for OG tags and sitemap |
-| `NEXT_PUBLIC_API_URL` | ✅ | NestJS API base URL (no trailing slash) |
+| `NODE_ENV` | ✅ | `development` / `production` |
+| `NEXT_PUBLIC_API_URL` | ✅ | Public NestJS API base URL (no trailing slash) — exposed to browser |
+| `API_INTERNAL_URL` | | Server-side-only API URL (Railway/Docker internal network) |
 | `REVALIDATE_SECRET` | ✅ | Must match value in `apps/api/.env` |
-| `JWT_PUBLIC_KEY` | ✅ | RS256 public key for verifying access tokens server-side |
+| `NEXT_PUBLIC_SITE_URL` | ✅ | Canonical site URL — used for OG tags, sitemap, `metadataBase` |
+| `NEXT_PUBLIC_RESUME_SLUG` | | Profile slug to load (default `"default"`) |
+
+### `apps/mcp/.env`
+
+| Variable | Required | Description |
+|---|---|---|
+| `API_BASE_URL` | | NestJS API base URL (default `http://localhost:3001`) |
+| `RESUME_SLUG` | | Profile slug to expose (default `"default"`) |
+| `PORT` | | When set: HTTP/StreamableHTTP mode on this port. Unset: stdio mode for Claude Desktop |
 
 > **Neon dual-URL pattern:** `DATABASE_URL` targets the PgBouncer pooler endpoint (`-pooler` suffix) for all runtime queries. `DATABASE_URL_UNPOOLED` targets the direct endpoint and is used **only** by the TypeORM migration CLI — DDL statements are incompatible with PgBouncer transaction mode.
 
@@ -114,83 +145,82 @@ yarn workspace api create-admin    # interactive prompt — creates the first ad
 ## Generating a JWT RS256 key pair
 
 ```sh
-# Private key
 openssl genrsa -out private.pem 2048
-
-# Public key (derived from private)
 openssl rsa -in private.pem -pubout -out public.pem
 ```
 
-Paste the full PEM content (including header/footer lines) into the respective env vars.
+Paste the full PEM content (including header/footer lines) into the respective env vars. In single-line env files replace newlines with `\n`.
 
 ---
 
 ## API overview
 
 Base path: `/v1`
-Interactive docs: `http://localhost:3001/v1/docs` (Swagger / OpenAPI 3.1)
+Interactive docs: `http://localhost:3001/v1/docs` (Swagger / OpenAPI 3.1 — enabled via `SWAGGER_ENABLED=true`)
 Admin panel: `http://localhost:3001/admin` (AdminJS — requires admin account)
+Health check: `http://localhost:3001/health`
 
 | Endpoint | Method | Auth | Description |
 |---|---|---|---|
-| `/v1/health` | `GET` | Public | Health check — returns status, version, timestamp |
-| `/v1/auth/login` | `POST` | Public | Login — returns RS256 JWT access token |
+| `/health` | `GET` | Public | Health check — returns status, version, uptime |
+| `/v1/auth/login` | `POST` | Public | Login — returns RS256 JWT access token + sets refresh cookie |
+| `/v1/auth/refresh` | `POST` | Cookie | Refresh access token using HTTP-only refresh cookie |
+| `/v1/auth/logout` | `POST` | Cookie | Clear refresh cookie |
 | `/v1/auth/me` | `GET` | 🔒 JWT | Returns the authenticated admin user |
-| `/v1/resume` | `GET` | Public | Full resume payload (profile, skills, experience, etc.) |
-| `/v1/blog` | `GET` | Public | List all published blog posts (summary) |
-| `/v1/blog/:slug` | `GET` | Public | Single blog post with rendered HTML content |
-| `/v1/blog` | `POST` | 🔒 JWT | Create a blog post (slug + HTML auto-generated) |
-| `/v1/blog/:id` | `PATCH` | 🔒 JWT | Update a blog post (re-renders Markdown on save) |
-| `/v1/blog/:id` | `DELETE` | 🔒 JWT | Delete a blog post |
-| `/v1/blog/tags` | `GET` | Public | List all tags sorted alphabetically |
-| `/v1/upload` | `POST` | 🔒 Session | Upload image → Cloudinary; returns `{ url, publicId }` |
+| `/v1/resume/:slug` | `GET` | Public | Full resume for named profile (slug default: `"default"`) |
+| `/v1/resume/profile` | `PATCH` | 🔒 JWT | Update profile fields |
+| `/v1/blog` | `GET` | Public | Paginated published blog posts |
+| `/v1/blog/:slug` | `GET` | Public | Single blog post with rendered HTML |
+| `/v1/blog` | `POST` | 🔒 JWT | Create blog post (slug + HTML auto-generated) |
+| `/v1/blog/:id` | `PATCH` | 🔒 JWT | Update blog post (re-renders Markdown) |
+| `/v1/blog/:id` | `DELETE` | 🔒 JWT | Delete blog post |
+| `/v1/blog/tags` | `GET` | Public | All tags sorted alphabetically |
+| `/v1/projects` | `GET` | Public | Paginated published projects |
+| `/v1/projects/:slug` | `GET` | Public | Single project with media and videos |
+| `/v1/gallery/albums` | `GET` | Public | All published albums |
+| `/v1/gallery/albums/:slug` | `GET` | Public | Album detail with photos |
+| `/v1/gallery/photos` | `GET` | Public | Cursor-paginated photos |
+| `/v1/upload` | `POST` | 🔒 JWT/Session | Upload file → Cloudinary; returns `{ url, publicId, lqipUrl, width, height }` |
 
 ### Database entities
 
-All entities use `uuid` primary keys and extend TypeORM's `BaseEntity` (Active Record pattern).
-
-| Entity | Table | Notable fields |
+| Entity | Table | Notes |
 |---|---|---|
-| `ResumeProfile` | `resume_profile` | headline, summary, contact info |
-| `Skill` | `skill` | name, category, proficiency level |
-| `ExperienceEntry` | `experience_entry` | company, role, start/end date, highlights |
-| `EducationEntry` | `education_entry` | institution, degree, field, dates |
-| `Patent` | `patent` | title, patent number, status |
-| `Certification` | `certification` | name, issuer, issue/expiry dates |
-| `Award` | `award` | title, issuer, year |
-| `BlogPost` | `blog_post` | title, slug, content, tags (M2M) |
-| `Tag` | `tag` | name (shared across blog posts) |
-| `Project` | `project` | title, slug, description, tags, media, videos |
-| `ProjectMedia` | `project_media` | image URL, alt, sort order |
-| `ProjectVideo` | `project_video` | video URL, provider, sort order |
-| `Album` | `album` | title, slug, description, cover photo |
-| `Photo` | `photo` | title, slug, image URL, album (M2O) |
+| `AdminUser` | `admin_users` | bcrypt password; session auth for AdminJS |
+| `ResumeProfile` | `resume_profile` | `slug` (unique, default `"default"`); name, position, description, contact, dates |
+| `Skill` | `skills` | `SkillCategory` enum: language/framework/database/tool; global (not profile-scoped) |
+| `ExperienceEntry` | `experience_entries` | FK → `profile_id`; bullets as `text[]`; M2M `Skill` |
+| `EducationEntry` | `education_entries` | FK → `profile_id`; degree, university, duration string |
+| `Patent` | `patents` | FK → `profile_id`; title, number (e.g. GB2572361A), URL |
+| `Certification` | `certifications` | FK → `profile_id`; title, issuer |
+| `Award` | `awards` | FK → `profile_id`; title, issuer |
+| `Tag` | `tags` | M2M `BlogPost` |
+| `BlogPost` | `blog_posts` | `rawMarkdown` + `htmlContent`; `published` flag |
+| `Project` | `projects` | `rawMarkdown` + `htmlContent`; `featured` flag; M2M `Skill` |
+| `ProjectMedia` | `project_media` | ordered carousel images; CASCADE on project delete |
+| `ProjectVideo` | `project_videos` | `VideoSource` enum: youtube/vimeo/self_hosted |
+| `Album` | `albums` | soft `coverId` FK to photos |
+| `Photo` | `photos` | `originalUrl`, `thumbUrl`, `lqipUrl`, `exif` jsonb |
 
 ---
 
 ## Blog Engine
 
-Blog posts are written in Markdown and stored in the database. On every create/update the API renders the Markdown to sanitized HTML and caches the result in the `htmlContent` column — the web frontend renders it directly without any client-side Markdown processing.
+Blog posts are written in Markdown and stored in the database. On every create/update the API renders Markdown to sanitised HTML and caches the result in `htmlContent` — the frontend renders it directly without client-side processing.
 
 ### Markdown pipeline (`apps/api/src/common/markdown.util.ts`)
 
-The NestJS API is compiled as **CommonJS** but the Markdown ecosystem (`unified`, `remark-*`, `rehype-*`) ships as **ESM-only**. The pipeline uses a dynamic import shim to bridge this gap at runtime:
+NestJS compiles as **CommonJS** but the Markdown ecosystem (`unified`, `remark-*`, `rehype-*`) is **ESM-only**. The pipeline bridges this with a dynamic import shim:
 
 ```ts
-// ESM-only packages loaded via dynamic import to bypass TS CJS transform
-const { unified } = await (new Function('m', 'return import(m)'))('unified');
+const esmImport = new Function('m', 'return import(m)') as (m: string) => Promise<any>;
 ```
 
-Supported transformations: GFM tables · strikethrough · task lists · fenced code blocks · autolinks · HTML sanitization.
-
-### Slug & reading time
-
-- **Slug**: auto-generated from the title using `generateSlug(title)` — e.g. `my-first-post-V1StGXR8`. Never regenerated after creation.
-- **Reading time**: computed as `⌈wordCount / 200⌉` minutes and stored on the entity.
+Pipeline: `unified` → `remark-gfm` → `rehype-pretty-code` (Shiki syntax highlighting) → `rehype-sanitize` (strict allowlist — no `<script>`, `<style>`, `<iframe>`).
 
 ### ISR revalidation
 
-Every mutation (create / update / delete via API or AdminJS) fires a `POST /api/revalidate` request to the Next.js web app, purging the `blog` cache tag. Published posts go live at `/blog/[slug]` within 60 seconds — no redeployment required.
+Every mutation (API or AdminJS) fires `POST /api/revalidate` to Next.js, purging the relevant cache tag. Changes go live within 60 seconds — no redeployment required.
 
 ---
 
@@ -198,38 +228,56 @@ Every mutation (create / update / delete via API or AdminJS) fires a `POST /api/
 
 ### Slugs — `nanoid` + `slugify`
 
-Every content entity that needs a URL-friendly identifier (blog posts, projects, albums, photos) uses the `generateSlug` helper.
-
 ```ts
 import { generateSlug, slugify } from 'src/common/slug.util';
 
-// Derive a collision-resistant slug from a title
 const slug = generateSlug('My First Blog Post');
-// → 'my-first-blog-post-V1StGXR8'
+// → 'my-first-blog-post-V1StGXR8'  (collision-resistant, never mutated after creation)
 
-// Or just normalise text (no random suffix)
 const plain = slugify('Ångström Units');
 // → 'angstrom-units'
 ```
 
-`slugify` is also exported from `@portfolio-cms/utils` for use on the Next.js frontend.
-
 ### Public IDs — `sqids`
 
-Internal UUIDs are kept as primary keys in the database. For public-facing URLs the `SqidsService` encodes a UUID into a short, opaque string and decodes it back, so internal database IDs are never exposed.
+Internal UUIDs stay as primary keys. `SqidsService` encodes them to short opaque strings for public URLs:
 
 ```ts
-// Injected by NestJS DI (SqidsModule is global)
-constructor(private readonly sqids: SqidsService) {}
-
 const publicId = this.sqids.encode('550e8400-e29b-41d4-a716-446655440000');
-// → 'kHfge3' (example — 6 chars minimum)
+// → 'kHfge3'
 
 const uuid = this.sqids.decode('kHfge3');
 // → '550e8400-e29b-41d4-a716-446655440000'
 ```
 
-`SqidsModule` is registered as `@Global()` in `AppModule`, so `SqidsService` can be constructor-injected into any feature module without additional imports.
+`SqidsModule` is `@Global()` — inject `SqidsService` anywhere without additional imports.
+
+---
+
+## MCP Server (`apps/mcp`)
+
+An [MCP](https://modelcontextprotocol.io) server that exposes portfolio resume data to AI agents (Claude, etc.).
+
+**Production URL:** `https://resume-web-mcp-production.up.railway.app/mcp`
+**Config:** `.mcp.json` at repo root wires both remote and local endpoints for Claude Code.
+
+### Tools
+
+| Tool | Description |
+|---|---|
+| `get_resume` | Full resume snapshot (all sections) |
+| `get_profile` | Name, position, contact, career start, years of experience |
+| `get_skills` | Skills grouped by category |
+| `get_experience` | Work experience with bullets and tech stack |
+| `get_education` | Education entries |
+| `get_patents` | Patents |
+| `get_certifications` | Certifications |
+| `get_awards` | Awards |
+
+### Transport modes
+
+- **HTTP mode** (Railway / remote): set `PORT` env var → `StreamableHTTPServerTransport` in stateless mode (new transport per request). Endpoints: `/mcp`, `/health`.
+- **Stdio mode** (Claude Desktop / local without PORT): `StdioServerTransport`.
 
 ---
 
@@ -264,69 +312,65 @@ These credentials match the defaults in `apps/api/.env.example`.
 resume-web/
 ├── apps/
 │   ├── api/                        # NestJS 10 backend
+│   │   ├── scripts/
+│   │   │   ├── create-admin.ts     # Interactive admin user creation
+│   │   │   └── export-openapi.ts   # Exports live OpenAPI spec → docs/openapi.json
 │   │   └── src/
-│   │       ├── admin/              # AdminJS panel (admin.module.ts)
+│   │       ├── admin/              # AdminJS panel (admin.module.ts + custom components)
+│   │       │   └── components/     # markdown-editor, media-uploader, photo-uploader,
+│   │       │                       # skill-picker, tag-picker, video-manager, dashboard
 │   │       ├── admin-user/         # AdminUser entity, service, module
 │   │       ├── auth/               # JWT RS256 auth (login, guards, strategies)
-│   │       ├── blog/               # Blog feature module
-│   │       │   ├── blog.controller.ts  # Public + JWT-protected endpoints
-│   │       │   ├── blog.service.ts     # CRUD, slug gen, tag upsert, ISR trigger
-│   │       │   ├── blog.module.ts
-│   │       │   └── dto/
-│   │       │       └── blog-post.dto.ts
+│   │       ├── blog/               # Blog CRUD, slug gen, tag upsert, ISR trigger
 │   │       ├── common/
-│   │       │   ├── markdown.util.ts# Markdown→HTML (unified/remark/rehype via dynamic ESM import)
-│   │       │   ├── middleware/     # no-index.middleware.ts
-│   │       │   ├── slug.util.ts    # slugify() + generateSlug() — uses nanoid
-│   │       │   ├── sqids.service.ts# encode/decode UUIDs ↔ short public IDs
-│   │       │   └── sqids.module.ts # @Global() NestJS module
-│   │       ├── database/           # TypeORM DataSource (Neon dual-URL)
-│   │       ├── entities/           # All TypeORM entities (extend BaseEntity)
-│   │       │   ├── resume-profile.entity.ts
-│   │       │   ├── skill.entity.ts
-│   │       │   ├── experience-entry.entity.ts
-│   │       │   ├── education-entry.entity.ts
-│   │       │   ├── patent.entity.ts
-│   │       │   ├── certification.entity.ts
-│   │       │   ├── award.entity.ts
-│   │       │   ├── blog-post.entity.ts
-│   │       │   ├── tag.entity.ts
-│   │       │   ├── project.entity.ts
-│   │       │   ├── project-media.entity.ts
-│   │       │   ├── project-video.entity.ts
-│   │       │   ├── album.entity.ts
-│   │       │   ├── photo.entity.ts
-│   │       │   └── index.ts
-│   │       ├── migrations/         # TypeORM migration files
-│   │       ├── resume/             # Resume feature module (controller, service, DTOs)
-│   │       ├── seeds/              # Idempotent seed script + seed data
-│   │       ├── app.module.ts       # Root module (registers SqidsModule globally)
-│   │       └── main.ts             # CORS, global prefix (v1), Swagger, ValidationPipe
+│   │       │   ├── markdown.util.ts    # Markdown→HTML (ESM dynamic import shim)
+│   │       │   ├── slug.util.ts        # slugify() + generateSlug() (nanoid suffix)
+│   │       │   ├── sqids.service.ts    # UUID ↔ short public ID
+│   │       │   └── sqids.module.ts     # @Global() NestJS module
+│   │       ├── database/               # TypeORM DataSource (Neon dual-URL)
+│   │       ├── entities/               # All TypeORM entities + barrel index.ts
+│   │       ├── gallery/                # Albums + photos CRUD, Cloudinary upload
+│   │       ├── migrations/             # TypeORM migration files
+│   │       ├── projects/               # Projects CRUD, media, videos
+│   │       ├── resume/                 # Resume CRUD (profile-scoped sub-entities)
+│   │       ├── seeds/                  # Idempotent seed script + seed data
+│   │       ├── upload/                 # Magic-byte validation + Cloudinary upload
+│   │       ├── app.module.ts
+│   │       └── main.ts                 # Early healthcheck server + NestJS bootstrap
+│   ├── mcp/                        # MCP server — exposes resume to AI agents
+│   │   └── src/
+│   │       └── index.ts            # Dual-mode: HTTP (Railway) or stdio (Claude Desktop)
 │   └── web/                        # Next.js 16 frontend
-│       ├── public/                 # Icons, manifests, profile photo
 │       └── src/app/
-│           ├── blog/
-│           │   ├── page.tsx        # /blog — ISR listing with post cards and tag chips
-│           │   └── [slug]/
-│           │       └── page.tsx    # /blog/[slug] — SSG detail page, OG meta, prose HTML
-│           ├── layout.tsx          # Root layout — fonts, ThemeProvider, SEO metadata
-│           ├── page.tsx            # Portfolio landing page
-│           ├── globals.css         # Tailwind v4 @theme + design tokens + @tailwindcss/typography
-│           ├── manifest.ts         # Web app manifest (Next.js App Router)
-│           └── robots.ts           # robots.txt (Next.js App Router)
+│           ├── api/revalidate/     # POST /api/revalidate — on-demand ISR
+│           ├── blog/               # /blog index (ISR) + /blog/[slug] (SSG)
+│           ├── gallery/            # /gallery index (SSR) + /gallery/[slug]
+│           ├── projects/           # /projects index (ISR) + /projects/[slug] (SSG)
+│           ├── resume/             # /resume (static + on-demand revalidate)
+│           ├── components/         # Shared Next.js components
+│           ├── lib/                # api.ts (fetch wrapper with cache tags)
+│           ├── layout.tsx          # Root layout — fonts, ThemeProvider, SEO
+│           ├── page.tsx            # Portfolio landing page (ISR 60s)
+│           ├── globals.css         # Tailwind v4 @theme + design tokens
+│           └── robots.ts           # robots.txt (Disallow: /admin)
 ├── packages/
+│   ├── oat-ui/                     # Shared component library
+│   │   └── src/                    # OatButton, OatCard, OatBadge, OatInput,
+│   │                               # OatSelect, OatTextarea, OatSpinner,
+│   │                               # OatTabs, OatModal, OatTable
 │   ├── utils/                      # Shared utilities
 │   │   └── src/
-│   │       ├── slug.ts             # slugify() — dep-free, used by web & api
-│   │       ├── date.ts             # calculateDuration, yearsOfExperience, etc.
+│   │       ├── date.ts             # calculateDuration, yearsOfExperience, formatNumberSuffix
+│   │       ├── slug.ts             # slugify()
 │   │       ├── latex.ts            # LaTeX resume generator
-│   │       └── index.ts            # Barrel export
-│   ├── types/                      # Shared TypeScript interfaces
-│   ├── eslint-config/              # Shared ESLint configs (base, next, nestjs)
-│   └── oat-ui/                     # Shared component library (stub)
+│   │       └── index.ts
+│   ├── types/                      # Generated from OpenAPI spec (never edit manually)
+│   └── eslint-config/              # Shared ESLint configs (base, next, nestjs)
 ├── docs/
-│   ├── PRD-portfolio-cms-platform.md
-│   └── EPICS-AND-STORIES.md
+│   ├── PRD-portfolio-cms-platform.md   # Product requirements (v1.1.0)
+│   ├── EPICS-AND-STORIES.md            # All 11 EPICs + stories (all complete)
+│   └── openapi.json                    # Exported OpenAPI spec (generated)
+├── .mcp.json                       # MCP client config for Claude Code
 ├── docker-compose.yml
 ├── lerna.json
 └── package.json                    # Workspace root
@@ -336,17 +380,18 @@ resume-web/
 
 ## Roadmap
 
-See [`docs/EPICS-AND-STORIES.md`](docs/EPICS-AND-STORIES.md) for the full implementation plan.
+All 11 EPICs complete. See [`docs/EPICS-AND-STORIES.md`](docs/EPICS-AND-STORIES.md) for full story breakdown.
 
 | Epic | Status |
 |---|---|
 | EPIC 1 — Foundation & Infrastructure | ✅ Complete |
-| EPIC 2 — Authentication & Authorization | ✅ Complete (JWT RS256, guards, AdminJS) |
-| EPIC 3 — Admin CMS (AdminJS) | ✅ Complete (all entities registered, BaseEntity pattern) |
-| EPIC 4 — Dynamic Resume System | ✅ Complete (REST API, Server Components, ISR, AdminJS resources) |
-| EPIC 5 — Blog Engine | ✅ Complete (NestJS CRUD, Markdown pipeline, Next.js 16 pages, ISR, AdminJS resources) |
-| EPIC 6 — Projects Showcase | 🔜 Planned |
-| EPIC 7 — Photography Gallery | 🔜 Planned |
-| EPIC 8 — Media & Cloudinary Pipeline | 🔜 Planned |
-| EPIC 9 — SEO, Performance & Analytics | 🔜 Planned |
-| EPIC 10 — Testing & Hardening | 🔜 Planned |
+| EPIC 2 — Authentication & Authorization | ✅ Complete |
+| EPIC 3 — Data Migration (`constants` → PostgreSQL) | ✅ Complete |
+| EPIC 4 — Dynamic Resume System | ✅ Complete |
+| EPIC 5 — Blog Engine | ✅ Complete |
+| EPIC 6 — Multimedia Project Showcase | ✅ Complete |
+| EPIC 7 — Photography Gallery | ✅ Complete |
+| EPIC 8 — AdminJS Panel & Custom Components | ✅ Complete |
+| EPIC 9 — OAT UI Component Library | ✅ Complete |
+| EPIC 10 — Non-Functional Requirements & Quality | ✅ Complete |
+| EPIC 11 — MCP Server (Model Context Protocol) | ✅ Complete |

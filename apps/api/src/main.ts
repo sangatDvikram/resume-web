@@ -44,7 +44,9 @@ async function bootstrap() {
   // before NestFactory.create() triggers onModuleInit and calls reorderRoutes.
   const { ExpressLoader } = await esmImport('@adminjs/nestjs');
   ExpressLoader.prototype.reorderRoutes = function (app: any) {
-    const router = app._router;
+    // Express 5 (used by NestJS 11) removed `app._router`; the router is now
+    // exposed as `app.router`. Fall back to `app._router` for Express 4 compat.
+    const router = app.router ?? app._router;
     if (!app || !router || !router.stack) return;
     let jsonParser: any[] = [];
     let urlencodedParser: any[] = [];

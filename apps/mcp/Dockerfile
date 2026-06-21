@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1.7
-# Build context: repo root (Railway Root Directory = /)
+# Portfolio CMS — apps/mcp (MCP server) container image
+# Used by Railway (apps/mcp/railway.toml) and Fly.io (apps/mcp/fly.toml).
+# Build context: repo root (Railway Root Directory = /; for Fly.io run
+# `flyctl deploy --config apps/mcp/fly.toml` from the repo root).
 ARG NODE_VERSION=22-alpine
 
 # ─── Stage 1: builder ─────────────────────────────────────────────────────────

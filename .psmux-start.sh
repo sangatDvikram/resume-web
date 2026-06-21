@@ -9,11 +9,8 @@ CONF="$PROJECT_DIR/.psmux.conf"
 # Already inside psmux — bail
 [ -n "$TMUX" ] && exit 0
 
-# Session exists — just attach
-if psmux has-session -t "$SESSION" 2>/dev/null; then
-  [ "$1" = "--no-attach" ] && exit 0
-  exec psmux attach -t "$SESSION"
-fi
+# Kill any existing session with the same name
+psmux kill-session -t "$SESSION" 2>/dev/null || true
 
 # Create session (detached), single window "dev" with 4 panes:
 #   ┌──────────┬──────────┐

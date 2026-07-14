@@ -99,8 +99,13 @@ export class GalleryController {
     return this.galleryService.listPhotosAdmin(albumId, cursor);
   }
 
-  /** POST /v1/gallery/photos/upload — single photo upload */
-  @UseGuards(JwtAuthGuard)
+  /**
+   * POST /v1/gallery/photos/upload — single photo upload
+   *
+   * Intentionally guarded at the UI layer only (AdminJS session cookie),
+   * same as /v1/upload — the admin components call this via same-origin
+   * fetch/XHR with `credentials: 'include'`, not a JWT Bearer token.
+   */
   @Post('photos/upload')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file', { storage: memStorage }))
@@ -112,7 +117,6 @@ export class GalleryController {
   }
 
   /** POST /v1/gallery/photos/bulk-upload — up to 50 photos in one batch */
-  @UseGuards(JwtAuthGuard)
   @Post('photos/bulk-upload')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FilesInterceptor('files', 50, { storage: memStorage }))

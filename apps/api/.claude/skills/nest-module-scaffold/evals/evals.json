@@ -1,0 +1,23 @@
+{
+  "skill_name": "nest-module-scaffold",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "add a testimonials feature to the api. testimonials have a quote, author name, author title/company, and a published flag + sort order so I can control what shows on the homepage. needs a public read endpoint and admin CRUD, and it should trigger ISR revalidation since it'll show on the site",
+      "expected_output": "Full module in apps/api/src/testimonials/ (module, controller, service, dto/testimonial.dto.ts, testimonials.service.spec.ts), Testimonial entity in apps/api/src/entities/testimonial.entity.ts, barrel export added, a migration creating the testimonials table, app.module.ts updated with the import + registration, main.ts Swagger tag added. Public GET (published only) with no guard, admin POST/PATCH/DELETE with JwtAuthGuard, revalidate() call present since it's public-facing.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need CRUD for a new entity called Sponsor -- name, logoUrl, websiteUrl, sortOrder. this is purely for the admin dashboard, no public page for it at all",
+      "expected_output": "Full module for Sponsor with entity, migration, dto, service, controller, module, spec, wired into app.module.ts. Since there's no public page, the service should skip the revalidate()/ISR call entirely (or omit the method) rather than including a no-op tag. All CRUD routes admin-guarded — reasonable to guard reads too since nothing here is meant to be public.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "scaffold a new module for FAQ entries -- question, answer (markdown), category (string), published flag. this could end up with a lot of entries over time so let's not just findAll() everything",
+      "expected_output": "Full FAQ module following the pagination pattern from gallery (cursor-based, base64 offset, overfetch-by-1 for hasMore) rather than blog's plain findAll(). Entity, migration, dto (including a page/list response interface), service, controller, module, spec, wired into app.module.ts and main.ts Swagger tags.",
+      "files": []
+    }
+  ]
+}

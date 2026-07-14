@@ -56,3 +56,9 @@ Thumbs.db
 Desktop.ini
 package-lock.json
 graphify-out
+.tokensave/branch-meta.json
+.tokensave/config.json
+.tokensave/tokensave.db
+.tokensave/tokensave.db-shm
+.tokensave/tokensave.db-wal
+.claude/.headroom_wrap_marker.json

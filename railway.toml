@@ -60,6 +60,10 @@
   restartPolicyType       = "ON_FAILURE"
   restartPolicyMaxRetries = 3
 
+  # Disable serverless sleep-on-idle — keep service always running (no cold
+  # start after inactivity).
+  sleepApplication = false
+
   # Zero-downtime: keep the old container alive for 30 s while the new one
   # warms up (AdminJS bundle compile + DB pool connect), then drain for 10 s.
   overlapSeconds  = 30
@@ -71,7 +75,7 @@
 [deploy.env]
   NODE_ENV        = "production"
   PORT            = "3001"
-  SWAGGER_ENABLED = "false"
+  SWAGGER_ENABLED = "true"
   DB_SSL          = "true"
   THROTTLE_TTL    = "60"
   THROTTLE_LIMIT  = "20"

@@ -6,6 +6,7 @@ import { DataSource, In } from 'typeorm';
 import { AdminUserModule } from '../admin-user/admin-user.module';
 import { AdminUserService } from '../admin-user/admin-user.service';
 import { AdminUser } from '../admin-user/admin-user.entity';
+import { generateSlug } from '../common/slug.util';
 import {
   ResumeProfile,
   Skill,
@@ -575,7 +576,17 @@ export class AdminJsModule {
                     options: {
                       actions: {
                         edit: { after: afterGallery },
-                        new: { after: afterGallery },
+                        new: {
+                          before: async (request: any) => {
+                            if (request.payload?.name) {
+                              request.payload.slug = generateSlug(
+                                request.payload.name,
+                              );
+                            }
+                            return request;
+                          },
+                          after: afterGallery,
+                        },
                         delete: { after: afterGallery },
                       },
                       listProperties: [

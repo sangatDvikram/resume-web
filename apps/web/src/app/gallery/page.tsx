@@ -3,10 +3,21 @@ import { getAlbums, getPhotos } from "@/lib/api";
 import type { AlbumSummaryDto, PhotoPageDto } from "@/lib/api";
 import { GalleryClient } from "./GalleryClient";
 
-export const metadata: Metadata = {
-  title: "Gallery",
-  description: "A collection of photographs — landscapes, portraits, and street scenes.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const { total } = await getPhotos();
+    const description =
+      total > 0
+        ? `${total} photo${total === 1 ? "" : "s"} — landscapes, portraits, and street scenes.`
+        : "A collection of photographs — landscapes, portraits, and street scenes.";
+    return { title: "Gallery", description };
+  } catch {
+    return {
+      title: "Gallery",
+      description: "A collection of photographs — landscapes, portraits, and street scenes.",
+    };
+  }
+}
 
 // ISR: revalidate every hour; on-demand via /api/revalidate with tag "gallery"
 export const revalidate = 3600;

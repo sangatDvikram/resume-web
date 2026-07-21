@@ -1,141 +1,316 @@
 /**
  * E8-S3: AdminJS custom component — split-pane Markdown editor.
  *
- * Bundled by AdminJS's internal esbuild pipeline; runs in the BROWSER.
+ * Bundled by AdminJS's internal Rollup pipeline; runs in the BROWSER.
  * Registered via ComponentLoader in admin.module.ts and mounted on the
  * rawMarkdown field of the BlogPost resource and description on Project.
  *
- * Layout: [editor textarea | live HTML preview]
- * Preview is debounced 300 ms via a simple GFM-subset renderer.
+ * Layout: [CodeMirror editor | live GFM preview via `marked`]
  * Upload flow: file picker → POST /v1/upload → insert ![name](url) at cursor.
+ *
+ * NOTE ON REACT DUPLICATION CRASHES: any package here that imports React via
+ * the *automatic* JSX runtime ('react/jsx-runtime') crashes AdminJS's admin
+ * panel with "Cannot read properties of undefined (reading
+ * 'recentlyCreatedOwnerStacks')" — a React-19-internals mismatch. AdminJS's
+ * Rollup bundler (node_modules/adminjs/lib/backend/bundler/*.js,
+ * DEFAULT_EXTERNALS) only externalizes 'react' and 'react-dom', not
+ * 'react/jsx-runtime', so that module gets bundled as a second, non-deduped
+ * React copy. Both `react-markdown` AND `@uiw/react-codemirror` (its
+ * compiled esm/index.js has `import {jsx as _jsx} from "react/jsx-runtime"`)
+ * hit this. Grep any candidate replacement for "jsx-runtime" in its compiled
+ * output before using it here — it won't show up in source-only greps of a
+ * package that ships pre-built dist files.
+ * `marked` (preview) is a zero-dependency string-returning parser, and the
+ * editor below uses plain `@codemirror/*` + `codemirror` packages driven
+ * imperatively (no React wrapper at all) — neither can hit this bug class.
  */
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useMemo, useCallback, useEffect } from 'react';
+import { marked } from 'marked';
+import { EditorView, keymap, placeholder as cmPlaceholder, type KeyBinding } from '@codemirror/view';
+import { EditorSelection } from '@codemirror/state';
+import { indentWithTab } from '@codemirror/commands';
+import { markdown as markdownLang } from '@codemirror/lang-markdown';
+import { basicSetup } from 'codemirror';
 
-// ── Lightweight GFM-subset renderer (no external deps) ────────────────────────
+// ── Markdown toolbar commands ──────────────────────────────────────────────
+// Real CodeMirror commands — `(view) => boolean` dispatched via
+// `state.changeByRange`, CodeMirror's own multi-selection-aware transaction
+// API — rather than naive fixed-string inserts at a single cursor. Shared
+// between the toolbar buttons below and the keymap, so both stay in sync.
+
+function wrapSelection(before: string, after: string = before) {
+  return (view: EditorView): boolean => {
+    const tr = view.state.changeByRange((range) => {
+      const selected = view.state.sliceDoc(range.from, range.to);
+      // Toggle off if the selection is already wrapped.
+      if (
+        range.from >= before.length &&
+        view.state.sliceDoc(range.from - before.length, range.from) === before &&
+        view.state.sliceDoc(range.to, range.to + after.length) === after
+      ) {
+        return {
+          changes: [
+            { from: range.from - before.length, to: range.from, insert: '' },
+            { from: range.to, to: range.to + after.length, insert: '' },
+          ],
+          range: EditorSelection.range(range.from - before.length, range.to - before.length),
+        };
+      }
+      const insert = before + selected + after;
+      return {
+        changes: [{ from: range.from, to: range.to, insert }],
+        range: range.empty
+          ? EditorSelection.cursor(range.from + before.length)
+          : EditorSelection.range(range.from + before.length, range.from + before.length + selected.length),
+      };
+    });
+    view.dispatch(view.state.update(tr, { scrollIntoView: true, userEvent: 'input' }));
+    view.focus();
+    return true;
+  };
+}
+
+function toggleHeading(view: EditorView): boolean {
+  const tr = view.state.changeByRange((range) => {
+    const line = view.state.doc.lineAt(range.from);
+    const match = /^(#{1,6})\s/.exec(line.text);
+    if (match) {
+      return {
+        changes: [{ from: line.from, to: line.from + match[0].length, insert: '' }],
+        range: EditorSelection.range(range.from - match[0].length, range.to - match[0].length),
+      };
+    }
+    return {
+      changes: [{ from: line.from, insert: '## ' }],
+      range: EditorSelection.range(range.from + 3, range.to + 3),
+    };
+  });
+  view.dispatch(view.state.update(tr, { scrollIntoView: true, userEvent: 'input' }));
+  view.focus();
+  return true;
+}
+
+function insertCodeBlock(view: EditorView): boolean {
+  const tr = view.state.changeByRange((range) => {
+    const selected = view.state.sliceDoc(range.from, range.to);
+    const insert = `\`\`\`\n${selected || 'code'}\n\`\`\``;
+    return {
+      changes: [{ from: range.from, to: range.to, insert }],
+      range: selected
+        ? EditorSelection.cursor(range.from + insert.length)
+        : EditorSelection.range(range.from + 4, range.from + 8),
+    };
+  });
+  view.dispatch(view.state.update(tr, { scrollIntoView: true, userEvent: 'input' }));
+  view.focus();
+  return true;
+}
+
+function insertLink(view: EditorView): boolean {
+  const tr = view.state.changeByRange((range) => {
+    const selected = view.state.sliceDoc(range.from, range.to) || 'text';
+    const insert = `[${selected}](url)`;
+    const urlStart = range.from + selected.length + 3;
+    return {
+      changes: [{ from: range.from, to: range.to, insert }],
+      range: EditorSelection.range(urlStart, urlStart + 3),
+    };
+  });
+  view.dispatch(view.state.update(tr, { scrollIntoView: true, userEvent: 'input' }));
+  view.focus();
+  return true;
+}
+
+const TOOLBAR_ACTIONS = [
+  { label: 'B', title: 'Bold (Ctrl/Cmd+B)',        run: wrapSelection('**') },
+  { label: 'I', title: 'Italic (Ctrl/Cmd+I)',       run: wrapSelection('*') },
+  { label: 'H', title: 'Heading (Ctrl/Cmd+H)',      run: toggleHeading },
+  { label: '`', title: 'Inline code (Ctrl/Cmd+E)',  run: wrapSelection('`') },
+  { label: '≡', title: 'Code block',                run: insertCodeBlock },
+  { label: '→', title: 'Link (Ctrl/Cmd+K)',         run: insertLink },
+] as const;
+
+const markdownKeymap: readonly KeyBinding[] = [
+  { key: 'Mod-b', run: wrapSelection('**') },
+  { key: 'Mod-i', run: wrapSelection('*') },
+  { key: 'Mod-h', run: toggleHeading, preventDefault: true },
+  { key: 'Mod-e', run: wrapSelection('`') },
+  { key: 'Mod-k', run: insertLink, preventDefault: true },
+];
+
+const lightTheme = EditorView.theme({
+  '&': { fontSize: '13px', backgroundColor: '#ffffff', color: '#1f2937' },
+  '.cm-content': { fontFamily: '"Fira Code","Cascadia Code","JetBrains Mono",monospace', caretColor: '#1f2937' },
+  '.cm-gutters': { backgroundColor: '#f9fafb', color: '#9ca3af', border: 'none' },
+  '&.cm-focused': { outline: 'none' },
+}, { dark: false });
 
 function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function renderMarkdown(raw: string): string {
-  // 1. Protect fenced code blocks
-  const saved: string[] = [];
-  let s = raw.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
-    saved.push(`<pre style="background:#0d1117;padding:12px;border-radius:6px;overflow:auto"><code>${esc(code.trim())}</code></pre>`);
-    return `\x00CB${saved.length - 1}\x00`;
-  });
+// Colors pulled directly from apps/web/src/app/globals.css's light-mode
+// `:root` vars (--foreground/--border/--surface/--link/--link-hover), which
+// is what the public site's `.wiki-prose` class resolves to. Values
+// confirmed via getComputedStyle() against the live blog post page, not
+// hand-converted from the hsl() source — keep them in sync if that palette
+// changes. Hardcoded (not CSS vars) because this renders in AdminJS, a
+// separate app with no access to the web app's stylesheet.
+const WIKI = {
+  fg: '#202122',      // --foreground
+  border: '#a0a8b0',  // --border
+  surface: '#f9fafb', // --surface / --muted
+  link: '#335ccc',    // --link
+} as const;
 
-  // 2. Protect inline code
-  s = s.replace(/`([^`\n]+)`/g, (_, c) => `<code style="background:#1e293b;padding:2px 6px;border-radius:4px;font-size:0.9em">${esc(c)}</code>`);
+// Light-theme renderer overrides (marked v18 token-object renderer API).
+// Regular `function` (not arrows) so `this.parser` binds correctly — marked
+// calls these as `this.renderer.<method>(token)`, per its own extension docs.
+// Styled to match apps/web's `.wiki-prose` article rendering (see WIKI above
+// and apps/web/src/app/globals.css) so what admins see in this preview is
+// what actually ships on the public blog/project pages — not just "some
+// readable light theme". AdminJS's global admin CSS also resets font-weight/
+// margin on plain tags, so every element needs its own inline style
+// regardless — relying on the browser default wouldn't even render bold
+// text or paragraph spacing, let alone match the site.
+const renderer = new marked.Renderer();
 
-  // 3. Process line by line (headers, blockquotes, lists, HR)
-  const lines = s.split('\n');
-  const out: string[] = [];
-  let listBuf: string[] = [];
-  let listType = 'ul';
+renderer.code = function ({ text }) {
+  return `<pre style="background:${WIKI.surface};color:${WIKI.fg};padding:12px;border-radius:6px;overflow:auto"><code>${esc(text)}</code></pre>`;
+};
 
-  const flushList = () => {
-    if (!listBuf.length) return;
-    out.push(`<${listType} style="padding-left:1.5em;margin:0.5em 0">${listBuf.join('')}</${listType}>`);
-    listBuf = [];
-  };
+renderer.codespan = function ({ text }) {
+  return `<code style="background:${WIKI.surface};color:${WIKI.fg};padding:2px 6px;border-radius:4px;font-size:0.9em">${esc(text)}</code>`;
+};
 
-  for (const line of lines) {
-    const h = line.match(/^(#{1,6})\s+(.+)/);
-    if (h) { flushList(); out.push(`<h${h[1].length} style="margin:0.75em 0 0.25em">${h[2]}</h${h[1].length}>`); continue; }
+renderer.blockquote = function ({ tokens }) {
+  return `<blockquote style="border-left:4px solid ${WIKI.border};background:${WIKI.surface};margin:0.5em 0;padding:0.75rem 1rem;color:${WIKI.fg};font-style:normal">${this.parser.parse(tokens)}</blockquote>`;
+};
 
-    const bq = line.match(/^>\s*(.*)/);
-    if (bq) { flushList(); out.push(`<blockquote style="border-left:3px solid #6366f1;margin:0.5em 0;padding:4px 12px;color:#94a3b8">${bq[1]}</blockquote>`); continue; }
+renderer.hr = function () {
+  return `<hr style="border:none;border-top:1px solid ${WIKI.border};margin:1em 0">`;
+};
 
-    if (/^[-*_]{3,}$/.test(line.trim())) { flushList(); out.push('<hr style="border:none;border-top:1px solid #334155;margin:1em 0">'); continue; }
+renderer.link = function ({ href, title, tokens }) {
+  const text = this.parser.parseInline(tokens);
+  return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${esc(title)}"` : ''} style="color:${WIKI.link};text-decoration:none">${text}</a>`;
+};
 
-    const ulm = line.match(/^(\s*)[-*+]\s+(.*)/);
-    const olm = line.match(/^(\s*)\d+\.\s+(.*)/);
-    if (ulm || olm) {
-      const type = ulm ? 'ul' : 'ol';
-      if (listBuf.length && type !== listType) flushList();
-      listType = type;
-      listBuf.push(`<li>${(ulm ?? olm)![2]}</li>`);
-      continue;
-    }
+renderer.image = function ({ href, title, text }) {
+  return `<img src="${href}" alt="${esc(text)}"${title ? ` title="${esc(title)}"` : ''} style="max-width:100%;border-radius:6px;margin:0.5em 0">`;
+};
 
-    flushList();
-    out.push(line);
-  }
-  flushList();
-  s = out.join('\n');
+renderer.strong = function ({ tokens }) {
+  return `<strong style="font-weight:700;color:${WIKI.fg}">${this.parser.parseInline(tokens)}</strong>`;
+};
 
-  // 4. Inline formatting
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  s = s.replace(/~~(.+?)~~/g, '<del>$1</del>');
+renderer.em = function ({ tokens }) {
+  return `<em style="font-style:italic;color:${WIKI.fg}">${this.parser.parseInline(tokens)}</em>`;
+};
 
-  // 5. Images (before links)
-  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,
-    '<img src="$2" alt="$1" style="max-width:100%;border-radius:6px;margin:0.5em 0">');
+renderer.del = function ({ tokens }) {
+  return `<del style="text-decoration:line-through;color:${WIKI.fg}">${this.parser.parseInline(tokens)}</del>`;
+};
 
-  // 6. Links
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener" style="color:#6366f1">$1</a>');
+renderer.paragraph = function ({ tokens }) {
+  return `<p style="margin:0 0 1.25em;color:${WIKI.fg}">${this.parser.parseInline(tokens)}</p>`;
+};
 
-  // 7. Paragraph wrap: non-HTML, non-blank sections
-  const sections = s.split(/\n\n+/);
-  s = sections.map(sec => {
-    const t = sec.trim();
-    if (!t) return '';
-    if (/^<(h[1-6]|ul|ol|pre|blockquote|hr|img)/.test(t) || t.startsWith('\x00CB')) return t;
-    return `<p style="margin:0.5em 0;line-height:1.7">${t.replace(/\n/g, '<br>')}</p>`;
-  }).join('\n');
+// h2/h3/h4 get the wiki bottom-rule + weight 600 (matches
+// `.wiki-prose :where(h2, h3, h4)`); h1/h5/h6 aren't specially ruled on the
+// site either (post titles render their own <h1> outside the markdown body).
+const HEADING_SIZES: Record<number, string> = { 1: '1.8em', 2: '1.5em', 3: '1.25em', 4: '1.1em', 5: '1em', 6: '0.9em' };
+const HEADING_MARGINS: Record<number, string> = { 2: '2em 0 0.6em', 3: '1.6em 0 0.5em' };
 
-  // 8. Restore code blocks
-  saved.forEach((blk, i) => { s = s.replace(`\x00CB${i}\x00`, blk); });
+renderer.heading = function ({ tokens, depth }) {
+  const size = HEADING_SIZES[depth] ?? '1em';
+  const margin = HEADING_MARGINS[depth] ?? '1em 0 0.5em';
+  const rule = depth >= 2 && depth <= 4 ? `border-bottom:1px solid ${WIKI.border};padding-bottom:0.2em;` : '';
+  return `<h${depth} style="margin:${margin};font-weight:600;font-size:${size};color:${WIKI.fg};${rule}">${this.parser.parseInline(tokens)}</h${depth}>`;
+};
 
-  return s;
-}
+renderer.list = function ({ ordered, start, items }) {
+  const tag = ordered ? 'ol' : 'ul';
+  const startAttr = ordered && start !== 1 ? ` start="${start}"` : '';
+  const body = items.map((item) => this.listitem(item)).join('');
+  return `<${tag}${startAttr} style="margin:0 0 1.25em;padding-left:1.5em;color:${WIKI.fg}">${body}</${tag}>`;
+};
+
+renderer.listitem = function (item) {
+  return `<li style="margin:0.25em 0">${this.parser.parse(item.tokens)}</li>`;
+};
+
+marked.setOptions({ gfm: true, breaks: false, renderer });
 
 const MarkdownEditor = ({ property, record, onChange }: any) => {
   const fieldPath: string = property.path;
   const initialValue: string = record?.params?.[fieldPath] ?? '';
 
-  const [value, setValue]       = useState<string>(initialValue);
-  const [preview, setPreview]   = useState<string>(() => renderMarkdown(initialValue));
+  const [value, setValue]         = useState<string>(initialValue);
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<'split' | 'editor' | 'preview'>('split');
-  const textareaRef  = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const editorViewRef = useRef<EditorView | null>(null);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
 
-  // Sync when record changes (page load / re-fetch)
+  const previewHtml = useMemo(() => (value ? marked.parse(value, { async: false }) : ''), [value]);
+
+  const handleChange = useCallback((v: string) => {
+    setValue(v);
+    onChange(fieldPath, v);
+  }, [fieldPath, onChange]);
+
+  // Mount CodeMirror once. The container div is always rendered (only its
+  // `display` toggles with the tab) so this EditorView is never orphaned by
+  // a conditional unmount — see the `editorWrapStyle` display toggle below.
+  const handleChangeRef = useRef(handleChange);
+  handleChangeRef.current = handleChange;
+
+  useEffect(() => {
+    if (!editorContainerRef.current) return;
+    const view = new EditorView({
+      doc: value,
+      extensions: [
+        keymap.of([...markdownKeymap, indentWithTab]),
+        basicSetup,
+        markdownLang(),
+        EditorView.lineWrapping,
+        lightTheme,
+        cmPlaceholder('Write Markdown here…'),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) handleChangeRef.current(update.state.doc.toString());
+        }),
+      ],
+      parent: editorContainerRef.current,
+    });
+    editorViewRef.current = view;
+    return () => { view.destroy(); editorViewRef.current = null; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync when record changes (page load / re-fetch) — replace the whole doc
+  // in the live view rather than remounting CodeMirror.
   useEffect(() => {
     const v = record?.params?.[fieldPath] ?? '';
     setValue(v);
-    setPreview(renderMarkdown(v));
+    const view = editorViewRef.current;
+    if (view && view.state.doc.toString() !== v) {
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: v } });
+    }
   }, [record?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const v = e.target.value;
-    setValue(v);
-    onChange(fieldPath, v);
-    // Debounce preview render 300 ms
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setPreview(renderMarkdown(v)), 300);
-  }, [fieldPath, onChange]);
-
   const insertAtCursor = useCallback((text: string) => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    const start = ta.selectionStart ?? value.length;
-    const end   = ta.selectionEnd   ?? value.length;
-    const next  = value.slice(0, start) + text + value.slice(end);
+    const view = editorViewRef.current;
+    if (!view) return;
+    const { from, to } = view.state.selection.main;
+    view.dispatch({
+      changes: { from, to, insert: text },
+      selection: { anchor: from + text.length },
+    });
+    const next = view.state.doc.toString();
     setValue(next);
     onChange(fieldPath, next);
-    setPreview(renderMarkdown(next));
-    setTimeout(() => {
-      ta.selectionStart = ta.selectionEnd = start + text.length;
-      ta.focus();
-    }, 0);
-  }, [value, fieldPath, onChange]);
+    view.focus();
+  }, [fieldPath, onChange]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -156,28 +331,30 @@ const MarkdownEditor = ({ property, record, onChange }: any) => {
     }
   };
 
-  // ── Styles ──────────────────────────────────────────────────────────────────
-  const editorStyle: React.CSSProperties = {
-    flex: 1, fontFamily: '"Fira Code","Cascadia Code","JetBrains Mono",monospace',
-    fontSize: '13px', lineHeight: '1.65', padding: '12px',
-    border: '1px solid #334155', borderRadius: '6px', resize: 'none',
-    background: '#0f172a', color: '#e2e8f0', minHeight: '460px',
-    boxSizing: 'border-box', overflowY: 'auto',
+  // ── Styles (light theme, matches AdminJS's default light admin UI) ───────────
+  // Both panes stay mounted always; `display` toggles with the active tab so
+  // the CodeMirror EditorView (mounted once, imperatively) never gets torn
+  // down by a conditional unmount.
+  const showEditor  = activeTab !== 'preview';
+  const showPreview = activeTab !== 'editor';
+
+  const editorWrapStyle: React.CSSProperties = {
+    display: showEditor ? 'block' : 'none',
+    flex: 1, border: '1px solid #d1d5db', borderRadius: '6px',
+    overflow: 'hidden', boxSizing: 'border-box', minHeight: '460px',
   };
   const previewStyle: React.CSSProperties = {
-    flex: 1, padding: '12px 16px', border: '1px solid #334155', borderRadius: '6px',
-    background: '#0f172a', color: '#e2e8f0', minHeight: '460px',
-    overflowY: 'auto', fontSize: '14px', lineHeight: '1.7',
+    display: showPreview ? 'block' : 'none',
+    flex: 1, padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '6px',
+    background: '#ffffff', color: WIKI.fg, minHeight: '460px',
+    overflowY: 'auto', fontSize: '16px', lineHeight: '1.6',
     boxSizing: 'border-box',
   };
   const tabBtn = (active: boolean): React.CSSProperties => ({
     padding: '5px 14px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-    border: '1px solid #334155', borderRadius: '5px', background: active ? '#6366f1' : 'transparent',
-    color: active ? '#fff' : '#94a3b8',
+    border: '1px solid #d1d5db', borderRadius: '5px', background: active ? '#3d5af1' : '#ffffff',
+    color: active ? '#fff' : '#4b5563',
   });
-
-  const showEditor  = activeTab !== 'preview';
-  const showPreview = activeTab !== 'editor';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -192,52 +369,37 @@ const MarkdownEditor = ({ property, record, onChange }: any) => {
           ))}
         </div>
         <div style={{ flex: 1 }} />
-        {/* Markdown shortcuts */}
-        {[
-          { label: 'B', title: 'Bold',   insert: '**bold**' },
-          { label: 'I', title: 'Italic', insert: '*italic*' },
-          { label: 'H', title: 'Heading', insert: '## Heading\n' },
-          { label: '`', title: 'Inline code', insert: '`code`' },
-          { label: '≡', title: 'Code block', insert: '```\ncode\n```\n' },
-          { label: '→', title: 'Link', insert: '[text](url)' },
-        ].map(({ label, title, insert }) => (
+        {/* Markdown shortcuts — same CodeMirror commands bound in markdownKeymap */}
+        {TOOLBAR_ACTIONS.map(({ label, title, run }) => (
           <button key={label} type="button" title={title}
-            onClick={() => insertAtCursor(insert)}
-            style={{ padding: '4px 10px', fontSize: '12px', fontWeight: 700, border: '1px solid #334155', borderRadius: '4px', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}>
+            onClick={() => { const view = editorViewRef.current; if (view) run(view); }}
+            style={{ padding: '4px 10px', fontSize: '12px', fontWeight: 700, border: '1px solid #d1d5db', borderRadius: '4px', background: '#ffffff', color: '#4b5563', cursor: 'pointer' }}>
             {label}
           </button>
         ))}
         {/* Image upload */}
         <button type="button" disabled={uploading}
           onClick={() => fileInputRef.current?.click()}
-          style={{ padding: '5px 12px', fontSize: '12px', fontWeight: 600, border: '1px solid #6366f1', borderRadius: '4px', background: uploading ? '#1e293b' : '#6366f120', color: '#818cf8', cursor: uploading ? 'not-allowed' : 'pointer' }}>
+          style={{ padding: '5px 12px', fontSize: '12px', fontWeight: 600, border: '1px solid #3d5af1', borderRadius: '4px', background: uploading ? '#f3f4f6' : '#eef1fe', color: '#3d5af1', cursor: uploading ? 'not-allowed' : 'pointer' }}>
           {uploading ? '⏳ Uploading…' : '📷 Image'}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
       </div>
 
-      {/* Split pane */}
+      {/* Split pane — both sides always mounted, `display` toggled by tab */}
       <div style={{ display: 'flex', gap: '8px' }}>
-        {showEditor && (
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={handleChange}
-            spellCheck={false}
-            style={editorStyle}
-            placeholder="Write Markdown here…"
-          />
-        )}
-        {showPreview && (
-          <div
-            style={previewStyle}
-            dangerouslySetInnerHTML={{ __html: preview || '<span style="color:#475569">Preview will appear here…</span>' }}
-          />
+        <div ref={editorContainerRef} style={editorWrapStyle} />
+        {previewHtml ? (
+          <div style={previewStyle} dangerouslySetInnerHTML={{ __html: previewHtml as string }} />
+        ) : (
+          <div style={previewStyle}>
+            <span style={{ color: '#9ca3af' }}>Preview will appear here…</span>
+          </div>
         )}
       </div>
 
-      <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>
-        GFM supported · preview debounced 300 ms · Ctrl+Z to undo
+      <p style={{ fontSize: '11px', color: '#9ca3af', margin: 0 }}>
+        CodeMirror editor · GFM preview via marked · Ctrl+Z to undo
       </p>
     </div>
   );

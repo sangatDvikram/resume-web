@@ -3,6 +3,7 @@ import { Lato, Roboto } from "next/font/google";
 import { ThemeProvider } from "@teispace/next-themes";
 import { Nav } from "./components/Nav";
 import { ServiceWorkerRegistrar } from "./components/ServiceWorkerRegistrar";
+import { getResume } from "@/lib/api";
 import "./globals.css";
 
 const lato = Lato({
@@ -19,51 +20,8 @@ const roboto = Roboto({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    template: "%s | Vikram Sangat",
-    default: "Vikram Sangat — Senior Software Engineer",
-  },
-  description:
-    "Portfolio of Vikram Sangat — Senior Software Engineer with 10 years of experience. Specialising in React micro-frontends, Node.js, Python, Flutter, and agentic AI. Two patent holder based in Bangalore, India.",
-  keywords: [
-    "Vikram Sangat",
-    "Senior Software Engineer",
-    "React",
-    "JavaScript",
-    "TypeScript",
-    "Node.js",
-    "Python",
-    "Flutter",
-    "micro-frontend",
-    "Single-SPA",
-    "Webpack 5",
-    "Module Federation",
-    "Bangalore",
-    "India",
-    "portfolio",
-  ],
-  authors: [{ name: "Vikram Sangat", url: "https://www.linkedin.com/in/sangatdvikram/" }],
-  creator: "Vikram Sangat",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://portfolio.example.com"
-  ),
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    siteName: "Vikram Sangat",
-    title: "Vikram Sangat — Senior Software Engineer",
-    description:
-      "10 years of experience in React, Node.js, Python, and Flutter. Architect of micro-frontend systems, agentic AI integrations, and two patent holder. Bangalore, India.",
-    images: [{ url: "/profile.jpeg", width: 400, height: 400, alt: "Vikram Sangat" }],
-  },
-  twitter: {
-    card: "summary",
-    title: "Vikram Sangat — Senior Software Engineer",
-    description:
-      "React · Node.js · Python · Flutter · Micro-frontends · Agentic AI · Two patent holder · Bangalore, India.",
-    images: ["/profile.jpeg"],
-  },
+// Static fields not derivable from resume data (favicons, PWA manifest, MS tile config).
+const STATIC_METADATA = {
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -92,7 +50,79 @@ export const metadata: Metadata = {
     "msapplication-TileImage": "/ms-icon-144x144.png",
     "msapplication-config": "/browserconfig.xml",
   },
+} satisfies Partial<Metadata>;
+
+// Fallback used if the API is unreachable at build/request time.
+const FALLBACK_METADATA: Metadata = {
+  title: {
+    template: "%s | Vikram Sangat",
+    default: "Vikram Sangat — Senior Software Engineer",
+  },
+  description:
+    "Portfolio of Vikram Sangat — Senior Software Engineer with 10 years of experience. Specialising in React micro-frontends, Node.js, Python, Flutter, and agentic AI. Two patent holder based in Bangalore, India.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://portfolio.example.com"
+  ),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Vikram Sangat",
+    title: "Vikram Sangat — Senior Software Engineer",
+    description:
+      "10 years of experience in React, Node.js, Python, and Flutter. Architect of micro-frontend systems, agentic AI integrations, and two patent holder. Bangalore, India.",
+    images: [{ url: "/profile.jpeg", width: 400, height: 400, alt: "Vikram Sangat" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Vikram Sangat — Senior Software Engineer",
+    description:
+      "React · Node.js · Python · Flutter · Micro-frontends · Agentic AI · Two patent holder · Bangalore, India.",
+    images: ["/profile.jpeg"],
+  },
+  ...STATIC_METADATA,
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const { profile, skills } = await getResume();
+    const title = `${profile.name} — ${profile.position}`;
+    const keywords = [
+      profile.name,
+      profile.position,
+      ...skills.map((s) => s.name),
+      profile.location,
+      "portfolio",
+    ].filter(Boolean);
+
+    return {
+      title: { template: `%s | ${profile.name}`, default: title },
+      description: profile.description,
+      keywords,
+      authors: [{ name: profile.name, url: profile.linkedInUrl }],
+      creator: profile.name,
+      metadataBase: new URL(
+        process.env.NEXT_PUBLIC_SITE_URL ?? profile.websiteUrl ?? "https://portfolio.example.com"
+      ),
+      openGraph: {
+        type: "website",
+        locale: "en_US",
+        siteName: profile.name,
+        title,
+        description: profile.description,
+        images: [{ url: profile.avatarUrl, width: 400, height: 400, alt: profile.name }],
+      },
+      twitter: {
+        card: "summary",
+        title,
+        description: profile.description,
+        images: [profile.avatarUrl],
+      },
+      ...STATIC_METADATA,
+    };
+  } catch {
+    return FALLBACK_METADATA;
+  }
+}
 
 export default function RootLayout({
   children,

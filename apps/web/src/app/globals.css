@@ -1,94 +1,109 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* ─── Light mode design tokens ──────────────────────────────────────────────── */
+/* Class-based dark mode (next-themes sets .dark on <html>) — without this,
+   Tailwind v4's default `dark:` variant follows the OS prefers-color-scheme
+   instead of the app's actual theme class, causing mismatches like
+   dark:prose-invert firing on a light page when the OS is in dark mode. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Light mode design tokens (Wikipedia / Vector 2022 palette) ────────────── */
 :root {
   --background: hsl(0 0% 100%);
-  --foreground: hsl(0 0% 0%);
+  --foreground: hsl(210 3% 13%);
 
-  --card: hsl(220 20% 97%);
-  --card-foreground: hsl(220 45% 10%);
+  --card: hsl(210 20% 98%);
+  --card-foreground: hsl(210 3% 13%);
 
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(220 45% 10%);
+  --popover-foreground: hsl(210 3% 13%);
 
-  --primary: hsl(220 75% 45%);
-  --primary-foreground: hsl(220 45% 8%);
+  --primary: hsl(224 60% 50%);
+  --primary-foreground: hsl(0 0% 100%);
 
-  --secondary: hsl(220 20% 93%);
-  --secondary-foreground: hsl(220 35% 15%);
+  --secondary: hsl(216 15% 92%);
+  --secondary-foreground: hsl(210 3% 13%);
 
-  --muted: hsl(220 15% 95%);
-  --muted-foreground: hsl(215 25% 40%);
+  --muted: hsl(210 20% 98%);
+  --muted-foreground: hsl(213 6% 37%);
 
-  --accent: hsl(200 80% 50%);
-  --accent-foreground: hsl(220 45% 8%);
+  --accent: hsl(224 60% 50%);
+  --accent-foreground: hsl(0 0% 100%);
 
-  --destructive: hsl(0 84% 60%);
-  --destructive-foreground: hsl(210 40% 98%);
+  --destructive: hsl(0 100% 37%);
+  --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(220 15% 85%);
-  --input: hsl(220 15% 85%);
-  --ring: hsl(180 65% 55%);
+  --border: hsl(213 9% 66%);
+  --input: hsl(213 9% 66%);
+  --ring: hsl(224 60% 50%);
 
-  --radius: 0.75rem;
+  --radius: 0.25rem;
 
-  /* Custom: teal/blue glows */
-  --glow: hsl(180 65% 55%);
-  --glow-muted: hsl(195 60% 45%);
-  --surface: hsl(220 20% 96%);
+  /* Custom: repurposed as wiki-blue glows */
+  --glow: hsl(224 60% 50%);
+  --glow-muted: hsl(224 60% 60%);
+  --surface: hsl(210 20% 98%);
   --surface-elevated: hsl(0 0% 100%);
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, hsl(180 70% 50%) 0%, hsl(220 75% 45%) 100%);
-  --gradient-card: linear-gradient(145deg, hsl(220 20% 97%) 0%, hsl(220 20% 95%) 100%);
-  --gradient-hero: linear-gradient(180deg, hsl(220 15% 97%) 0%, hsl(220 15% 95%) 100%);
-  --gradient-glow: radial-gradient(ellipse at center, hsl(180 65% 55% / 0.15) 0%, transparent 70%);
+  --gradient-primary: linear-gradient(135deg, hsl(224 60% 55%) 0%, hsl(224 60% 45%) 100%);
+  --gradient-card: linear-gradient(145deg, hsl(210 20% 98%) 0%, hsl(216 15% 95%) 100%);
+  --gradient-hero: linear-gradient(180deg, hsl(210 20% 99%) 0%, hsl(210 20% 97%) 100%);
+  --gradient-glow: radial-gradient(ellipse at center, hsl(224 60% 50% / 0.12) 0%, transparent 70%);
 
-  /* Accent teal radial glow */
-  --teal-glow: hsl(174 72% 56%);
+  /* Accent glow */
+  --teal-glow: hsl(224 60% 50%);
 
   /* Status badge */
   --status-available: hsl(158 64% 51%);
 
   /* Resume (print) palette */
   --resume-bg: hsl(0 0% 100%);
-  --resume-fg: hsl(0 0% 0%);
-  --resume-body: hsl(218 11% 25%);
-  --resume-muted: hsl(217 10% 35%);
-  --resume-subtle: hsl(220 9% 46%);
-  --resume-border: hsl(212 13% 82%);
+  --resume-fg: hsl(210 3% 13%);
+  --resume-body: hsl(210 3% 13%);
+  --resume-muted: hsl(213 6% 37%);
+  --resume-subtle: hsl(213 9% 66%);
+  --resume-border: hsl(213 9% 66%);
 
-  /* Link colours */
-  --link: hsl(221 83% 53%);
-  --link-hover: hsl(221 83% 43%);
+  /* Link colours (Wikipedia blue) */
+  --link: hsl(224 60% 50%);
+  --link-hover: hsl(224 70% 40%);
 }
 
-/* ─── Dark mode overrides ────────────────────────────────────────────────────── */
+/* ─── Dark mode overrides (Wikipedia / Vector 2022 "night" palette) ─────────── */
 .dark {
-  --background: hsl(0 0% 0%);
-  --foreground: hsl(210 40% 98%);
+  --background: hsl(210 15% 8%);
+  --foreground: hsl(216 12% 92%);
 
-  --card: hsl(220 45% 10%);
-  --card-foreground: hsl(210 40% 98%);
+  --card: hsl(210 10% 16%);
+  --card-foreground: hsl(216 12% 92%);
 
-  --popover: hsl(220 45% 10%);
-  --popover-foreground: hsl(210 40% 98%);
+  --popover: hsl(210 10% 16%);
+  --popover-foreground: hsl(216 12% 92%);
 
-  --secondary: hsl(220 35% 15%);
-  --secondary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(210 8% 20%);
+  --secondary-foreground: hsl(216 12% 92%);
 
-  --muted: hsl(220 35% 20%);
-  --muted-foreground: hsl(210 20% 60%);
+  --muted: hsl(210 8% 17%);
+  --muted-foreground: hsl(213 9% 66%);
 
-  --border: hsl(220 35% 18%);
-  --input: hsl(220 35% 18%);
+  --border: hsl(210 6% 27%);
+  --input: hsl(210 6% 27%);
 
-  --surface: hsl(220 40% 12%);
-  --surface-elevated: hsl(220 38% 14%);
+  --surface: hsl(210 10% 16%);
+  --surface-elevated: hsl(210 10% 18%);
 
-  --gradient-card: linear-gradient(145deg, hsl(220 40% 12%) 0%, hsl(220 45% 10%) 100%);
-  --gradient-hero: linear-gradient(180deg, hsl(220 45% 10%) 0%, hsl(220 45% 8%) 100%);
+  --gradient-card: linear-gradient(145deg, hsl(210 10% 16%) 0%, hsl(210 15% 8%) 100%);
+  --gradient-hero: linear-gradient(180deg, hsl(210 15% 8%) 0%, hsl(210 15% 6%) 100%);
+
+  /* Wikipedia night-mode link blue */
+  --link: hsl(217 89% 74%);
+  --link-hover: hsl(217 89% 82%);
+  --primary: hsl(217 89% 74%);
+  --primary-foreground: hsl(210 15% 8%);
+  --accent: hsl(217 89% 74%);
+  --accent-foreground: hsl(210 15% 8%);
+  --ring: hsl(217 89% 74%);
 }
 
 /* ─── Tailwind v4 theme mapping ──────────────────────────────────────────────── */
@@ -229,6 +244,90 @@
   .timeline-line {
     width: 1px;
     background: linear-gradient(to bottom, color-mix(in oklch, var(--primary) 50%, transparent), transparent);
+  }
+}
+
+/* ─── Wiki-style article prose ───────────────────────────────────────────────────
+   Must live in @layer utilities, not @layer components: Tailwind Typography's
+   .prose rules are emitted into @layer utilities, and layer order beats
+   selector specificity — component-layer overrides of .prose text color get
+   silently discarded (e.g. <strong> stayed prose-plugin gray-900 in dark mode). */
+@layer utilities {
+  /* Wikipedia-article-style prose: bottom-ruled headings, wiki-blue links,
+     generous line-height. Colors driven by --foreground/--link/--border so
+     light/dark both stay correct instead of Typography's fixed gray scale. */
+  .wiki-prose {
+    color: var(--foreground);
+    line-height: 1.6;
+  }
+
+  .wiki-prose :where(h2, h3, h4) {
+    color: var(--foreground);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.2em;
+  }
+
+  .wiki-prose h2 {
+    margin-top: 2em;
+    margin-bottom: 0.6em;
+    font-size: 1.5em;
+  }
+
+  .wiki-prose h3 {
+    margin-top: 1.6em;
+    margin-bottom: 0.5em;
+    font-size: 1.25em;
+  }
+
+  .wiki-prose p,
+  .wiki-prose li {
+    color: var(--foreground);
+  }
+
+  .wiki-prose strong,
+  .wiki-prose b {
+    color: var(--foreground);
+  }
+
+  .wiki-prose a {
+    color: var(--link);
+    text-decoration: none;
+  }
+
+  .wiki-prose a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+
+  .wiki-prose blockquote {
+    border-left: 4px solid var(--border);
+    background-color: var(--surface);
+    color: var(--foreground);
+    font-style: normal;
+    padding: 0.75rem 1rem;
+  }
+
+  .wiki-prose blockquote p::before,
+  .wiki-prose blockquote p::after {
+    content: none;
+  }
+
+  .wiki-prose code {
+    color: var(--foreground);
+    background-color: var(--muted);
+  }
+
+  .wiki-prose hr {
+    border-color: var(--border);
+  }
+
+  .wiki-prose thead {
+    border-bottom-color: var(--border);
+  }
+
+  .wiki-prose tbody tr {
+    border-bottom-color: var(--border);
   }
 }
 

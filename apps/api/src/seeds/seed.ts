@@ -1,22 +1,21 @@
 /**
- * Portfolio CMS — drop-migrate-seed script.
+ * Portfolio CMS — idempotent migrate-seed script.
  *
  * Usage:
  *   yarn workspace api seed
  *
  * Flow:
- *   1. Drop all content tables + typeorm_migrations (raw pg, unpooled).
- *      admin_users is intentionally excluded.
- *   2. AppDataSource.initialize() + runMigrations() recreates schema cleanly.
- *   3. Seed data in FK-dependency order.
+ *   1. AppDataSource.initialize() + runMigrations() — no tables are dropped.
+ *   2. Seed data in FK-dependency order; each record is looked up by its
+ *      natural key first and only created if it doesn't already exist.
+ *      Existing records are left untouched (not upserted/overwritten).
  *
  * Seed order:
  *   Skills → ResumeProfile → Experience/Education/Patent/Cert/Award
- *   → Projects → Gallery
+ *   → Projects → Gallery → Blog (Tags → Posts)
  */
 
 import 'reflect-metadata';
-import { Client } from 'pg';
 import AppDataSource from '../database/data-source';
 import { ResumeProfile } from '../entities/resume-profile.entity';
 import { Skill } from '../entities/skill.entity';
@@ -28,6 +27,10 @@ import { Award } from '../entities/award.entity';
 import { Project } from '../entities/project.entity';
 import { Album } from '../entities/album.entity';
 import { Photo } from '../entities/photo.entity';
+import { BlogPost } from '../entities/blog-post.entity';
+import { Tag } from '../entities/tag.entity';
+import { generateSlug } from '../common/slug.util';
+import { renderMarkdown, estimateReadingTime } from '../common/markdown.util';
 import {
   PROFILE_SEED,
   SKILLS_SEED,
@@ -39,49 +42,13 @@ import {
   PROJECTS_SEED,
   DEFAULT_ALBUM,
   PHOTOS_SEED,
+  BLOG_TAGS_SEED,
+  BLOG_POSTS_SEED,
 } from './seed-data';
-
-// ─── Pre-drop (raw pg, unpooled) ─────────────────────────────────────────────
-// Runs before AppDataSource.initialize() so migrations start from a blank slate.
-// Uses DATABASE_URL_UNPOOLED (loaded by data-source.ts import via dotenv).
-
-async function preTruncate(): Promise<void> {
-  const client = new Client({
-    connectionString:
-      process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL,
-  });
-  try {
-    await client.connect();
-    // Drop all content tables and the migration tracking table so that
-    // runMigrations() below starts from a clean slate.
-    // admin_users is intentionally excluded — admin accounts survive reseeds.
-    await client.query(`
-      DROP TABLE IF EXISTS
-        photos, albums,
-        project_media, project_videos,
-        post_tags, blog_posts, tags,
-        experience_skills, project_skills,
-        experience_entries,
-        awards, certifications, patents, education_entries,
-        projects, skills, resume_profile,
-        migrations
-      CASCADE
-    `);
-    console.log('  ✓ Dropped content tables + migrations tracking\n');
-  } catch (e: unknown) {
-    console.error('  ✗ Pre-drop failed:', (e as Error).message);
-    throw e;
-  } finally {
-    await client.end().catch(() => {});
-  }
-}
 
 // ─── Seed ─────────────────────────────────────────────────────────────────────
 
 async function seed(): Promise<void> {
-  console.log('🗑️  Pre-truncating tables…');
-  await preTruncate();
-
   console.log('🔌 Connecting to database…');
   await AppDataSource.initialize();
 
@@ -90,24 +57,44 @@ async function seed(): Promise<void> {
   console.log(`  ✓ Applied ${ranMigrations.length} migration(s)\n`);
 
   try {
-    // ── 1. Skills (no deps) ───────────────────────────────────────────────
+    // ── 1. Skills (no deps) — unique key: name ──────────────────────────────
     const skillRepo = AppDataSource.getRepository(Skill);
     const skillMap = new Map<string, Skill>();
 
     for (const s of SKILLS_SEED) {
-      const skill = await skillRepo.save(skillRepo.create(s));
+      let skill = await skillRepo.findOne({ where: { name: s.name } });
+      if (!skill) {
+        skill = await skillRepo.save(skillRepo.create(s));
+        console.log(`  ✓ Skill created: ${s.name}`);
+      } else {
+        console.log(`  · Skill exists, skipped: ${s.name}`);
+      }
       skillMap.set(s.name, skill);
     }
-    console.log(`  ✓ Skills (${SKILLS_SEED.length})`);
 
-    // ── 2. Resume profile ─────────────────────────────────────────────────
+    // ── 2. Resume profile — unique key: slug ────────────────────────────────
     const profileRepo = AppDataSource.getRepository(ResumeProfile);
-    const profile = await profileRepo.save(profileRepo.create(PROFILE_SEED));
-    console.log(`  ✓ ResumeProfile (slug: ${profile.slug})`);
+    let profile = await profileRepo.findOne({
+      where: { slug: PROFILE_SEED.slug },
+    });
+    if (!profile) {
+      profile = await profileRepo.save(profileRepo.create(PROFILE_SEED));
+      console.log(`  ✓ ResumeProfile created (slug: ${profile.slug})`);
+    } else {
+      console.log(`  · ResumeProfile exists, skipped (slug: ${profile.slug})`);
+    }
 
-    // ── 3. Experience entries (dep: profile + skills) ──────────────────────
+    // ── 3. Experience entries — key: title + company ────────────────────────
     const expRepo = AppDataSource.getRepository(ExperienceEntry);
     for (const e of EXPERIENCE_SEED) {
+      const exists = await expRepo.findOne({
+        where: { title: e.title, company: e.company },
+      });
+      if (exists) {
+        console.log(`  · Experience exists, skipped: ${e.title} @ ${e.company}`);
+        continue;
+      }
+
       const skills = e.techStack
         .map((name) => skillMap.get(name))
         .filter((s): s is Skill => s !== undefined);
@@ -126,40 +113,72 @@ async function seed(): Promise<void> {
           skills,
         }),
       );
-      console.log(`  ✓ Experience: ${e.title} @ ${e.company}`);
+      console.log(`  ✓ Experience created: ${e.title} @ ${e.company}`);
     }
 
-    // ── 4. Education entries (dep: profile) ───────────────────────────────
+    // ── 4. Education entries — key: degree + university ─────────────────────
     const eduRepo = AppDataSource.getRepository(EducationEntry);
     for (const ed of EDUCATION_SEED) {
+      const exists = await eduRepo.findOne({
+        where: { degree: ed.degree, university: ed.university },
+      });
+      if (exists) {
+        console.log(`  · Education exists, skipped: ${ed.degree}`);
+        continue;
+      }
       await eduRepo.save(eduRepo.create({ ...ed, profile }));
-      console.log(`  ✓ Education: ${ed.degree}`);
+      console.log(`  ✓ Education created: ${ed.degree}`);
     }
 
-    // ── 5. Patents (dep: profile) ──────────────────────────────────────────
+    // ── 5. Patents — key: link (patent number) ───────────────────────────────
     const patentRepo = AppDataSource.getRepository(Patent);
     for (const p of PATENTS_SEED) {
+      const exists = await patentRepo.findOne({ where: { link: p.link } });
+      if (exists) {
+        console.log(`  · Patent exists, skipped: ${p.link}`);
+        continue;
+      }
       await patentRepo.save(patentRepo.create({ ...p, profile }));
-      console.log(`  ✓ Patent: ${p.link}`);
+      console.log(`  ✓ Patent created: ${p.link}`);
     }
 
-    // ── 6. Certifications (dep: profile) ──────────────────────────────────
+    // ── 6. Certifications — key: title + issuer ──────────────────────────────
     const certRepo = AppDataSource.getRepository(Certification);
     for (const c of CERTIFICATIONS_SEED) {
+      const exists = await certRepo.findOne({
+        where: { title: c.title, issuer: c.issuer },
+      });
+      if (exists) {
+        console.log(`  · Certification exists, skipped: ${c.title}`);
+        continue;
+      }
       await certRepo.save(certRepo.create({ ...c, profile }));
-      console.log(`  ✓ Certification: ${c.title}`);
+      console.log(`  ✓ Certification created: ${c.title}`);
     }
 
-    // ── 7. Awards (dep: profile) ───────────────────────────────────────────
+    // ── 7. Awards — key: title + issuer ──────────────────────────────────────
     const awardRepo = AppDataSource.getRepository(Award);
     for (const a of AWARDS_SEED) {
+      const exists = await awardRepo.findOne({
+        where: { title: a.title, issuer: a.issuer },
+      });
+      if (exists) {
+        console.log(`  · Award exists, skipped: ${a.title}`);
+        continue;
+      }
       await awardRepo.save(awardRepo.create({ ...a, profile }));
-      console.log(`  ✓ Award: ${a.title}`);
+      console.log(`  ✓ Award created: ${a.title}`);
     }
 
-    // ── 8. Projects (dep: skills only — no profile FK) ────────────────────
+    // ── 8. Projects — key: slug ───────────────────────────────────────────────
     const projectRepo = AppDataSource.getRepository(Project);
     for (const p of PROJECTS_SEED) {
+      const exists = await projectRepo.findOne({ where: { slug: p.slug } });
+      if (exists) {
+        console.log(`  · Project exists, skipped: ${p.title}`);
+        continue;
+      }
+
       const skills = p.techStack
         .map((name) => skillMap.get(name))
         .filter((s): s is Skill => s !== undefined);
@@ -181,16 +200,28 @@ async function seed(): Promise<void> {
           skills,
         }),
       );
-      console.log(`  ✓ Project: ${p.title}`);
+      console.log(`  ✓ Project created: ${p.title}`);
     }
 
-    // ── 9. Gallery — default album + photos ───────────────────────────────
+    // ── 9. Gallery — default album (key: slug) + photos (key: originalUrl) ──
     const albumRepo = AppDataSource.getRepository(Album);
-    const album = await albumRepo.save(albumRepo.create(DEFAULT_ALBUM));
-    console.log(`  ✓ Album: ${DEFAULT_ALBUM.name}`);
+    let album = await albumRepo.findOne({ where: { slug: DEFAULT_ALBUM.slug } });
+    if (!album) {
+      album = await albumRepo.save(albumRepo.create(DEFAULT_ALBUM));
+      console.log(`  ✓ Album created: ${DEFAULT_ALBUM.name}`);
+    } else {
+      console.log(`  · Album exists, skipped: ${DEFAULT_ALBUM.name}`);
+    }
 
     const photoRepo = AppDataSource.getRepository(Photo);
     for (const ph of PHOTOS_SEED) {
+      const exists = await photoRepo.findOne({
+        where: { originalUrl: ph.originalUrl },
+      });
+      if (exists) {
+        console.log(`  · Photo exists, skipped: ${ph.title ?? ph.sortOrder}`);
+        continue;
+      }
       await photoRepo.save(
         photoRepo.create({
           title: ph.title ?? null,
@@ -202,10 +233,53 @@ async function seed(): Promise<void> {
           album,
         }),
       );
-      console.log(`  ✓ Photo: ${ph.title ?? ph.sortOrder}`);
+      console.log(`  ✓ Photo created: ${ph.title ?? ph.sortOrder}`);
     }
 
-    console.log('\n✅ Seed complete — database is ready.');
+    // ── 10. Blog — tags (key: name) + posts (key: title) ────────────────────
+    const tagRepo = AppDataSource.getRepository(Tag);
+    const tagMap = new Map<string, Tag>();
+    for (const name of BLOG_TAGS_SEED) {
+      let tag = await tagRepo.findOne({ where: { name } });
+      if (!tag) {
+        tag = await tagRepo.save(tagRepo.create({ name }));
+        console.log(`  ✓ Tag created: ${name}`);
+      } else {
+        console.log(`  · Tag exists, skipped: ${name}`);
+      }
+      tagMap.set(name, tag);
+    }
+
+    const blogRepo = AppDataSource.getRepository(BlogPost);
+    for (const p of BLOG_POSTS_SEED) {
+      const exists = await blogRepo.findOne({ where: { title: p.title } });
+      if (exists) {
+        console.log(`  · Blog post exists, skipped: ${p.title}`);
+        continue;
+      }
+
+      const tags = p.tags
+        .map((name) => tagMap.get(name))
+        .filter((t): t is Tag => t !== undefined);
+
+      await blogRepo.save(
+        blogRepo.create({
+          slug: generateSlug(p.title),
+          title: p.title,
+          excerpt: p.excerpt,
+          coverImageUrl: p.coverImageUrl,
+          rawMarkdown: p.rawMarkdown,
+          htmlContent: await renderMarkdown(p.rawMarkdown),
+          readingTime: estimateReadingTime(p.rawMarkdown),
+          published: p.published,
+          publishedAt: p.publishedAt,
+          tags,
+        }),
+      );
+      console.log(`  ✓ Blog post created: ${p.title}`);
+    }
+
+    console.log('\n✅ Seed complete — database is up to date.');
   } finally {
     await AppDataSource.destroy();
   }

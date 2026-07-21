@@ -437,7 +437,7 @@ Album
   name        TEXT NOT NULL
   description TEXT
   location    TEXT
-  coverId     UUID FK → Photo
+  coverId     UUID soft ref → Photo (no FK constraint; app-resolved, avoids circular cascade)
   published   BOOLEAN DEFAULT false
   sortOrder   INTEGER DEFAULT 0
 

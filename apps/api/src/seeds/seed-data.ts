@@ -331,6 +331,69 @@ export const PROJECTS_SEED = [
   },
 ];
 
+// ─── Blog ─────────────────────────────────────────────────────────────────────
+
+export const BLOG_TAGS_SEED = [
+  'Food Safety',
+  'Public Health',
+  'Food Supply Chain',
+  'FSSAI',
+  'Guest Post',
+];
+
+export const BLOG_POSTS_SEED = [
+  {
+    title: 'Food Safety: A Shared Responsibility',
+    excerpt:
+      "From a farmer's field to our dining table, food passes through many hands — and safety is only as strong as the weakest link in that chain.",
+    coverImageUrl:
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=2400&h=1350',
+    published: true,
+    publishedAt: new Date('2026-07-21'),
+    tags: [
+      'Food Safety',
+      'Public Health',
+      'Food Supply Chain',
+      'FSSAI',
+      'Guest Post',
+    ],
+    rawMarkdown: `*Guest post by Dilip T. Sangat, retired Assistant Commissioner of Food.*
+
+Food safety is rarely thought of as a chain — but that's exactly what it is. "From a farmer's field to our dining table, food passes through many hands," and every one of those hands carries a share of the responsibility. A single weak link, at any point along that chain, is enough to put public health at risk.
+
+## Six links, one chain
+
+**Farmers** sit at the start of the chain. Following Good Agricultural Practices (GAP) — safe pesticide use, clean irrigation water, proper harvest handling — determines the baseline quality of everything that follows.
+
+**Processors** take raw produce and turn it into packaged food. This is where HACCP (Hazard Analysis and Critical Control Points) standards and strict plant hygiene matter most, since contamination introduced here scales to every unit that ships.
+
+**Transporters and storage facilities** are the connective tissue of the chain. Preserving the cold chain — keeping perishables within safe temperature ranges from warehouse to shelf — is a quiet but critical responsibility that's easy to overlook until it fails.
+
+**Government and FSSAI** set the rules of the game: regulations, licensing, and inspections that give every other link something to be held to.
+
+**Retailers** are the last checkpoint before food reaches a household. Proper storage conditions and active monitoring of expiry dates catch problems before they become someone's dinner.
+
+**Consumers**, finally, close the loop. Safe handling at home is the last line of defense, and it's one every one of us controls directly.
+
+## The 4 Cs
+
+For that last link — what happens in our own kitchens — the guidance comes down to four habits:
+
+- **Clean** hands and surfaces before and during food preparation
+- **Cook** food thoroughly, especially meat, poultry, and eggs
+- **Chill** leftovers within 2 hours to stop bacterial growth
+- **Combat** cross-contamination by keeping raw and cooked food separate
+
+None of these require special equipment or expertise — just consistency.
+
+## Why it matters
+
+In 2013, 23 children died in Bihar after a mid-day school meal was cooked in oil that had been stored in a container previously used for pesticide. It wasn't a failure of farming, or processing, or regulation in the abstract — it was a single lapse in storage practice, at one point in the chain, with irreversible consequences.
+
+That's the core message worth carrying forward: food safety isn't any one group's job. It's a shared responsibility, and it only works when every link — farmer, processor, transporter, regulator, retailer, and consumer — holds up their end.`,
+  },
+];
+
 // ─── Gallery (photos) ─────────────────────────────────────────────────────────
 
 export const DEFAULT_ALBUM = {

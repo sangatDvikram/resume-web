@@ -5,10 +5,18 @@ import { getBlogPosts } from "@/lib/api";
 import type { BlogPostSummaryDto } from "@/lib/api";
 import { OatBadge } from "@portfolio-cms/oat-ui";
 
-export const metadata: Metadata = {
-  title: "Blog",
-  description: "Articles, thoughts, and technical deep-dives.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const posts = await getBlogPosts();
+    const description =
+      posts.length > 0
+        ? `${posts.length} article${posts.length === 1 ? "" : "s"} — thoughts and technical deep-dives.`
+        : "Articles, thoughts, and technical deep-dives.";
+    return { title: "Blog", description };
+  } catch {
+    return { title: "Blog", description: "Articles, thoughts, and technical deep-dives." };
+  }
+}
 
 // ISR: revalidate every hour; on-demand via /api/revalidate with tag "blog"
 export const revalidate = 3600;

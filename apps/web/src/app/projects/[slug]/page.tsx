@@ -193,11 +193,10 @@ export default async function ProjectDetailPage({
           {project.htmlDescription && (
             <section>
               <div
-                className="prose prose-neutral dark:prose-invert max-w-none
-                           prose-headings:font-semibold prose-headings:tracking-tight
-                           prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                className="wiki-prose prose max-w-none
+                           prose-headings:tracking-tight
                            prose-code:before:content-none prose-code:after:content-none
-                           prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded"
+                           prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded"
                 dangerouslySetInnerHTML={{ __html: project.htmlDescription }}
               />
             </section>

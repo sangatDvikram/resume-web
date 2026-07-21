@@ -3,10 +3,21 @@ import { getProjects } from "@/lib/api";
 import type { ProjectSummaryDto, SkillRefDto } from "@/lib/api";
 import { ProjectsClient } from "./ProjectsClient";
 
-export const metadata: Metadata = {
-  title: "Projects",
-  description: "A showcase of projects — side projects, open-source work, and professional highlights.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const projects = await getProjects();
+    const description =
+      projects.length > 0
+        ? `${projects.length} project${projects.length === 1 ? "" : "s"} — side projects, open-source work, and professional highlights.`
+        : "A showcase of projects — side projects, open-source work, and professional highlights.";
+    return { title: "Projects", description };
+  } catch {
+    return {
+      title: "Projects",
+      description: "A showcase of projects — side projects, open-source work, and professional highlights.",
+    };
+  }
+}
 
 // ISR: revalidate at most once per minute; on-demand via /api/revalidate with tag "projects"
 export const revalidate = 60;

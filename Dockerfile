@@ -24,6 +24,7 @@ WORKDIR /app
 # packages/{utils,oat-ui,eslint-config} stubs are included so Yarn resolves
 # the workspace graph without errors, but their source is not copied.
 COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn/releases .yarn/releases
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/types/package.json packages/types/

@@ -18,15 +18,19 @@ RUN corepack enable
 WORKDIR /app
 
 # Copy workspace manifests first for cacheable yarn install.
-# apps/web/package.json is required: Yarn Berry validates every workspace
-# declared in the root package.json even if we never build it.
-# The actual apps/web source is excluded by .dockerignore.
+# apps/web/package.json and apps/mcp/package.json are required: Yarn Berry
+# validates every workspace matched by the root "apps/*" glob even if we
+# never build it, and --immutable recomputes the lockfile against exactly
+# the workspaces present — omitting one changes the resolved graph and
+# trips "lockfile would have been modified".
+# The actual apps/web and apps/mcp source is excluded by .dockerignore.
 # packages/{utils,oat-ui,eslint-config} stubs are included so Yarn resolves
 # the workspace graph without errors, but their source is not copied.
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn/releases .yarn/releases
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
+COPY apps/mcp/package.json apps/mcp/
 COPY packages/types/package.json packages/types/
 COPY packages/utils/package.json packages/utils/
 COPY packages/oat-ui/package.json packages/oat-ui/
